@@ -1,38 +1,8 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { format, subDays, startOfDay, endOfDay, parseISO } from "date-fns";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  registrationDate: Date;
-}
-
-interface Transaction {
-  id: string;
-  type: 'receita' | 'despesa';
-  date: Date;
-  value: number;
-  category: string;
-  subcategory?: string;
-  observation?: string;
-  fuelType?: string;
-  pricePerLiter?: number;
-}
-
-interface OdometerRecord {
-  id: string;
-  date: Date;
-  type: 'inicial' | 'final';
-  value: number;
-}
-
-interface WorkHoursRecord {
-  id: string;
-  startDateTime: Date;
-  endDateTime: Date;
-}
+import { subDays } from "date-fns";
+import type { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from "@/types";
+import { getMetrics, getChartData } from "@/utils/calculations";
 
 interface UserContextType {
   user: User | null;
@@ -42,20 +12,8 @@ interface UserContextType {
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   addOdometerRecord: (record: Omit<OdometerRecord, 'id'>) => void;
   addWorkHours: (record: Omit<WorkHoursRecord, 'id'>) => void;
-  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    receita: number;
-    despesa: number;
-    saldo: number;
-    kmRodado: number;
-    valorPorKm: number;
-    horasTrabalhadas: number;
-    valorPorHora: number;
-  };
-  getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => Array<{
-    date: string;
-    receita: number;
-    despesa: number;
-  }>;
+  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics;
+  getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -139,149 +97,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setWorkHours(prev => [...prev, newRecord]);
   };
 
-  const filterByPeriod = <T extends { date: Date }>(items: T[], period: string, customStartDate?: Date, customEndDate?: Date): T[] => {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date = endOfDay(now);
-
-    if (period === 'personalizado' && customStartDate && customEndDate) {
-      startDate = startOfDay(customStartDate);
-      endDate = endOfDay(customEndDate);
-    } else {
-      switch (period) {
-        case 'hoje':
-          startDate = startOfDay(now);
-          break;
-        case '7dias':
-          startDate = startOfDay(subDays(now, 6));
-          break;
-        case '30dias':
-          startDate = startOfDay(subDays(now, 29));
-          break;
-        default:
-          startDate = startOfDay(now);
-      }
-    }
-
-    return items.filter(item => {
-      const itemDate = new Date(item.date);
-      return itemDate >= startDate && itemDate <= endDate;
-    });
+  const handleGetMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
+    return getMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
   };
 
-  const filterWorkHoursByPeriod = (items: WorkHoursRecord[], period: string, customStartDate?: Date, customEndDate?: Date): WorkHoursRecord[] => {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date = endOfDay(now);
-
-    if (period === 'personalizado' && customStartDate && customEndDate) {
-      startDate = startOfDay(customStartDate);
-      endDate = endOfDay(customEndDate);
-    } else {
-      switch (period) {
-        case 'hoje':
-          startDate = startOfDay(now);
-          break;
-        case '7dias':
-          startDate = startOfDay(subDays(now, 6));
-          break;
-        case '30dias':
-          startDate = startOfDay(subDays(now, 29));
-          break;
-        default:
-          startDate = startOfDay(now);
-      }
-    }
-
-    return items.filter(item => {
-      const itemStartDate = new Date(item.startDateTime);
-      return itemStartDate >= startDate && itemStartDate <= endDate;
-    });
-  };
-
-  const calculateWorkHours = (period: string, customStartDate?: Date, customEndDate?: Date): number => {
-    const filteredWorkHours = filterWorkHoursByPeriod(workHours, period, customStartDate, customEndDate);
-    
-    return filteredWorkHours.reduce((total, record) => {
-      const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
-      return total + (diff / (1000 * 60 * 60)); // Convert to hours
-    }, 0);
-  };
-
-  const getMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
-    
-    const receita = filteredTransactions
-      .filter(t => t.type === 'receita')
-      .reduce((sum, t) => sum + t.value, 0);
-    
-    const despesa = filteredTransactions
-      .filter(t => t.type === 'despesa')
-      .reduce((sum, t) => sum + t.value, 0);
-
-    const saldo = receita - despesa;
-
-    // Calculate KM rodado based on odometer records for the same period
-    const filteredOdometer = filterByPeriod(odometerRecords, period, customStartDate, customEndDate);
-    
-    // Group odometer records by date and calculate daily KM
-    const kmByDate = new Map<string, { inicial?: number; final?: number }>();
-    
-    filteredOdometer.forEach(record => {
-      const dateKey = format(record.date, 'yyyy-MM-dd');
-      const existing = kmByDate.get(dateKey) || {};
-      
-      if (record.type === 'inicial') {
-        existing.inicial = record.value;
-      } else if (record.type === 'final') {
-        existing.final = record.value;
-      }
-      
-      kmByDate.set(dateKey, existing);
-    });
-    
-    // Calculate total KM for the period
-    const kmRodado = Array.from(kmByDate.values()).reduce((total, day) => {
-      if (day.inicial !== undefined && day.final !== undefined) {
-        return total + (day.final - day.inicial);
-      }
-      return total;
-    }, 0);
-
-    const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
-
-    const horasTrabalhadas = calculateWorkHours(period, customStartDate, customEndDate);
-    const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
-
-    return { receita, despesa, saldo, kmRodado, valorPorKm, horasTrabalhadas, valorPorHora };
-  };
-
-  const getChartData = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
-    
-    // Group transactions by date
-    const dataMap = new Map<string, { receita: number; despesa: number }>();
-    
-    filteredTransactions.forEach(transaction => {
-      const dateKey = format(transaction.date, 'yyyy-MM-dd');
-      const existing = dataMap.get(dateKey) || { receita: 0, despesa: 0 };
-      
-      if (transaction.type === 'receita') {
-        existing.receita += transaction.value;
-      } else {
-        existing.despesa += transaction.value;
-      }
-      
-      dataMap.set(dateKey, existing);
-    });
-
-    // Convert to array and sort by date
-    return Array.from(dataMap.entries())
-      .map(([date, values]) => ({
-        date,
-        ...values
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+  const handleGetChartData = (period: string, customStartDate?: Date, customEndDate?: Date) => {
+    return getChartData(transactions, period, customStartDate, customEndDate);
   };
 
   return (
@@ -293,8 +114,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       addTransaction,
       addOdometerRecord,
       addWorkHours,
-      getMetrics,
-      getChartData
+      getMetrics: handleGetMetrics,
+      getChartData: handleGetChartData
     }}>
       {children}
     </UserContext.Provider>
