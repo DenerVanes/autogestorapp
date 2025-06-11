@@ -1,10 +1,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, DollarSign, TrendingDown, Navigation, X } from "lucide-react";
+import { Plus, DollarSign, TrendingDown, Car, Clock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type ActionType = 'receita' | 'despesa' | 'odometro';
+type ActionType = 'receita' | 'despesa' | 'odometro' | 'horas';
 
 interface FloatingActionButtonProps {
   onAction: (type: ActionType) => void;
@@ -31,9 +31,16 @@ const FloatingActionButton = ({ onAction }: FloatingActionButtonProps) => {
     {
       type: 'odometro' as ActionType,
       label: 'Registrar Odômetro',
-      icon: Navigation,
+      icon: Car,
       color: 'bg-blue-500 hover:bg-blue-600',
       textColor: 'text-blue-600'
+    },
+    {
+      type: 'horas' as ActionType,
+      label: 'Registrar Horas Trabalhadas',
+      icon: Clock,
+      color: 'bg-purple-500 hover:bg-purple-600',
+      textColor: 'text-purple-600'
     }
   ];
 
