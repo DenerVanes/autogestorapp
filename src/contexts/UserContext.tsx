@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from "react";
 import { subDays } from "date-fns";
 import type { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from "@/types";
@@ -6,6 +5,7 @@ import { getMetrics, getChartData } from "@/utils/calculations";
 
 interface UserContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
   transactions: Transaction[];
   odometerRecords: OdometerRecord[];
   workHours: WorkHoursRecord[];
@@ -25,7 +25,12 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>({
+    id: '1',
+    name: 'João Silva',
+    email: 'joao@example.com'
+  });
+
   const [transactions, setTransactions] = useState<Transaction[]>([
     // Mock data for demonstration
     {
@@ -144,6 +149,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   return (
     <UserContext.Provider value={{
       user,
+      setUser,
       transactions,
       odometerRecords,
       workHours,

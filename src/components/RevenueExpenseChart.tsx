@@ -1,6 +1,6 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface ChartData {
@@ -20,8 +20,10 @@ const RevenueExpenseChart = ({ data }: RevenueExpenseChartProps) => {
 
   const formatXAxisLabel = (tickItem: string) => {
     try {
-      const date = new Date(tickItem);
-      return format(date, 'dd/MM', { locale: ptBR });
+      const date = parseISO(tickItem);
+      const dayName = format(date, 'EEE', { locale: ptBR });
+      const dayNumber = format(date, 'dd/MM', { locale: ptBR });
+      return `${dayName}\n${dayNumber}`;
     } catch {
       return tickItem;
     }
@@ -30,13 +32,15 @@ const RevenueExpenseChart = ({ data }: RevenueExpenseChartProps) => {
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 35 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatXAxisLabel}
             stroke="#64748b"
-            fontSize={12}
+            fontSize={11}
+            height={60}
+            interval={0}
           />
           <YAxis 
             stroke="#64748b"
@@ -47,8 +51,10 @@ const RevenueExpenseChart = ({ data }: RevenueExpenseChartProps) => {
             formatter={formatTooltipValue}
             labelFormatter={(label) => {
               try {
-                const date = new Date(label);
-                return format(date, 'dd/MM/yyyy', { locale: ptBR });
+                const date = parseISO(label);
+                const dayName = format(date, 'EEEE', { locale: ptBR });
+                const fullDate = format(date, 'dd/MM/yyyy', { locale: ptBR });
+                return `${dayName}, ${fullDate}`;
               } catch {
                 return label;
               }

@@ -25,7 +25,7 @@ const Dashboard = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>();
   
-  const { getMetrics, getChartData, transactions } = useUser();
+  const { user, getMetrics, getChartData, transactions } = useUser();
 
   const customStartDate = dateRange?.from;
   const customEndDate = dateRange?.to;
@@ -45,7 +45,6 @@ const Dashboard = () => {
   };
 
   const handleDateRangeApply = () => {
-    // The date range is already set, just trigger a re-render by ensuring the period is set
     setSelectedPeriod('personalizado');
   };
 
@@ -58,6 +57,13 @@ const Dashboard = () => {
 
   const formatDate = (date: Date) => {
     return format(date, 'dd/MM/yyyy HH:mm', { locale: ptBR });
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Bom dia";
+    if (hour < 18) return "Boa tarde";
+    return "Boa noite";
   };
 
   if (showHistory) {
@@ -75,8 +81,10 @@ const Dashboard = () => {
                 <Car className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">Drive Control</h1>
-                <p className="text-sm text-muted-foreground">Dashboard</p>
+                <h1 className="text-xl font-semibold text-foreground">
+                  {getGreeting()}, {user?.name || 'Usuário'}!
+                </h1>
+                <p className="text-sm text-muted-foreground">Aqui está o seu dashboard atualizado</p>
               </div>
             </div>
             

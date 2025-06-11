@@ -3,7 +3,6 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  registrationDate: Date;
 }
 
 export interface Transaction {
@@ -12,10 +11,6 @@ export interface Transaction {
   date: Date;
   value: number;
   category: string;
-  subcategory?: string;
-  observation?: string;
-  fuelType?: string;
-  pricePerLiter?: number;
 }
 
 export interface OdometerRecord {
