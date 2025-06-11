@@ -139,7 +139,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setWorkHours(prev => [...prev, newRecord]);
   };
 
-  const filterByPeriod = (items: Array<{ date: Date }>, period: string, customStartDate?: Date, customEndDate?: Date) => {
+  const filterByPeriod = <T extends { date: Date }>(items: T[], period: string, customStartDate?: Date, customEndDate?: Date): T[] => {
     const now = new Date();
     let startDate: Date;
     let endDate: Date = endOfDay(now);
@@ -169,8 +169,38 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const filterWorkHoursByPeriod = (items: WorkHoursRecord[], period: string, customStartDate?: Date, customEndDate?: Date): WorkHoursRecord[] => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = endOfDay(now);
+
+    if (period === 'personalizado' && customStartDate && customEndDate) {
+      startDate = startOfDay(customStartDate);
+      endDate = endOfDay(customEndDate);
+    } else {
+      switch (period) {
+        case 'hoje':
+          startDate = startOfDay(now);
+          break;
+        case '7dias':
+          startDate = startOfDay(subDays(now, 6));
+          break;
+        case '30dias':
+          startDate = startOfDay(subDays(now, 29));
+          break;
+        default:
+          startDate = startOfDay(now);
+      }
+    }
+
+    return items.filter(item => {
+      const itemStartDate = new Date(item.startDateTime);
+      return itemStartDate >= startDate && itemStartDate <= endDate;
+    });
+  };
+
   const calculateWorkHours = (period: string, customStartDate?: Date, customEndDate?: Date): number => {
-    const filteredWorkHours = filterByPeriod(workHours, period, customStartDate, customEndDate);
+    const filteredWorkHours = filterWorkHoursByPeriod(workHours, period, customStartDate, customEndDate);
     
     return filteredWorkHours.reduce((total, record) => {
       const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
@@ -193,7 +223,30 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     // Calculate KM rodado based on odometer records for the same period
     const filteredOdometer = filterByPeriod(odometerRecords, period, customStartDate, customEndDate);
-    const kmRodado = 450; // Mock for now - would need proper calculation
+    
+    // Group odometer records by date and calculate daily KM
+    const kmByDate = new Map<string, { inicial?: number; final?: number }>();
+    
+    filteredOdometer.forEach(record => {
+      const dateKey = format(record.date, 'yyyy-MM-dd');
+      const existing = kmByDate.get(dateKey) || {};
+      
+      if (record.type === 'inicial') {
+        existing.inicial = record.value;
+      } else if (record.type === 'final') {
+        existing.final = record.value;
+      }
+      
+      kmByDate.set(dateKey, existing);
+    });
+    
+    // Calculate total KM for the period
+    const kmRodado = Array.from(kmByDate.values()).reduce((total, day) => {
+      if (day.inicial !== undefined && day.final !== undefined) {
+        return total + (day.final - day.inicial);
+      }
+      return total;
+    }, 0);
 
     const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
 
