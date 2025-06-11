@@ -12,6 +12,12 @@ interface UserContextType {
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   addOdometerRecord: (record: Omit<OdometerRecord, 'id'>) => void;
   addWorkHours: (record: Omit<WorkHoursRecord, 'id'>) => void;
+  updateTransaction: (id: string, transaction: Partial<Transaction>) => void;
+  deleteTransaction: (id: string) => void;
+  updateOdometerRecord: (id: string, record: Partial<OdometerRecord>) => void;
+  deleteOdometerRecord: (id: string) => void;
+  updateWorkHours: (id: string, record: Partial<WorkHoursRecord>) => void;
+  deleteWorkHours: (id: string) => void;
   getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics;
   getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
 }
@@ -97,6 +103,36 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setWorkHours(prev => [...prev, newRecord]);
   };
 
+  const updateTransaction = (id: string, updatedTransaction: Partial<Transaction>) => {
+    setTransactions(prev => prev.map(transaction => 
+      transaction.id === id ? { ...transaction, ...updatedTransaction } : transaction
+    ));
+  };
+
+  const deleteTransaction = (id: string) => {
+    setTransactions(prev => prev.filter(transaction => transaction.id !== id));
+  };
+
+  const updateOdometerRecord = (id: string, updatedRecord: Partial<OdometerRecord>) => {
+    setOdometerRecords(prev => prev.map(record => 
+      record.id === id ? { ...record, ...updatedRecord } : record
+    ));
+  };
+
+  const deleteOdometerRecord = (id: string) => {
+    setOdometerRecords(prev => prev.filter(record => record.id !== id));
+  };
+
+  const updateWorkHours = (id: string, updatedRecord: Partial<WorkHoursRecord>) => {
+    setWorkHours(prev => prev.map(record => 
+      record.id === id ? { ...record, ...updatedRecord } : record
+    ));
+  };
+
+  const deleteWorkHours = (id: string) => {
+    setWorkHours(prev => prev.filter(record => record.id !== id));
+  };
+
   const handleGetMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
     return getMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
   };
@@ -114,6 +150,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       addTransaction,
       addOdometerRecord,
       addWorkHours,
+      updateTransaction,
+      deleteTransaction,
+      updateOdometerRecord,
+      deleteOdometerRecord,
+      updateWorkHours,
+      deleteWorkHours,
       getMetrics: handleGetMetrics,
       getChartData: handleGetChartData
     }}>

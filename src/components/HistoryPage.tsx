@@ -7,13 +7,24 @@ import { ArrowLeft, DollarSign, TrendingDown, Navigation, Clock, Edit2, Trash2 }
 import { useUser } from "@/contexts/UserContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import EditTransactionModal from "./EditTransactionModal";
+import type { Transaction, OdometerRecord, WorkHoursRecord } from "@/types";
 
 interface HistoryPageProps {
   onBack: () => void;
 }
 
 const HistoryPage = ({ onBack }: HistoryPageProps) => {
-  const { transactions, odometerRecords, workHours } = useUser();
+  const { 
+    transactions, 
+    odometerRecords, 
+    workHours,
+    deleteTransaction,
+    deleteOdometerRecord,
+    deleteWorkHours
+  } = useUser();
+  
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -31,6 +42,24 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}min`;
+  };
+
+  const handleDeleteTransaction = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este lançamento?')) {
+      deleteTransaction(id);
+    }
+  };
+
+  const handleDeleteOdometerRecord = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este registro de odômetro?')) {
+      deleteOdometerRecord(id);
+    }
+  };
+
+  const handleDeleteWorkHours = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este registro de horas?')) {
+      deleteWorkHours(id);
+    }
   };
 
   return (
@@ -74,10 +103,18 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="font-semibold text-green-600">{formatCurrency(transaction.value)}</span>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditingTransaction(transaction)}
+                        >
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteTransaction(transaction.id)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -112,10 +149,18 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="font-semibold text-red-600">{formatCurrency(transaction.value)}</span>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditingTransaction(transaction)}
+                        >
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteTransaction(transaction.id)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -150,7 +195,11 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
                         <Button variant="ghost" size="sm">
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteOdometerRecord(record.id)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -189,7 +238,11 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
                         <Button variant="ghost" size="sm">
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteWorkHours(record.id)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -204,6 +257,14 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {editingTransaction && (
+        <EditTransactionModal
+          transaction={editingTransaction}
+          isOpen={true}
+          onClose={() => setEditingTransaction(null)}
+        />
+      )}
     </div>
   );
 };

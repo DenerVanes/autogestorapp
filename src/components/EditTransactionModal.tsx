@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,52 +7,45 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, DollarSign, TrendingDown, Navigation } from "lucide-react";
+import { CalendarIcon, DollarSign, TrendingDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
+import type { Transaction } from "@/types";
 
-interface TransactionModalProps {
-  type: 'receita' | 'despesa' | 'odometro';
+interface EditTransactionModalProps {
+  transaction: Transaction;
   isOpen: boolean;
   onClose: () => void;
 }
 
-const TransactionModal = ({ type, isOpen, onClose }: TransactionModalProps) => {
-  const [date, setDate] = useState<Date>(new Date());
-  const [value, setValue] = useState("");
-  const [category, setCategory] = useState("");
-  const [fuelType, setFuelType] = useState("");
-  const [pricePerLiter, setPricePerLiter] = useState("");
-  const [subcategory, setSubcategory] = useState("");
-  const [observation, setObservation] = useState("");
-  const [odometerType, setOdometerType] = useState("");
+const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionModalProps) => {
+  const [date, setDate] = useState<Date>(transaction.date);
+  const [value, setValue] = useState(transaction.value.toString());
+  const [category, setCategory] = useState(transaction.category);
+  const [fuelType, setFuelType] = useState(transaction.fuelType || "");
+  const [pricePerLiter, setPricePerLiter] = useState(transaction.pricePerLiter?.toString() || "");
+  const [subcategory, setSubcategory] = useState(transaction.subcategory || "");
+  const [observation, setObservation] = useState(transaction.observation || "");
 
-  const { addTransaction, addOdometerRecord } = useUser();
+  const { updateTransaction } = useUser();
 
   const getModalConfig = () => {
-    switch (type) {
+    switch (transaction.type) {
       case 'receita':
         return {
-          title: 'Nova Receita',
+          title: 'Editar Receita',
           icon: DollarSign,
           color: 'text-green-600',
           categories: ['Uber', '99', 'InDrive', 'Gorjetas', 'Corridas Particulares']
         };
       case 'despesa':
         return {
-          title: 'Nova Despesa',
+          title: 'Editar Despesa',
           icon: TrendingDown,
           color: 'text-red-600',
           categories: ['Combustível', 'Alimentação', 'Manutenção']
-        };
-      case 'odometro':
-        return {
-          title: 'Registrar Odômetro',
-          icon: Navigation,
-          color: 'text-blue-600',
-          categories: []
         };
       default:
         return { title: '', icon: DollarSign, color: '', categories: [] };
@@ -65,45 +58,22 @@ const TransactionModal = ({ type, isOpen, onClose }: TransactionModalProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (type === 'odometro') {
-      addOdometerRecord({
-        date,
-        type: odometerType as 'inicial' | 'final',
-        value: parseInt(value)
-      });
-    } else {
-      const transactionData: any = {
-        type,
-        date,
-        value: parseFloat(value),
-        category
-      };
+    const updatedTransaction: Partial<Transaction> = {
+      date,
+      value: parseFloat(value),
+      category,
+      ...(transaction.type === 'despesa' && category === 'Combustível' && {
+        fuelType,
+        pricePerLiter: parseFloat(pricePerLiter)
+      }),
+      ...(transaction.type === 'despesa' && category === 'Manutenção' && {
+        subcategory,
+        observation
+      })
+    };
 
-      // Add specific fields for fuel
-      if (type === 'despesa' && category === 'Combustível') {
-        transactionData.fuelType = fuelType;
-        transactionData.pricePerLiter = parseFloat(pricePerLiter);
-      }
-
-      // Add specific fields for maintenance
-      if (type === 'despesa' && category === 'Manutenção') {
-        transactionData.subcategory = subcategory;
-        transactionData.observation = observation;
-      }
-
-      addTransaction(transactionData);
-    }
-
+    updateTransaction(transaction.id, updatedTransaction);
     onClose();
-    
-    // Reset form
-    setValue("");
-    setCategory("");
-    setFuelType("");
-    setPricePerLiter("");
-    setSubcategory("");
-    setObservation("");
-    setOdometerType("");
   };
 
   return (
@@ -146,42 +116,38 @@ const TransactionModal = ({ type, isOpen, onClose }: TransactionModalProps) => {
             </Popover>
           </div>
 
-          {/* Valor (para receita e despesa) */}
-          {type !== 'odometro' && (
-            <div className="space-y-2">
-              <Label>Valor (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0,00"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                required
-              />
-            </div>
-          )}
+          {/* Valor */}
+          <div className="space-y-2">
+            <Label>Valor (R$)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="0,00"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              required
+            />
+          </div>
 
-          {/* Categoria (para receita e despesa) */}
-          {type !== 'odometro' && (
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Select value={category} onValueChange={setCategory} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {config.categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Categoria */}
+          <div className="space-y-2">
+            <Label>Categoria</Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {config.categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Campos específicos para combustível */}
-          {type === 'despesa' && category === 'Combustível' && (
+          {transaction.type === 'despesa' && category === 'Combustível' && (
             <>
               <div className="space-y-2">
                 <Label>Tipo de Combustível</Label>
@@ -210,7 +176,7 @@ const TransactionModal = ({ type, isOpen, onClose }: TransactionModalProps) => {
           )}
 
           {/* Campos específicos para manutenção */}
-          {type === 'despesa' && category === 'Manutenção' && (
+          {transaction.type === 'despesa' && category === 'Manutenção' && (
             <>
               <div className="space-y-2">
                 <Label>Subcategoria</Label>
@@ -237,34 +203,6 @@ const TransactionModal = ({ type, isOpen, onClose }: TransactionModalProps) => {
             </>
           )}
 
-          {/* Campos específicos para odômetro */}
-          {type === 'odometro' && (
-            <>
-              <div className="space-y-2">
-                <Label>Tipo de Registro</Label>
-                <Select value={odometerType} onValueChange={setOdometerType} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inicial">Odômetro Inicial</SelectItem>
-                    <SelectItem value="final">Odômetro Final</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Quilometragem</Label>
-                <Input
-                  type="number"
-                  placeholder="000000"
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  required
-                />
-              </div>
-            </>
-          )}
-
           {/* Botões */}
           <div className="flex space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
@@ -274,9 +212,8 @@ const TransactionModal = ({ type, isOpen, onClose }: TransactionModalProps) => {
               type="submit" 
               className={cn(
                 "flex-1",
-                type === 'receita' && "bg-green-600 hover:bg-green-700",
-                type === 'despesa' && "bg-red-600 hover:bg-red-700",
-                type === 'odometro' && "bg-blue-600 hover:bg-blue-700"
+                transaction.type === 'receita' && "bg-green-600 hover:bg-green-700",
+                transaction.type === 'despesa' && "bg-red-600 hover:bg-red-700"
               )}
             >
               Salvar
@@ -288,4 +225,4 @@ const TransactionModal = ({ type, isOpen, onClose }: TransactionModalProps) => {
   );
 };
 
-export default TransactionModal;
+export default EditTransactionModal;

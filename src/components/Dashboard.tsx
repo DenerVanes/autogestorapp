@@ -3,9 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DollarSign, TrendingDown, Car, Clock, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
+import { DollarSign, TrendingDown, Car, Clock, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FloatingActionButton from "./FloatingActionButton";
@@ -14,8 +12,10 @@ import TransactionModal from "./TransactionModal";
 import WorkHoursModal from "./WorkHoursModal";
 import RevenueExpenseChart from "./RevenueExpenseChart";
 import HistoryPage from "./HistoryPage";
+import DateRangePicker from "./DateRangePicker";
 import { useUser } from "@/contexts/UserContext";
 import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
 type TransactionType = 'receita' | 'despesa' | 'odometro' | 'horas' | null;
 
@@ -23,11 +23,12 @@ const Dashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("hoje");
   const [modalType, setModalType] = useState<TransactionType>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [customStartDate, setCustomStartDate] = useState<Date>();
-  const [customEndDate, setCustomEndDate] = useState<Date>();
-  const [showCustomCalendar, setShowCustomCalendar] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>();
   
   const { getMetrics, getChartData, transactions } = useUser();
+
+  const customStartDate = dateRange?.from;
+  const customEndDate = dateRange?.to;
 
   const metrics = getMetrics(selectedPeriod, customStartDate, customEndDate);
   const chartData = getChartData(selectedPeriod, customStartDate, customEndDate);
@@ -39,9 +40,13 @@ const Dashboard = () => {
   const handlePeriodChange = (value: string) => {
     setSelectedPeriod(value);
     if (value !== 'personalizado') {
-      setCustomStartDate(undefined);
-      setCustomEndDate(undefined);
+      setDateRange(undefined);
     }
+  };
+
+  const handleDateRangeApply = () => {
+    // The date range is already set, just trigger a re-render by ensuring the period is set
+    setSelectedPeriod('personalizado');
   };
 
   const formatCurrency = (value: number) => {
@@ -89,46 +94,11 @@ const Dashboard = () => {
               </Select>
               
               {selectedPeriod === 'personalizado' && (
-                <Popover open={showCustomCalendar} onOpenChange={setShowCustomCalendar}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="bg-white/80">
-                      <CalendarIcon className="w-4 h-4 mr-2" />
-                      {customStartDate && customEndDate 
-                        ? `${format(customStartDate, 'dd/MM')} - ${format(customEndDate, 'dd/MM')}`
-                        : 'Selecionar período'
-                      }
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <div className="p-4 space-y-4">
-                      <div>
-                        <label className="text-sm font-medium">Data de início:</label>
-                        <Calendar
-                          mode="single"
-                          selected={customStartDate}
-                          onSelect={setCustomStartDate}
-                          className="rounded-md border mt-1"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Data de fim:</label>
-                        <Calendar
-                          mode="single"
-                          selected={customEndDate}
-                          onSelect={setCustomEndDate}
-                          className="rounded-md border mt-1"
-                        />
-                      </div>
-                      <Button 
-                        onClick={() => setShowCustomCalendar(false)}
-                        className="w-full"
-                        disabled={!customStartDate || !customEndDate}
-                      >
-                        Aplicar filtro
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <DateRangePicker
+                  dateRange={dateRange}
+                  onDateRangeChange={setDateRange}
+                  onApply={handleDateRangeApply}
+                />
               )}
             </div>
           </div>
