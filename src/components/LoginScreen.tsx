@@ -5,22 +5,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Car, Mail, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
-interface LoginScreenProps {
-  onLogin: () => void;
-}
-
-const LoginScreen = ({ onLogin }: LoginScreenProps) => {
+const LoginScreen = () => {
+  const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulação de autenticação
-    onLogin();
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        if (password !== confirmPassword) {
+          toast.error("As senhas não coincidem");
+          return;
+        }
+
+        const { error } = await signUp(email, password, { name });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Conta criada com sucesso! Verifique seu email.");
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Login realizado com sucesso!");
+        }
+      }
+    } catch (error) {
+      toast.error("Ocorreu um erro inesperado");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -117,9 +143,10 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
 
               <Button 
                 type="submit" 
+                disabled={isLoading}
                 className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 transition-all duration-300"
               >
-                {isSignUp ? "Criar Conta" : "Entrar"}
+                {isLoading ? "Carregando..." : (isSignUp ? "Criar Conta" : "Entrar")}
               </Button>
 
               {!isSignUp && (
