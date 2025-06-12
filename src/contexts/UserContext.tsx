@@ -72,18 +72,30 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         supabaseService.getWorkHours()
       ]);
 
+      // Convert and type-cast transactions data properly
       setTransactions(transactionsData.map(t => ({
-        ...t,
-        date: new Date(t.date)
+        id: t.id,
+        type: t.type as 'receita' | 'despesa',
+        date: new Date(t.date),
+        value: t.value,
+        category: t.category,
+        fuelType: t.fuel_type || undefined,
+        pricePerLiter: t.price_per_liter || undefined,
+        subcategory: t.subcategory || undefined,
+        observation: t.observation || undefined
       })));
 
+      // Convert and type-cast odometer data properly
       setOdometerRecords(odometerData.map(o => ({
-        ...o,
-        date: new Date(o.date)
+        id: o.id,
+        type: o.type as 'inicial' | 'final',
+        date: new Date(o.date),
+        value: o.value
       })));
 
+      // Convert work hours data properly
       setWorkHours(workHoursData.map(w => ({
-        ...w,
+        id: w.id,
         startDateTime: new Date(w.start_date_time),
         endDateTime: new Date(w.end_date_time)
       })));
@@ -109,11 +121,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         observation: transaction.observation
       });
 
-      setTransactions(prev => [...prev, {
-        ...newTransaction,
-        date: new Date(newTransaction.date)
-      }]);
+      // Properly convert the response to match our Transaction interface
+      const convertedTransaction: Transaction = {
+        id: newTransaction.id,
+        type: newTransaction.type as 'receita' | 'despesa',
+        date: new Date(newTransaction.date),
+        value: newTransaction.value,
+        category: newTransaction.category,
+        fuelType: newTransaction.fuelType,
+        pricePerLiter: newTransaction.pricePerLiter,
+        subcategory: newTransaction.subcategory,
+        observation: newTransaction.observation
+      };
 
+      setTransactions(prev => [...prev, convertedTransaction]);
       toast.success('Transação salva com sucesso!');
     } catch (error) {
       console.error('Error creating transaction:', error);
@@ -130,11 +151,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         value: record.value
       });
 
-      setOdometerRecords(prev => [...prev, {
-        ...newRecord,
-        date: new Date(newRecord.date)
-      }]);
+      // Properly convert the response to match our OdometerRecord interface
+      const convertedRecord: OdometerRecord = {
+        id: newRecord.id,
+        type: newRecord.type as 'inicial' | 'final',
+        date: new Date(newRecord.date),
+        value: newRecord.value
+      };
 
+      setOdometerRecords(prev => [...prev, convertedRecord]);
       toast.success('Registro de odômetro salvo com sucesso!');
     } catch (error) {
       console.error('Error creating odometer record:', error);
