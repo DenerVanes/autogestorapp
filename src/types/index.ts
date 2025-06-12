@@ -11,6 +11,10 @@ export interface Transaction {
   date: Date;
   value: number;
   category: string;
+  fuelType?: string;
+  pricePerLiter?: number;
+  subcategory?: string;
+  observation?: string;
 }
 
 export interface OdometerRecord {
@@ -24,6 +28,13 @@ export interface WorkHoursRecord {
   id: string;
   startDateTime: Date;
   endDateTime: Date;
+}
+
+export interface WorkHoursSession {
+  id: string;
+  startDateTime?: Date;
+  endDateTime?: Date;
+  isActive: boolean;
 }
 
 export interface Metrics {
