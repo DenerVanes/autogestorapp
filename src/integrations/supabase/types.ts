@@ -9,7 +9,132 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      odometer_records: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          type: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          type: string
+          updated_at?: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          category: string
+          created_at: string
+          date: string
+          fuel_type: string | null
+          id: string
+          observation: string | null
+          price_per_liter: number | null
+          subcategory: string | null
+          type: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          date: string
+          fuel_type?: string | null
+          id?: string
+          observation?: string | null
+          price_per_liter?: number | null
+          subcategory?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          date?: string
+          fuel_type?: string | null
+          id?: string
+          observation?: string | null
+          price_per_liter?: number | null
+          subcategory?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      work_hours_records: {
+        Row: {
+          created_at: string
+          end_date_time: string
+          id: string
+          start_date_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date_time: string
+          id?: string
+          start_date_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date_time?: string
+          id?: string
+          start_date_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
