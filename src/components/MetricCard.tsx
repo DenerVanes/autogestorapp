@@ -18,6 +18,16 @@ const MetricCard = ({ title, value, icon: Icon, color, change }: MetricCardProps
     blue: "text-blue-600 bg-blue-50"
   };
 
+  const getChangeColor = (changeValue?: string) => {
+    if (!changeValue) return "text-gray-500";
+    const isPositive = changeValue.startsWith('+');
+    const isNegative = changeValue.startsWith('-');
+    
+    if (isPositive) return "text-green-600";
+    if (isNegative) return "text-red-600";
+    return "text-gray-500";
+  };
+
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
       <CardContent className="p-6">
@@ -26,7 +36,7 @@ const MetricCard = ({ title, value, icon: Icon, color, change }: MetricCardProps
             <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
             <p className={cn("text-2xl font-bold", `text-${color}-600`)}>{value}</p>
             {change && (
-              <p className={cn("text-xs mt-1", `text-${color}-600`)}>
+              <p className={cn("text-xs mt-1 font-medium", getChangeColor(change))}>
                 {change} vs período anterior
               </p>
             )}

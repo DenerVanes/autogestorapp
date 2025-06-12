@@ -16,6 +16,7 @@ import DateRangePicker from "./DateRangePicker";
 import { useUser } from "@/contexts/UserContext";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+import { filterByPeriod } from "@/utils/dateFilters";
 
 type TransactionType = 'receita' | 'despesa' | 'odometro' | 'horas' | null;
 
@@ -32,6 +33,9 @@ const Dashboard = () => {
 
   const metrics = getMetrics(selectedPeriod, customStartDate, customEndDate);
   const chartData = getChartData(selectedPeriod, customStartDate, customEndDate);
+  
+  // Apply the same date filter to recent transactions
+  const filteredTransactions = filterByPeriod(transactions, selectedPeriod, customStartDate, customEndDate);
 
   const handleFloatingButtonClick = (type: TransactionType) => {
     setModalType(type);
@@ -64,6 +68,24 @@ const Dashboard = () => {
     if (hour < 12) return "Bom dia";
     if (hour < 18) return "Boa tarde";
     return "Boa noite";
+  };
+
+  const getPeriodLabel = () => {
+    switch (selectedPeriod) {
+      case 'hoje':
+        return 'de hoje';
+      case '7dias':
+        return 'dos últimos 7 dias';
+      case '30dias':
+        return 'dos últimos 30 dias';
+      case 'personalizado':
+        if (customStartDate && customEndDate) {
+          return `de ${format(customStartDate, 'dd/MM', { locale: ptBR })} a ${format(customEndDate, 'dd/MM', { locale: ptBR })}`;
+        }
+        return 'do período personalizado';
+      default:
+        return 'do período selecionado';
+    }
   };
 
   if (showHistory) {
@@ -122,42 +144,42 @@ const Dashboard = () => {
             value={formatCurrency(metrics.receita)}
             icon={DollarSign}
             color="green"
-            change="+12.5%"
+            change={metrics.changes?.receita}
           />
           <MetricCard
             title="Despesa Total"
             value={formatCurrency(metrics.despesa)}
             icon={TrendingDown}
             color="red"
-            change="+5.2%"
+            change={metrics.changes?.despesa}
           />
           <MetricCard
             title="Saldo Total"
             value={formatCurrency(metrics.saldo)}
             icon={DollarSign}
             color={metrics.saldo >= 0 ? "green" : "red"}
-            change={metrics.saldo >= 0 ? "+8.7%" : "-3.2%"}
+            change={metrics.changes?.saldo}
           />
           <MetricCard
             title="KM Rodado"
             value={`${metrics.kmRodado} km`}
             icon={Car}
             color="blue"
-            change="+8.1%"
+            change={metrics.changes?.kmRodado}
           />
           <MetricCard
             title="R$ por KM"
             value={formatCurrency(metrics.valorPorKm)}
             icon={DollarSign}
             color="green"
-            change="+4.3%"
+            change={metrics.changes?.valorPorKm}
           />
           <MetricCard
             title="R$ por Hora"
             value={formatCurrency(metrics.valorPorHora)}
             icon={Clock}
             color="green"
-            change="+6.8%"
+            change={metrics.changes?.valorPorHora}
           />
         </div>
 
@@ -181,7 +203,7 @@ const Dashboard = () => {
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Últimos Lançamentos</CardTitle>
+              <CardTitle>Lançamentos {getPeriodLabel()}</CardTitle>
               <Button 
                 variant="outline" 
                 onClick={() => setShowHistory(true)}
@@ -194,7 +216,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {transactions.slice(0, 5).map((transaction) => (
+              {filteredTransactions.slice(0, 5).map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className={cn(
@@ -214,8 +236,10 @@ const Dashboard = () => {
                   </span>
                 </div>
               ))}
-              {transactions.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">Nenhum lançamento registrado</p>
+              {filteredTransactions.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhum lançamento encontrado {getPeriodLabel()}
+                </p>
               )}
             </div>
           </CardContent>

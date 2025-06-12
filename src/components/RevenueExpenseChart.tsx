@@ -32,7 +32,11 @@ const RevenueExpenseChart = ({ data }: RevenueExpenseChartProps) => {
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 35 }}>
+        <BarChart 
+          data={data} 
+          margin={{ top: 20, right: 30, left: 20, bottom: 35 }}
+          barCategoryGap="20%"
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
@@ -66,8 +70,21 @@ const RevenueExpenseChart = ({ data }: RevenueExpenseChartProps) => {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }}
           />
-          <Bar dataKey="receita" stackId="a" fill="#22c55e" name="receita" />
-          <Bar dataKey="despesa" stackId="a" fill="#ef4444" name="despesa" />
+          {/* Receitas e despesas em colunas separadas lado a lado */}
+          <Bar 
+            dataKey="receita" 
+            fill="#22c55e" 
+            name="receita" 
+            radius={[4, 4, 0, 0]}
+            maxBarSize={60}
+          />
+          <Bar 
+            dataKey="despesa" 
+            fill="#ef4444" 
+            name="despesa" 
+            radius={[4, 4, 0, 0]}
+            maxBarSize={60}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

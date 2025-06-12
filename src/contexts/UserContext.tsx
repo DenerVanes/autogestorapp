@@ -1,6 +1,4 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { subDays } from "date-fns";
 import type { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from "@/types";
 import { getMetrics, getChartData } from "@/utils/calculations";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +20,7 @@ interface UserContextType {
   deleteOdometerRecord: (id: string) => Promise<void>;
   updateWorkHours: (id: string, record: Partial<WorkHoursRecord>) => Promise<void>;
   deleteWorkHours: (id: string) => Promise<void>;
-  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics;
+  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics & { changes: Record<string, string> };
   getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
   isLoading: boolean;
 }
@@ -121,7 +119,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         observation: transaction.observation
       });
 
-      // Properly convert the response to match our Transaction interface
       const convertedTransaction: Transaction = {
         id: newTransaction.id,
         type: newTransaction.type as 'receita' | 'despesa',
@@ -151,7 +148,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         value: record.value
       });
 
-      // Properly convert the response to match our OdometerRecord interface
       const convertedRecord: OdometerRecord = {
         id: newRecord.id,
         type: newRecord.type as 'inicial' | 'final',
