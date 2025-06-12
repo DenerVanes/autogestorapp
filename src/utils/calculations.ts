@@ -1,5 +1,5 @@
 
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO, subMonths, addDays, startOfWeek, endOfWeek } from "date-fns";
 import type { Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from "@/types";
 import { filterByPeriod, filterWorkHoursByPeriod } from "./dateFilters";
 
@@ -40,8 +40,8 @@ export const calculateKmRodado = (odometerRecords: OdometerRecord[], period: str
   }, 0);
 };
 
-// Calculate metrics for previous period for comparison
-const getPreviousPeriodDates = (period: string, customStartDate?: Date, customEndDate?: Date) => {
+// Calculate metrics for the same day of the previous month for comparison
+const getPreviousMonthDates = (period: string, customStartDate?: Date, customEndDate?: Date) => {
   const now = new Date();
   let currentStart: Date;
   let currentEnd: Date;
@@ -66,11 +66,11 @@ const getPreviousPeriodDates = (period: string, customStartDate?: Date, customEn
     }
   }
   
-  const daysDifference = Math.ceil((currentEnd.getTime() - currentStart.getTime()) / (1000 * 60 * 60 * 24));
-  const previousEnd = subDays(currentStart, 1);
-  const previousStart = subDays(previousEnd, daysDifference - 1);
+  // Calculate the same period in the previous month
+  const previousStart = startOfDay(subMonths(currentStart, 1));
+  const previousEnd = endOfDay(subMonths(currentEnd, 1));
   
-  return { previousStart: startOfDay(previousStart), previousEnd: endOfDay(previousEnd) };
+  return { previousStart, previousEnd };
 };
 
 const calculatePreviousMetrics = (
@@ -81,7 +81,7 @@ const calculatePreviousMetrics = (
   customStartDate?: Date,
   customEndDate?: Date
 ): Metrics => {
-  const { previousStart, previousEnd } = getPreviousPeriodDates(period, customStartDate, customEndDate);
+  const { previousStart, previousEnd } = getPreviousMonthDates(period, customStartDate, customEndDate);
   
   const filteredTransactions = transactions.filter(t => {
     const itemDate = new Date(t.date);
@@ -144,7 +144,7 @@ const calculatePreviousMetrics = (
 
 const calculatePercentageChange = (current: number, previous: number): string => {
   if (previous === 0) {
-    return current > 0 ? '+100%' : '0%';
+    return current > 0 ? '+100%' : 'Sem dados anteriores para comparar';
   }
   
   const change = ((current - previous) / previous) * 100;
@@ -176,7 +176,7 @@ export const getMetrics = (
   const horasTrabalhadas = calculateWorkHours(workHours, period, customStartDate, customEndDate);
   const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
 
-  // Calculate previous period metrics for comparison
+  // Calculate previous month metrics for comparison
   const previousMetrics = calculatePreviousMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
   
   const changes = {
@@ -192,57 +192,51 @@ export const getMetrics = (
 };
 
 export const getChartData = (transactions: Transaction[], period: string, customStartDate?: Date, customEndDate?: Date): ChartData[] => {
-  const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
-  
-  // Get date range for the period
+  // Always show a week view (7 days) for better readability
   const now = new Date();
-  let startDate: Date;
-  let endDate: Date;
   
-  if (period === 'personalizado' && customStartDate && customEndDate) {
-    startDate = startOfDay(customStartDate);
-    endDate = endOfDay(customEndDate);
+  // Determine the base week to show
+  let referenceDate: Date;
+  if (period === 'personalizado' && customStartDate) {
+    referenceDate = customStartDate;
+  } else if (period === 'hoje') {
+    referenceDate = now;
   } else {
-    endDate = endOfDay(now);
-    switch (period) {
-      case 'hoje':
-        startDate = startOfDay(now);
-        break;
-      case '7dias':
-        startDate = startOfDay(subDays(now, 6));
-        break;
-      case '30dias':
-        startDate = startOfDay(subDays(now, 29));
-        break;
-      default:
-        startDate = startOfDay(now);
-    }
+    // For 7dias and 30dias, show the current week
+    referenceDate = now;
   }
   
-  // Create array of all days in the period
-  const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+  // Get the week containing the reference date
+  const weekStart = startOfWeek(referenceDate, { weekStartsOn: 0 }); // Sunday = 0
+  const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 0 });
+  
+  // Create array of all days in the week
+  const allDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  
+  // Filter transactions to include only those in the selected period
+  const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
   
   // Group transactions by date
   const dataMap = new Map<string, { receita: number; despesa: number }>();
   
-  // Initialize all days with zero values
+  // Initialize all days in the week with zero values
   allDays.forEach(day => {
     const dateKey = format(day, 'yyyy-MM-dd');
     dataMap.set(dateKey, { receita: 0, despesa: 0 });
   });
   
-  // Add transaction data
+  // Add transaction data only for dates within the filtered period
   filteredTransactions.forEach(transaction => {
     const dateKey = format(transaction.date, 'yyyy-MM-dd');
-    const existing = dataMap.get(dateKey) || { receita: 0, despesa: 0 };
+    const existing = dataMap.get(dateKey);
     
-    if (transaction.type === 'receita') {
-      existing.receita += transaction.value;
-    } else {
-      existing.despesa += transaction.value;
+    if (existing) { // Only add if the date is in our week
+      if (transaction.type === 'receita') {
+        existing.receita += transaction.value;
+      } else {
+        existing.despesa += transaction.value;
+      }
     }
-    
-    dataMap.set(dateKey, existing);
   });
 
   // Convert to array and sort by date

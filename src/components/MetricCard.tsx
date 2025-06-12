@@ -19,13 +19,19 @@ const MetricCard = ({ title, value, icon: Icon, color, change }: MetricCardProps
   };
 
   const getChangeColor = (changeValue?: string) => {
-    if (!changeValue) return "text-gray-500";
+    if (!changeValue || changeValue === "Sem dados anteriores para comparar") return "text-gray-500";
     const isPositive = changeValue.startsWith('+');
     const isNegative = changeValue.startsWith('-');
     
     if (isPositive) return "text-green-600";
     if (isNegative) return "text-red-600";
     return "text-gray-500";
+  };
+
+  const getChangeText = (changeValue?: string) => {
+    if (!changeValue) return "";
+    if (changeValue === "Sem dados anteriores para comparar") return changeValue;
+    return `${changeValue} vs mês anterior`;
   };
 
   return (
@@ -37,7 +43,7 @@ const MetricCard = ({ title, value, icon: Icon, color, change }: MetricCardProps
             <p className={cn("text-2xl font-bold", `text-${color}-600`)}>{value}</p>
             {change && (
               <p className={cn("text-xs mt-1 font-medium", getChangeColor(change))}>
-                {change} vs período anterior
+                {getChangeText(change)}
               </p>
             )}
           </div>
