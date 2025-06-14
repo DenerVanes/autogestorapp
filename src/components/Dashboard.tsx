@@ -40,11 +40,8 @@ const Dashboard = () => {
   };
 
   const handlePeriodChange = (value: string) => {
-    if (value === 'personalizado') {
-      // Don't change period immediately, wait for date selection
-      return;
-    }
     setSelectedPeriod(value);
+    // Clear custom date range when selecting predefined periods
     setDateRange(undefined);
   };
 
@@ -56,10 +53,16 @@ const Dashboard = () => {
     switch (selectedPeriod) {
       case 'hoje':
         return 'de hoje';
-      case '7dias':
-        return 'dos últimos 7 dias';
-      case '30dias':
-        return 'dos últimos 30 dias';
+      case 'ontem':
+        return 'de ontem';
+      case 'esta-semana':
+        return 'desta semana';
+      case 'semana-passada':
+        return 'da semana passada';
+      case 'este-mes':
+        return 'deste mês';
+      case 'mes-passado':
+        return 'do mês passado';
       case 'personalizado':
         if (customStartDate && customEndDate) {
           return `de ${format(customStartDate, 'dd/MM', { locale: ptBR })} a ${format(customEndDate, 'dd/MM', { locale: ptBR })}`;

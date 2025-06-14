@@ -1,10 +1,7 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car, User } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import DateRangePicker from "./DateRangePicker";
 import { DateRange } from "react-day-picker";
 
@@ -68,9 +65,11 @@ const DashboardHeader = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="hoje">Hoje</SelectItem>
-                <SelectItem value="7dias">Últimos 7 dias</SelectItem>
-                <SelectItem value="30dias">Últimos 30 dias</SelectItem>
-                <SelectItem value="personalizado">Personalizado</SelectItem>
+                <SelectItem value="ontem">Ontem</SelectItem>
+                <SelectItem value="esta-semana">Esta semana</SelectItem>
+                <SelectItem value="semana-passada">Semana passada</SelectItem>
+                <SelectItem value="este-mes">Este mês</SelectItem>
+                <SelectItem value="mes-passado">Mês passado</SelectItem>
               </SelectContent>
             </Select>
             
@@ -116,9 +115,11 @@ const DashboardHeader = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="hoje">Hoje</SelectItem>
-                  <SelectItem value="7dias">7 dias</SelectItem>
-                  <SelectItem value="30dias">30 dias</SelectItem>
-                  <SelectItem value="personalizado">Personalizado</SelectItem>
+                  <SelectItem value="ontem">Ontem</SelectItem>
+                  <SelectItem value="esta-semana">Esta semana</SelectItem>
+                  <SelectItem value="semana-passada">Semana passada</SelectItem>
+                  <SelectItem value="este-mes">Este mês</SelectItem>
+                  <SelectItem value="mes-passado">Mês passado</SelectItem>
                 </SelectContent>
               </Select>
               
