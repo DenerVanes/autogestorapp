@@ -3,8 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car, User } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import DateRangePicker from "./DateRangePicker";
 import { DateRange } from "react-day-picker";
 
@@ -27,11 +25,30 @@ const DashboardHeader = ({
   onDateRangeApply,
   onShowProfileModal
 }: DashboardHeaderProps) => {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Bom dia";
     if (hour < 18) return "Boa tarde";
     return "Boa noite";
+  };
+
+  const handlePeriodChange = (value: string) => {
+    if (value === 'personalizado') {
+      setShowDatePicker(true);
+      return;
+    }
+    onPeriodChange(value);
+  };
+
+  const handleDateRangeApply = () => {
+    onDateRangeApply();
+    setShowDatePicker(false);
+  };
+
+  const handleDatePickerClose = () => {
+    setShowDatePicker(false);
   };
 
   return (
@@ -62,7 +79,7 @@ const DashboardHeader = ({
               Perfil
             </Button>
             
-            <Select value={selectedPeriod} onValueChange={onPeriodChange}>
+            <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
               <SelectTrigger className="w-40 bg-white/80">
                 <SelectValue />
               </SelectTrigger>
@@ -73,12 +90,6 @@ const DashboardHeader = ({
                 <SelectItem value="personalizado">Personalizado</SelectItem>
               </SelectContent>
             </Select>
-            
-            <DateRangePicker
-              dateRange={dateRange}
-              onDateRangeChange={onDateRangeChange}
-              onApply={onDateRangeApply}
-            />
           </div>
         </div>
 
@@ -109,28 +120,29 @@ const DashboardHeader = ({
               Perfil
             </Button>
             
-            <div className="flex items-center space-x-2">
-              <Select value={selectedPeriod} onValueChange={onPeriodChange}>
-                <SelectTrigger className="w-32 bg-white/80 min-h-[44px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hoje">Hoje</SelectItem>
-                  <SelectItem value="7dias">7 dias</SelectItem>
-                  <SelectItem value="30dias">30 dias</SelectItem>
-                  <SelectItem value="personalizado">Personalizado</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <DateRangePicker
-                dateRange={dateRange}
-                onDateRangeChange={onDateRangeChange}
-                onApply={onDateRangeApply}
-              />
-            </div>
+            <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+              <SelectTrigger className="w-32 bg-white/80 min-h-[44px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hoje">Hoje</SelectItem>
+                <SelectItem value="7dias">7 dias</SelectItem>
+                <SelectItem value="30dias">30 dias</SelectItem>
+                <SelectItem value="personalizado">Personalizado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
+
+      {/* Date Range Picker Modal */}
+      <DateRangePicker
+        isOpen={showDatePicker}
+        dateRange={dateRange}
+        onDateRangeChange={onDateRangeChange}
+        onApply={handleDateRangeApply}
+        onClose={handleDatePickerClose}
+      />
     </div>
   );
 };
