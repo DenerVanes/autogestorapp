@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car, User } from "lucide-react";
@@ -34,21 +34,35 @@ const DashboardHeader = ({
     return "Boa noite";
   };
 
+  const openCalendar = useCallback(() => {
+    // Reset state primeiro para garantir que o calendário seja fechado
+    setShowDatePicker(false);
+    
+    // Usar setTimeout para garantir que o state seja limpo antes de abrir
+    setTimeout(() => {
+      setShowDatePicker(true);
+    }, 10);
+  }, []);
+
+  const closeCalendar = useCallback(() => {
+    setShowDatePicker(false);
+  }, []);
+
   const handlePeriodChange = (value: string) => {
     if (value === 'personalizado') {
-      setShowDatePicker(true);
+      // Usar o callback otimizado para abrir o calendário
+      openCalendar();
       return;
     }
+    
+    // Para outros filtros, garantir que o calendário esteja fechado
+    setShowDatePicker(false);
     onPeriodChange(value);
   };
 
   const handleDateRangeApply = () => {
     onDateRangeApply();
-    setShowDatePicker(false);
-  };
-
-  const handleDatePickerClose = () => {
-    setShowDatePicker(false);
+    closeCalendar();
   };
 
   return (
@@ -137,11 +151,12 @@ const DashboardHeader = ({
 
       {/* Date Range Picker Modal */}
       <DateRangePicker
+        key={showDatePicker ? 'open' : 'closed'}
         isOpen={showDatePicker}
         dateRange={dateRange}
         onDateRangeChange={onDateRangeChange}
         onApply={handleDateRangeApply}
-        onClose={handleDatePickerClose}
+        onClose={closeCalendar}
       />
     </div>
   );

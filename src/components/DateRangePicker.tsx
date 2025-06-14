@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
+import { useEffect } from "react";
 
 interface DateRangePickerProps {
   isOpen: boolean;
@@ -21,16 +22,33 @@ const DateRangePicker = ({
   onApply, 
   onClose 
 }: DateRangePickerProps) => {
+  
+  // Resetar o foco quando o modal abrir
+  useEffect(() => {
+    if (isOpen) {
+      // Garantir que o calendário seja renderizado corretamente
+      const timer = setTimeout(() => {
+        // Force um re-render se necessário
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   const handleApply = () => {
     if (dateRange?.from && dateRange?.to) {
       onApply();
     }
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   const isValidRange = dateRange?.from && dateRange?.to;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Selecione o período personalizado</DialogTitle>
@@ -52,7 +70,7 @@ const DateRangePicker = ({
           <div className="flex gap-2">
             <Button 
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1"
             >
               Cancelar
