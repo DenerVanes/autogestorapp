@@ -1,8 +1,10 @@
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car, User } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import DateRangePicker from "./DateRangePicker";
 import { DateRange } from "react-day-picker";
 
@@ -25,58 +27,11 @@ const DashboardHeader = ({
   onDateRangeApply,
   onShowProfileModal
 }: DashboardHeaderProps) => {
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [calendarKey, setCalendarKey] = useState(0);
-
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Bom dia";
     if (hour < 18) return "Boa tarde";
     return "Boa noite";
-  };
-
-  const openCalendar = useCallback(() => {
-    console.log('🎯 Abrindo filtro personalizado... Estado atual:', showDatePicker);
-    
-    // 1. Reset completo do estado
-    setShowDatePicker(false);
-    
-    // 2. Incrementar key para forçar re-mount completo
-    setCalendarKey(prev => {
-      const newKey = prev + 1;
-      console.log('🔄 Nova key do calendário:', newKey);
-      return newKey;
-    });
-    
-    // 3. Aguardar 2 frames para garantir que o DOM seja limpo
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        console.log('📅 Abrindo calendário');
-        setShowDatePicker(true);
-      });
-    });
-  }, [showDatePicker]);
-
-  const closeCalendar = useCallback(() => {
-    console.log('❌ Fechando calendário');
-    setShowDatePicker(false);
-  }, []);
-
-  const handlePeriodChange = (value: string) => {
-    if (value === 'personalizado') {
-      // Usar o callback otimizado para abrir o calendário
-      openCalendar();
-      return;
-    }
-    
-    // Para outros filtros, garantir que o calendário esteja fechado
-    setShowDatePicker(false);
-    onPeriodChange(value);
-  };
-
-  const handleDateRangeApply = () => {
-    onDateRangeApply();
-    closeCalendar();
   };
 
   return (
@@ -107,7 +62,7 @@ const DashboardHeader = ({
               Perfil
             </Button>
             
-            <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+            <Select value={selectedPeriod} onValueChange={onPeriodChange}>
               <SelectTrigger className="w-40 bg-white/80">
                 <SelectValue />
               </SelectTrigger>
@@ -118,6 +73,12 @@ const DashboardHeader = ({
                 <SelectItem value="personalizado">Personalizado</SelectItem>
               </SelectContent>
             </Select>
+            
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={onDateRangeChange}
+              onApply={onDateRangeApply}
+            />
           </div>
         </div>
 
@@ -148,32 +109,28 @@ const DashboardHeader = ({
               Perfil
             </Button>
             
-            <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
-              <SelectTrigger className="w-32 bg-white/80 min-h-[44px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="hoje">Hoje</SelectItem>
-                <SelectItem value="7dias">7 dias</SelectItem>
-                <SelectItem value="30dias">30 dias</SelectItem>
-                <SelectItem value="personalizado">Personalizado</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-2">
+              <Select value={selectedPeriod} onValueChange={onPeriodChange}>
+                <SelectTrigger className="w-32 bg-white/80 min-h-[44px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hoje">Hoje</SelectItem>
+                  <SelectItem value="7dias">7 dias</SelectItem>
+                  <SelectItem value="30dias">30 dias</SelectItem>
+                  <SelectItem value="personalizado">Personalizado</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={onDateRangeChange}
+                onApply={onDateRangeApply}
+              />
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Date Range Picker Modal - Renderizar condicionalmente com key única */}
-      {showDatePicker && (
-        <DateRangePicker
-          key={`calendar-${calendarKey}-${Date.now()}`}
-          isOpen={showDatePicker}
-          dateRange={dateRange}
-          onDateRangeChange={onDateRangeChange}
-          onApply={handleDateRangeApply}
-          onClose={closeCalendar}
-        />
-      )}
     </div>
   );
 };

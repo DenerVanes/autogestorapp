@@ -1,88 +1,73 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
-import { useEffect } from "react";
 
 interface DateRangePickerProps {
-  isOpen: boolean;
   dateRange?: DateRange;
   onDateRangeChange: (range: DateRange | undefined) => void;
   onApply: () => void;
-  onClose: () => void;
 }
 
-const DateRangePicker = ({ 
-  isOpen, 
-  dateRange, 
-  onDateRangeChange, 
-  onApply, 
-  onClose 
-}: DateRangePickerProps) => {
-  
-  // Log para debug
-  useEffect(() => {
-    console.log('📅 DateRangePicker montado/atualizado. isOpen:', isOpen);
-  }, [isOpen]);
-
-  // Garantir que o modal seja focado quando abrir
-  useEffect(() => {
-    if (isOpen) {
-      console.log('🔓 Modal do calendário aberto');
-      // Garantir que o calendário seja renderizado corretamente
-      const timer = setTimeout(() => {
-        // Forçar foco no modal se necessário
-        const modalElement = document.querySelector('[role="dialog"]');
-        if (modalElement) {
-          (modalElement as HTMLElement).focus();
-        }
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
+const DateRangePicker = ({ dateRange, onDateRangeChange, onApply }: DateRangePickerProps) => {
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleApply = () => {
     if (dateRange?.from && dateRange?.to) {
-      console.log('✅ Aplicando filtro personalizado:', dateRange);
       onApply();
+      setIsOpen(false);
     }
   };
 
-  const handleClose = () => {
-    console.log('❌ Fechando modal do calendário');
-    onClose();
+  const handleCancel = () => {
+    setIsOpen(false);
   };
 
   const isValidRange = dateRange?.from && dateRange?.to;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Selecione o período personalizado</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Calendar
-            mode="range"
-            selected={dateRange}
-            onSelect={onDateRangeChange}
-            numberOfMonths={1}
-            locale={ptBR}
-            weekStartsOn={0}
-            className="rounded-md border pointer-events-auto bg-white mx-auto"
-            formatters={{
-              formatWeekdayName: (date) => format(date, 'EEEEEE', { locale: ptBR }),
-              formatMonthCaption: (date) => format(date, 'MMMM yyyy', { locale: ptBR }),
-            }}
-          />
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="outline" 
+          className="bg-white/80 min-h-[44px] md:min-h-auto"
+          size="sm"
+        >
+          <CalendarIcon className="w-4 h-4 mr-2" />
+          {dateRange?.from && dateRange?.to 
+            ? `${format(dateRange.from, 'dd/MM', { locale: ptBR })} - ${format(dateRange.to, 'dd/MM', { locale: ptBR })}`
+            : 'Período'
+          }
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 z-50" align="end">
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Selecione o período:</label>
+            <Calendar
+              mode="range"
+              selected={dateRange}
+              onSelect={onDateRangeChange}
+              numberOfMonths={1}
+              locale={ptBR}
+              weekStartsOn={0}
+              className="rounded-md border pointer-events-auto bg-white"
+              formatters={{
+                formatWeekdayName: (date) => format(date, 'EEEEEE', { locale: ptBR }),
+                formatMonthCaption: (date) => format(date, 'MMMM yyyy', { locale: ptBR }),
+              }}
+            />
+          </div>
           <div className="flex gap-2">
             <Button 
               variant="outline"
-              onClick={handleClose}
+              onClick={handleCancel}
               className="flex-1"
             >
               Cancelar
@@ -96,8 +81,8 @@ const DateRangePicker = ({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 };
 

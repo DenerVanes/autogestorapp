@@ -40,11 +40,12 @@ const Dashboard = () => {
   };
 
   const handlePeriodChange = (value: string) => {
-    setSelectedPeriod(value);
-    // Clear date range when switching to non-custom periods
-    if (value !== 'personalizado') {
-      setDateRange(undefined);
+    if (value === 'personalizado') {
+      // Don't change period immediately, wait for date selection
+      return;
     }
+    setSelectedPeriod(value);
+    setDateRange(undefined);
   };
 
   const handleDateRangeApply = () => {
