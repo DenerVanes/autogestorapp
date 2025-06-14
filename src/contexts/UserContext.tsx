@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabaseService } from '@/services/supabaseService';
@@ -145,8 +144,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       date: new Date(newTransaction.date),
       value: Number(newTransaction.value),
       category: newTransaction.category,
-      fuelType: newTransaction.fuel_type,
-      pricePerLiter: newTransaction.price_per_liter ? Number(newTransaction.price_per_liter) : undefined,
+      fuelType: newTransaction.fuelType,
+      pricePerLiter: newTransaction.pricePerLiter ? Number(newTransaction.pricePerLiter) : undefined,
       subcategory: newTransaction.subcategory,
       observation: newTransaction.observation
     };
