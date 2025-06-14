@@ -26,6 +26,7 @@ const DashboardHeader = ({
   onShowProfileModal
 }: DashboardHeaderProps) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [calendarKey, setCalendarKey] = useState(0);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -35,16 +36,29 @@ const DashboardHeader = ({
   };
 
   const openCalendar = useCallback(() => {
-    // Reset state primeiro para garantir que o calendário seja fechado
+    console.log('🎯 Abrindo filtro personalizado... Estado atual:', showDatePicker);
+    
+    // 1. Reset completo do estado
     setShowDatePicker(false);
     
-    // Usar setTimeout para garantir que o state seja limpo antes de abrir
-    setTimeout(() => {
-      setShowDatePicker(true);
-    }, 10);
-  }, []);
+    // 2. Incrementar key para forçar re-mount completo
+    setCalendarKey(prev => {
+      const newKey = prev + 1;
+      console.log('🔄 Nova key do calendário:', newKey);
+      return newKey;
+    });
+    
+    // 3. Aguardar 2 frames para garantir que o DOM seja limpo
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        console.log('📅 Abrindo calendário');
+        setShowDatePicker(true);
+      });
+    });
+  }, [showDatePicker]);
 
   const closeCalendar = useCallback(() => {
+    console.log('❌ Fechando calendário');
     setShowDatePicker(false);
   }, []);
 
@@ -149,15 +163,17 @@ const DashboardHeader = ({
         </div>
       </div>
 
-      {/* Date Range Picker Modal */}
-      <DateRangePicker
-        key={showDatePicker ? 'open' : 'closed'}
-        isOpen={showDatePicker}
-        dateRange={dateRange}
-        onDateRangeChange={onDateRangeChange}
-        onApply={handleDateRangeApply}
-        onClose={closeCalendar}
-      />
+      {/* Date Range Picker Modal - Renderizar condicionalmente com key única */}
+      {showDatePicker && (
+        <DateRangePicker
+          key={`calendar-${calendarKey}-${Date.now()}`}
+          isOpen={showDatePicker}
+          dateRange={dateRange}
+          onDateRangeChange={onDateRangeChange}
+          onApply={handleDateRangeApply}
+          onClose={closeCalendar}
+        />
+      )}
     </div>
   );
 };

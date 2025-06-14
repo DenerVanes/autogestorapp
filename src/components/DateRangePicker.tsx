@@ -23,13 +23,23 @@ const DateRangePicker = ({
   onClose 
 }: DateRangePickerProps) => {
   
-  // Resetar o foco quando o modal abrir
+  // Log para debug
+  useEffect(() => {
+    console.log('📅 DateRangePicker montado/atualizado. isOpen:', isOpen);
+  }, [isOpen]);
+
+  // Garantir que o modal seja focado quando abrir
   useEffect(() => {
     if (isOpen) {
+      console.log('🔓 Modal do calendário aberto');
       // Garantir que o calendário seja renderizado corretamente
       const timer = setTimeout(() => {
-        // Force um re-render se necessário
-      }, 50);
+        // Forçar foco no modal se necessário
+        const modalElement = document.querySelector('[role="dialog"]');
+        if (modalElement) {
+          (modalElement as HTMLElement).focus();
+        }
+      }, 100);
       
       return () => clearTimeout(timer);
     }
@@ -37,11 +47,13 @@ const DateRangePicker = ({
 
   const handleApply = () => {
     if (dateRange?.from && dateRange?.to) {
+      console.log('✅ Aplicando filtro personalizado:', dateRange);
       onApply();
     }
   };
 
   const handleClose = () => {
+    console.log('❌ Fechando modal do calendário');
     onClose();
   };
 
