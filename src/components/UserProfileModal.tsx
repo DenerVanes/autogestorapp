@@ -20,7 +20,7 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
     name: user?.name || "",
     vehicleType: user?.vehicleType || "",
     vehicleModel: user?.vehicleModel || "",
-    fuelConsumption: user?.fuelConsumption || ""
+    fuelConsumption: user?.fuelConsumption?.toString() || ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
