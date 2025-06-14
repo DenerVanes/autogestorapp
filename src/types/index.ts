@@ -1,8 +1,10 @@
-
 export interface User {
   id: string;
   name: string;
   email: string;
+  vehicleType?: string;
+  vehicleModel?: string;
+  fuelConsumption?: number;
 }
 
 export interface Transaction {
@@ -92,6 +94,9 @@ export interface DatabaseProfile {
   id: string;
   name: string;
   email: string;
+  vehicle_type?: string;
+  vehicle_model?: string;
+  fuel_consumption?: number;
   created_at: string;
   updated_at: string;
 }

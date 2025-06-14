@@ -3,13 +3,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingDown, Car, Clock, ArrowRight } from "lucide-react";
+import { DollarSign, TrendingDown, Car, Clock, ArrowRight, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FloatingActionButton from "./FloatingActionButton";
 import MetricCard from "./MetricCard";
+import FuelExpenseCard from "./FuelExpenseCard";
 import TransactionModal from "./TransactionModal";
 import WorkHoursModal from "./WorkHoursModal";
+import UserProfileModal from "./UserProfileModal";
 import RevenueExpenseChart from "./RevenueExpenseChart";
 import HistoryPage from "./HistoryPage";
 import DateRangePicker from "./DateRangePicker";
@@ -24,6 +26,7 @@ const Dashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("hoje");
   const [modalType, setModalType] = useState<TransactionType>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>();
   
   const { user, getMetrics, getChartData, transactions } = useUser();
@@ -111,6 +114,16 @@ const Dashboard = () => {
             </div>
             
             <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowProfileModal(true)}
+                className="bg-white/80"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Perfil
+              </Button>
+              
               <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
                 <SelectTrigger className="w-40 bg-white/80">
                   <SelectValue />
@@ -138,7 +151,7 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6 mb-8">
           <MetricCard
             title="Receita Total"
             value={formatCurrency(metrics.receita)}
@@ -180,6 +193,11 @@ const Dashboard = () => {
             icon={Clock}
             color="green"
             change={metrics.changes?.valorPorHora}
+          />
+          <FuelExpenseCard
+            period={selectedPeriod}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
           />
         </div>
 
@@ -264,6 +282,11 @@ const Dashboard = () => {
           onClose={() => setModalType(null)}
         />
       )}
+
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </div>
   );
 };

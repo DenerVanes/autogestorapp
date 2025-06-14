@@ -43,23 +43,32 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          fuel_consumption: number | null
           id: string
           name: string
           updated_at: string
+          vehicle_model: string | null
+          vehicle_type: string | null
         }
         Insert: {
           created_at?: string
           email: string
+          fuel_consumption?: number | null
           id: string
           name: string
           updated_at?: string
+          vehicle_model?: string | null
+          vehicle_type?: string | null
         }
         Update: {
           created_at?: string
           email?: string
+          fuel_consumption?: number | null
           id?: string
           name?: string
           updated_at?: string
+          vehicle_model?: string | null
+          vehicle_type?: string | null
         }
         Relationships: []
       }

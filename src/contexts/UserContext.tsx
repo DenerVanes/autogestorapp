@@ -20,6 +20,7 @@ interface UserContextType {
   deleteOdometerRecord: (id: string) => Promise<void>;
   updateWorkHours: (id: string, record: Partial<WorkHoursRecord>) => Promise<void>;
   deleteWorkHours: (id: string) => Promise<void>;
+  updateUserProfile: (updates: Partial<Pick<User, 'name' | 'vehicleType' | 'vehicleModel' | 'fuelConsumption'>>) => Promise<void>;
   getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics & { changes: Record<string, string> };
   getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
   isLoading: boolean;
@@ -59,7 +60,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setUser({
           id: profile.id,
           name: profile.name,
-          email: profile.email
+          email: profile.email,
+          vehicleType: profile.vehicle_type,
+          vehicleModel: profile.vehicle_model,
+          fuelConsumption: profile.fuel_consumption
         });
       }
 
@@ -290,6 +294,28 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserProfile = async (updates: Partial<Pick<User, 'name' | 'vehicleType' | 'vehicleModel' | 'fuelConsumption'>>) => {
+    if (!authUser) throw new Error('User not authenticated');
+
+    try {
+      const updateData: any = {};
+      
+      if (updates.name) updateData.name = updates.name;
+      if (updates.vehicleType) updateData.vehicle_type = updates.vehicleType;
+      if (updates.vehicleModel) updateData.vehicle_model = updates.vehicleModel;
+      if (updates.fuelConsumption !== undefined) updateData.fuel_consumption = updates.fuelConsumption;
+
+      await supabaseService.updateUserProfile(authUser.id, updateData);
+
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      toast.success('Perfil atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      toast.error('Erro ao atualizar perfil');
+      throw error;
+    }
+  };
+
   const handleGetMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
     return getMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
   };
@@ -314,6 +340,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       deleteOdometerRecord,
       updateWorkHours,
       deleteWorkHours,
+      updateUserProfile,
       getMetrics: handleGetMetrics,
       getChartData: handleGetChartData,
       isLoading
