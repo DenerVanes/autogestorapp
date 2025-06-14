@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,23 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
   const { user, updateUserProfile } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    vehicleType: user?.vehicleType || "",
-    vehicleModel: user?.vehicleModel || "",
-    fuelConsumption: user?.fuelConsumption?.toString() || ""
+    name: "",
+    vehicleType: "",
+    vehicleModel: "",
+    fuelConsumption: ""
   });
+
+  // Load user data when modal opens or user data changes
+  useEffect(() => {
+    if (isOpen && user) {
+      setFormData({
+        name: user.name || "",
+        vehicleType: user.vehicleType || "",
+        vehicleModel: user.vehicleModel || "",
+        fuelConsumption: user.fuelConsumption?.toString() || ""
+      });
+    }
+  }, [isOpen, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
