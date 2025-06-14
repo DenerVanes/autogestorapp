@@ -1,62 +1,64 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import type { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from "@/types";
-import { getMetrics, getChartData } from "@/utils/calculations";
-import { useAuth } from "@/hooks/useAuth";
-import { supabaseService } from "@/services/supabaseService";
-import { toast } from "sonner";
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabaseService } from '@/services/supabaseService';
+import { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from '@/types';
+import { filterByPeriod, filterWorkHoursByPeriod } from '@/utils/dateFilters';
+import { calculateMetrics } from '@/utils/calculations';
 
 interface UserContextType {
   user: User | null;
-  setUser: (user: User | null) => void;
+  loading: boolean;
   transactions: Transaction[];
   odometerRecords: OdometerRecord[];
   workHours: WorkHoursRecord[];
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
   addOdometerRecord: (record: Omit<OdometerRecord, 'id'>) => Promise<void>;
   addWorkHours: (record: Omit<WorkHoursRecord, 'id'>) => Promise<void>;
-  updateTransaction: (id: string, transaction: Partial<Transaction>) => Promise<void>;
-  deleteTransaction: (id: string) => Promise<void>;
-  updateOdometerRecord: (id: string, record: Partial<OdometerRecord>) => Promise<void>;
-  deleteOdometerRecord: (id: string) => Promise<void>;
-  updateWorkHours: (id: string, record: Partial<WorkHoursRecord>) => Promise<void>;
-  deleteWorkHours: (id: string) => Promise<void>;
-  updateUserProfile: (updates: Partial<Pick<User, 'name' | 'vehicleType' | 'vehicleModel' | 'fuelConsumption'>>) => Promise<void>;
-  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics & { changes: Record<string, string> };
+  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics;
   getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
-  isLoading: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const { user: authUser } = useAuth();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [odometerRecords, setOdometerRecords] = useState<OdometerRecord[]>([]);
   const [workHours, setWorkHours] = useState<WorkHoursRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Load user profile and data when auth user changes
+  // Load user data when auth user changes
   useEffect(() => {
-    if (authUser) {
-      loadUserData();
-    } else {
-      // Clear data when user logs out
-      setUser(null);
-      setTransactions([]);
-      setOdometerRecords([]);
-      setWorkHours([]);
-    }
-  }, [authUser]);
+    const loadUserData = async () => {
+      if (!authUser) {
+        setUser(null);
+        setTransactions([]);
+        setOdometerRecords([]);
+        setWorkHours([]);
+        setLoading(false);
+        return;
+      }
 
-  const loadUserData = async () => {
-    if (!authUser) return;
-    
-    setIsLoading(true);
-    try {
-      // Load user profile
-      const profile = await supabaseService.getUserProfile(authUser.id);
-      if (profile) {
+      try {
+        setLoading(true);
+        
+        // Try to get user profile, create if doesn't exist
+        let profile;
+        try {
+          profile = await supabaseService.getUserProfile(authUser.id);
+        } catch (error: any) {
+          console.log('Profile not found, creating new profile');
+          // Create profile if it doesn't exist
+          profile = await supabaseService.updateUserProfile(authUser.id, {
+            name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário',
+            email: authUser.email || ''
+          });
+        }
+
         setUser({
           id: profile.id,
           name: profile.name,
@@ -65,286 +67,186 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           vehicleModel: profile.vehicle_model,
           fuelConsumption: profile.fuel_consumption
         });
-      }
 
-      // Load all user data
+        // Load all user data
+        await refreshData();
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [authUser]);
+
+  const refreshData = async () => {
+    if (!authUser) return;
+
+    try {
       const [transactionsData, odometerData, workHoursData] = await Promise.all([
         supabaseService.getTransactions(),
         supabaseService.getOdometerRecords(),
         supabaseService.getWorkHours()
       ]);
 
-      // Convert and type-cast transactions data properly
+      // Transform database data to application format
       setTransactions(transactionsData.map(t => ({
         id: t.id,
         type: t.type as 'receita' | 'despesa',
         date: new Date(t.date),
-        value: t.value,
+        value: Number(t.value),
         category: t.category,
-        fuelType: t.fuel_type || undefined,
-        pricePerLiter: t.price_per_liter || undefined,
-        subcategory: t.subcategory || undefined,
-        observation: t.observation || undefined
+        fuelType: t.fuel_type,
+        pricePerLiter: t.price_per_liter ? Number(t.price_per_liter) : undefined,
+        subcategory: t.subcategory,
+        observation: t.observation
       })));
 
-      // Convert and type-cast odometer data properly
       setOdometerRecords(odometerData.map(o => ({
         id: o.id,
-        type: o.type as 'inicial' | 'final',
         date: new Date(o.date),
+        type: o.type as 'inicial' | 'final',
         value: o.value
       })));
 
-      // Convert work hours data properly
       setWorkHours(workHoursData.map(w => ({
         id: w.id,
         startDateTime: new Date(w.start_date_time),
         endDateTime: new Date(w.end_date_time)
       })));
-
     } catch (error) {
-      console.error('Error loading user data:', error);
-      toast.error('Erro ao carregar dados do usuário');
-    } finally {
-      setIsLoading(false);
+      console.error('Error refreshing data:', error);
     }
   };
 
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
-    try {
-      const newTransaction = await supabaseService.createTransaction({
-        type: transaction.type,
-        date: transaction.date.toISOString(),
-        value: transaction.value,
-        category: transaction.category,
-        fuel_type: transaction.fuelType,
-        price_per_liter: transaction.pricePerLiter,
-        subcategory: transaction.subcategory,
-        observation: transaction.observation
-      });
+    if (!authUser) throw new Error('User not authenticated');
 
-      const convertedTransaction: Transaction = {
-        id: newTransaction.id,
-        type: newTransaction.type as 'receita' | 'despesa',
-        date: new Date(newTransaction.date),
-        value: newTransaction.value,
-        category: newTransaction.category,
-        fuelType: newTransaction.fuelType,
-        pricePerLiter: newTransaction.pricePerLiter,
-        subcategory: newTransaction.subcategory,
-        observation: newTransaction.observation
-      };
+    const newTransaction = await supabaseService.createTransaction({
+      type: transaction.type,
+      date: transaction.date.toISOString(),
+      value: transaction.value,
+      category: transaction.category,
+      fuel_type: transaction.fuelType,
+      price_per_liter: transaction.pricePerLiter,
+      subcategory: transaction.subcategory,
+      observation: transaction.observation
+    });
 
-      setTransactions(prev => [...prev, convertedTransaction]);
-      toast.success('Transação salva com sucesso!');
-    } catch (error) {
-      console.error('Error creating transaction:', error);
-      toast.error('Erro ao salvar transação');
-      throw error;
-    }
+    setTransactions(prev => [newTransaction, ...prev]);
   };
 
   const addOdometerRecord = async (record: Omit<OdometerRecord, 'id'>) => {
-    try {
-      const newRecord = await supabaseService.createOdometerRecord({
-        date: record.date.toISOString(),
-        type: record.type,
-        value: record.value
-      });
+    if (!authUser) throw new Error('User not authenticated');
 
-      const convertedRecord: OdometerRecord = {
-        id: newRecord.id,
-        type: newRecord.type as 'inicial' | 'final',
-        date: new Date(newRecord.date),
-        value: newRecord.value
-      };
+    const newRecord = await supabaseService.createOdometerRecord({
+      date: record.date.toISOString(),
+      type: record.type,
+      value: record.value
+    });
 
-      setOdometerRecords(prev => [...prev, convertedRecord]);
-      toast.success('Registro de odômetro salvo com sucesso!');
-    } catch (error) {
-      console.error('Error creating odometer record:', error);
-      toast.error('Erro ao salvar registro de odômetro');
-      throw error;
-    }
+    const transformedRecord = {
+      id: newRecord.id,
+      date: new Date(newRecord.date),
+      type: newRecord.type as 'inicial' | 'final',
+      value: newRecord.value
+    };
+
+    setOdometerRecords(prev => [transformedRecord, ...prev]);
   };
 
   const addWorkHours = async (record: Omit<WorkHoursRecord, 'id'>) => {
-    try {
-      const newRecord = await supabaseService.createWorkHours({
-        start_date_time: record.startDateTime.toISOString(),
-        end_date_time: record.endDateTime.toISOString()
-      });
-
-      setWorkHours(prev => [...prev, {
-        ...newRecord,
-        startDateTime: new Date(newRecord.start_date_time),
-        endDateTime: new Date(newRecord.end_date_time)
-      }]);
-
-      toast.success('Horas de trabalho salvas com sucesso!');
-    } catch (error) {
-      console.error('Error creating work hours:', error);
-      toast.error('Erro ao salvar horas de trabalho');
-      throw error;
-    }
-  };
-
-  const updateTransaction = async (id: string, updatedTransaction: Partial<Transaction>) => {
-    try {
-      const updateData: any = {};
-      
-      if (updatedTransaction.date) updateData.date = updatedTransaction.date.toISOString();
-      if (updatedTransaction.value !== undefined) updateData.value = updatedTransaction.value;
-      if (updatedTransaction.category) updateData.category = updatedTransaction.category;
-      if (updatedTransaction.fuelType) updateData.fuel_type = updatedTransaction.fuelType;
-      if (updatedTransaction.pricePerLiter !== undefined) updateData.price_per_liter = updatedTransaction.pricePerLiter;
-      if (updatedTransaction.subcategory) updateData.subcategory = updatedTransaction.subcategory;
-      if (updatedTransaction.observation) updateData.observation = updatedTransaction.observation;
-
-      await supabaseService.updateTransaction(id, updateData);
-
-      setTransactions(prev => prev.map(transaction => 
-        transaction.id === id ? { ...transaction, ...updatedTransaction } : transaction
-      ));
-
-      toast.success('Transação atualizada com sucesso!');
-    } catch (error) {
-      console.error('Error updating transaction:', error);
-      toast.error('Erro ao atualizar transação');
-      throw error;
-    }
-  };
-
-  const deleteTransaction = async (id: string) => {
-    try {
-      await supabaseService.deleteTransaction(id);
-      setTransactions(prev => prev.filter(transaction => transaction.id !== id));
-      toast.success('Transação excluída com sucesso!');
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-      toast.error('Erro ao excluir transação');
-      throw error;
-    }
-  };
-
-  const updateOdometerRecord = async (id: string, updatedRecord: Partial<OdometerRecord>) => {
-    try {
-      const updateData: any = {};
-      
-      if (updatedRecord.date) updateData.date = updatedRecord.date.toISOString();
-      if (updatedRecord.type) updateData.type = updatedRecord.type;
-      if (updatedRecord.value !== undefined) updateData.value = updatedRecord.value;
-
-      await supabaseService.updateOdometerRecord(id, updateData);
-
-      setOdometerRecords(prev => prev.map(record => 
-        record.id === id ? { ...record, ...updatedRecord } : record
-      ));
-
-      toast.success('Registro de odômetro atualizado com sucesso!');
-    } catch (error) {
-      console.error('Error updating odometer record:', error);
-      toast.error('Erro ao atualizar registro de odômetro');
-      throw error;
-    }
-  };
-
-  const deleteOdometerRecord = async (id: string) => {
-    try {
-      await supabaseService.deleteOdometerRecord(id);
-      setOdometerRecords(prev => prev.filter(record => record.id !== id));
-      toast.success('Registro de odômetro excluído com sucesso!');
-    } catch (error) {
-      console.error('Error deleting odometer record:', error);
-      toast.error('Erro ao excluir registro de odômetro');
-      throw error;
-    }
-  };
-
-  const updateWorkHours = async (id: string, updatedRecord: Partial<WorkHoursRecord>) => {
-    try {
-      const updateData: any = {};
-      
-      if (updatedRecord.startDateTime) updateData.start_date_time = updatedRecord.startDateTime.toISOString();
-      if (updatedRecord.endDateTime) updateData.end_date_time = updatedRecord.endDateTime.toISOString();
-
-      await supabaseService.updateWorkHours(id, updateData);
-
-      setWorkHours(prev => prev.map(record => 
-        record.id === id ? { ...record, ...updatedRecord } : record
-      ));
-
-      toast.success('Horas de trabalho atualizadas com sucesso!');
-    } catch (error) {
-      console.error('Error updating work hours:', error);
-      toast.error('Erro ao atualizar horas de trabalho');
-      throw error;
-    }
-  };
-
-  const deleteWorkHours = async (id: string) => {
-    try {
-      await supabaseService.deleteWorkHours(id);
-      setWorkHours(prev => prev.filter(record => record.id !== id));
-      toast.success('Horas de trabalho excluídas com sucesso!');
-    } catch (error) {
-      console.error('Error deleting work hours:', error);
-      toast.error('Erro ao excluir horas de trabalho');
-      throw error;
-    }
-  };
-
-  const updateUserProfile = async (updates: Partial<Pick<User, 'name' | 'vehicleType' | 'vehicleModel' | 'fuelConsumption'>>) => {
     if (!authUser) throw new Error('User not authenticated');
 
-    try {
-      const updateData: any = {};
+    const newRecord = await supabaseService.createWorkHours({
+      start_date_time: record.startDateTime.toISOString(),
+      end_date_time: record.endDateTime.toISOString()
+    });
+
+    const transformedRecord = {
+      id: newRecord.id,
+      startDateTime: new Date(newRecord.start_date_time),
+      endDateTime: new Date(newRecord.end_date_time)
+    };
+
+    setWorkHours(prev => [transformedRecord, ...prev]);
+  };
+
+  const updateUserProfile = async (updates: Partial<User>) => {
+    if (!authUser || !user) throw new Error('User not authenticated');
+
+    const updatedProfile = await supabaseService.updateUserProfile(authUser.id, {
+      name: updates.name,
+      vehicle_type: updates.vehicleType,
+      vehicle_model: updates.vehicleModel,
+      fuel_consumption: updates.fuelConsumption
+    });
+
+    setUser({
+      id: updatedProfile.id,
+      name: updatedProfile.name,
+      email: updatedProfile.email,
+      vehicleType: updatedProfile.vehicle_type,
+      vehicleModel: updatedProfile.vehicle_model,
+      fuelConsumption: updatedProfile.fuel_consumption
+    });
+  };
+
+  const getMetrics = (period: string, customStartDate?: Date, customEndDate?: Date): Metrics => {
+    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
+    const filteredOdometer = filterByPeriod(odometerRecords, period, customStartDate, customEndDate);
+    const filteredWorkHours = filterWorkHoursByPeriod(workHours, period, customStartDate, customEndDate);
+
+    return calculateMetrics(filteredTransactions, filteredOdometer, filteredWorkHours);
+  };
+
+  const getChartData = (period: string, customStartDate?: Date, customEndDate?: Date): ChartData[] => {
+    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
+    
+    // Group transactions by date
+    const groupedData: { [key: string]: { receita: number; despesa: number } } = {};
+    
+    filteredTransactions.forEach(transaction => {
+      const date = transaction.date.toISOString().split('T')[0];
+      if (!groupedData[date]) {
+        groupedData[date] = { receita: 0, despesa: 0 };
+      }
       
-      if (updates.name) updateData.name = updates.name;
-      if (updates.vehicleType) updateData.vehicle_type = updates.vehicleType;
-      if (updates.vehicleModel) updateData.vehicle_model = updates.vehicleModel;
-      if (updates.fuelConsumption !== undefined) updateData.fuel_consumption = updates.fuelConsumption;
+      if (transaction.type === 'receita') {
+        groupedData[date].receita += transaction.value;
+      } else {
+        groupedData[date].despesa += transaction.value;
+      }
+    });
 
-      await supabaseService.updateUserProfile(authUser.id, updateData);
-
-      setUser(prev => prev ? { ...prev, ...updates } : null);
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error) {
-      console.error('Error updating user profile:', error);
-      toast.error('Erro ao atualizar perfil');
-      throw error;
-    }
-  };
-
-  const handleGetMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    return getMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
-  };
-
-  const handleGetChartData = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    return getChartData(transactions, period, customStartDate, customEndDate);
+    return Object.entries(groupedData)
+      .map(([date, data]) => ({
+        date,
+        receita: data.receita,
+        despesa: data.despesa
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
   };
 
   return (
-    <UserContext.Provider value={{
-      user,
-      setUser,
-      transactions,
-      odometerRecords,
-      workHours,
-      addTransaction,
-      addOdometerRecord,
-      addWorkHours,
-      updateTransaction,
-      deleteTransaction,
-      updateOdometerRecord,
-      deleteOdometerRecord,
-      updateWorkHours,
-      deleteWorkHours,
-      updateUserProfile,
-      getMetrics: handleGetMetrics,
-      getChartData: handleGetChartData,
-      isLoading
-    }}>
+    <UserContext.Provider
+      value={{
+        user,
+        loading: loading || authLoading,
+        transactions,
+        odometerRecords,
+        workHours,
+        addTransaction,
+        addOdometerRecord,
+        addWorkHours,
+        updateUserProfile,
+        getMetrics,
+        getChartData,
+        refreshData
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
