@@ -1,9 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Car, User } from "lucide-react";
+import { Car, User, LogOut } from "lucide-react";
 import DateRangePicker from "./DateRangePicker";
 import { DateRange } from "react-day-picker";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -24,11 +27,27 @@ const DashboardHeader = ({
   onDateRangeApply,
   onShowProfileModal
 }: DashboardHeaderProps) => {
+  const { signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Bom dia";
     if (hour < 18) return "Boa tarde";
     return "Boa noite";
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      toast.success("Logout realizado com sucesso!");
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error("Erro ao sair. Tente novamente.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -78,6 +97,17 @@ const DashboardHeader = ({
               onDateRangeChange={onDateRangeChange}
               onApply={onDateRangeApply}
             />
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="bg-white/80 text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {isLoggingOut ? "Saindo..." : "Sair"}
+            </Button>
           </div>
         </div>
 
@@ -98,15 +128,28 @@ const DashboardHeader = ({
           
           {/* Second line - Action buttons */}
           <div className="flex items-center justify-between space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onShowProfileModal}
-              className="bg-white/80 min-h-[44px]"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Perfil
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShowProfileModal}
+                className="bg-white/80 min-h-[44px]"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Perfil
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="bg-white/80 text-muted-foreground hover:text-foreground min-h-[44px]"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                {isLoggingOut ? "Saindo..." : "Sair"}
+              </Button>
+            </div>
             
             <div className="flex items-center space-x-2">
               <Select value={selectedPeriod} onValueChange={onPeriodChange}>
