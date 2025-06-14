@@ -152,6 +152,55 @@ const calculatePercentageChange = (current: number, previous: number): string =>
   return `${sign}${change.toFixed(1)}%`;
 };
 
+export const calculateMetrics = (
+  transactions: Transaction[],
+  odometerRecords: OdometerRecord[],
+  workHours: WorkHoursRecord[]
+): Metrics => {
+  const receita = transactions
+    .filter(t => t.type === 'receita')
+    .reduce((sum, t) => sum + t.value, 0);
+  
+  const despesa = transactions
+    .filter(t => t.type === 'despesa')
+    .reduce((sum, t) => sum + t.value, 0);
+
+  const saldo = receita - despesa;
+  
+  // Calculate KM rodado
+  const kmByDate = new Map<string, { inicial?: number; final?: number }>();
+  odometerRecords.forEach(record => {
+    const dateKey = format(record.date, 'yyyy-MM-dd');
+    const existing = kmByDate.get(dateKey) || {};
+    
+    if (record.type === 'inicial') {
+      existing.inicial = record.value;
+    } else if (record.type === 'final') {
+      existing.final = record.value;
+    }
+    
+    kmByDate.set(dateKey, existing);
+  });
+  
+  const kmRodado = Array.from(kmByDate.values()).reduce((total, day) => {
+    if (day.inicial !== undefined && day.final !== undefined) {
+      return total + (day.final - day.inicial);
+    }
+    return total;
+  }, 0);
+  
+  // Calculate work hours
+  const horasTrabalhadas = workHours.reduce((total, record) => {
+    const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
+    return total + (diff / (1000 * 60 * 60));
+  }, 0);
+  
+  const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
+  const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
+
+  return { receita, despesa, saldo, kmRodado, valorPorKm, horasTrabalhadas, valorPorHora };
+};
+
 export const getMetrics = (
   transactions: Transaction[],
   odometerRecords: OdometerRecord[],

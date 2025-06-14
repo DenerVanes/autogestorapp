@@ -1,10 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabaseService } from '@/services/supabaseService';
 import { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from '@/types';
 import { filterByPeriod, filterWorkHoursByPeriod } from '@/utils/dateFilters';
-import { calculateMetrics } from '@/utils/calculations';
+import { getMetrics, getChartData } from '@/utils/calculations';
 
 interface UserContextType {
   user: User | null;
@@ -16,7 +15,11 @@ interface UserContextType {
   addOdometerRecord: (record: Omit<OdometerRecord, 'id'>) => Promise<void>;
   addWorkHours: (record: Omit<WorkHoursRecord, 'id'>) => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
-  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics;
+  updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+  deleteOdometerRecord: (id: string) => Promise<void>;
+  deleteWorkHours: (id: string) => Promise<void>;
+  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics & { changes: Record<string, string> };
   getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
   refreshData: () => Promise<void>;
 }
@@ -135,7 +138,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       observation: transaction.observation
     });
 
-    setTransactions(prev => [newTransaction, ...prev]);
+    const transformedTransaction: Transaction = {
+      id: newTransaction.id,
+      type: newTransaction.type as 'receita' | 'despesa',
+      date: new Date(newTransaction.date),
+      value: Number(newTransaction.value),
+      category: newTransaction.category,
+      fuelType: newTransaction.fuel_type,
+      pricePerLiter: newTransaction.price_per_liter ? Number(newTransaction.price_per_liter) : undefined,
+      subcategory: newTransaction.subcategory,
+      observation: newTransaction.observation
+    };
+
+    setTransactions(prev => [transformedTransaction, ...prev]);
   };
 
   const addOdometerRecord = async (record: Omit<OdometerRecord, 'id'>) => {
@@ -194,40 +209,64 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const getMetrics = (period: string, customStartDate?: Date, customEndDate?: Date): Metrics => {
-    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
-    const filteredOdometer = filterByPeriod(odometerRecords, period, customStartDate, customEndDate);
-    const filteredWorkHours = filterWorkHoursByPeriod(workHours, period, customStartDate, customEndDate);
+  const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+    if (!authUser) throw new Error('User not authenticated');
 
-    return calculateMetrics(filteredTransactions, filteredOdometer, filteredWorkHours);
-  };
-
-  const getChartData = (period: string, customStartDate?: Date, customEndDate?: Date): ChartData[] => {
-    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
-    
-    // Group transactions by date
-    const groupedData: { [key: string]: { receita: number; despesa: number } } = {};
-    
-    filteredTransactions.forEach(transaction => {
-      const date = transaction.date.toISOString().split('T')[0];
-      if (!groupedData[date]) {
-        groupedData[date] = { receita: 0, despesa: 0 };
-      }
-      
-      if (transaction.type === 'receita') {
-        groupedData[date].receita += transaction.value;
-      } else {
-        groupedData[date].despesa += transaction.value;
-      }
+    const updatedTransaction = await supabaseService.updateTransaction(id, {
+      type: updates.type,
+      date: updates.date?.toISOString(),
+      value: updates.value,
+      category: updates.category,
+      fuel_type: updates.fuelType,
+      price_per_liter: updates.pricePerLiter,
+      subcategory: updates.subcategory,
+      observation: updates.observation
     });
 
-    return Object.entries(groupedData)
-      .map(([date, data]) => ({
-        date,
-        receita: data.receita,
-        despesa: data.despesa
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+    setTransactions(prev => prev.map(t => 
+      t.id === id 
+        ? {
+            id: updatedTransaction.id,
+            type: updatedTransaction.type as 'receita' | 'despesa',
+            date: new Date(updatedTransaction.date),
+            value: Number(updatedTransaction.value),
+            category: updatedTransaction.category,
+            fuelType: updatedTransaction.fuel_type,
+            pricePerLiter: updatedTransaction.price_per_liter ? Number(updatedTransaction.price_per_liter) : undefined,
+            subcategory: updatedTransaction.subcategory,
+            observation: updatedTransaction.observation
+          }
+        : t
+    ));
+  };
+
+  const deleteTransaction = async (id: string) => {
+    if (!authUser) throw new Error('User not authenticated');
+
+    await supabaseService.deleteTransaction(id);
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
+  const deleteOdometerRecord = async (id: string) => {
+    if (!authUser) throw new Error('User not authenticated');
+
+    await supabaseService.deleteOdometerRecord(id);
+    setOdometerRecords(prev => prev.filter(o => o.id !== id));
+  };
+
+  const deleteWorkHours = async (id: string) => {
+    if (!authUser) throw new Error('User not authenticated');
+
+    await supabaseService.deleteWorkHours(id);
+    setWorkHours(prev => prev.filter(w => w.id !== id));
+  };
+
+  const getMetricsWithChanges = (period: string, customStartDate?: Date, customEndDate?: Date): Metrics & { changes: Record<string, string> } => {
+    return getMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
+  };
+
+  const getChartDataFiltered = (period: string, customStartDate?: Date, customEndDate?: Date): ChartData[] => {
+    return getChartData(transactions, period, customStartDate, customEndDate);
   };
 
   return (
@@ -242,8 +281,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         addOdometerRecord,
         addWorkHours,
         updateUserProfile,
-        getMetrics,
-        getChartData,
+        updateTransaction,
+        deleteTransaction,
+        deleteOdometerRecord,
+        deleteWorkHours,
+        getMetrics: getMetricsWithChanges,
+        getChartData: getChartDataFiltered,
         refreshData
       }}
     >
