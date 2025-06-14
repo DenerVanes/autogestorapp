@@ -45,10 +45,12 @@ const Dashboard = () => {
   };
 
   const handlePeriodChange = (value: string) => {
-    setSelectedPeriod(value);
-    if (value !== 'personalizado') {
-      setDateRange(undefined);
+    if (value === 'personalizado') {
+      // Don't change period immediately, wait for date selection
+      return;
     }
+    setSelectedPeriod(value);
+    setDateRange(undefined);
   };
 
   const handleDateRangeApply = () => {
@@ -100,7 +102,8 @@ const Dashboard = () => {
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
                 <Car className="w-5 h-5 text-white" />
@@ -136,13 +139,60 @@ const Dashboard = () => {
                 </SelectContent>
               </Select>
               
-              {selectedPeriod === 'personalizado' && (
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                onApply={handleDateRangeApply}
+              />
+            </div>
+          </div>
+
+          {/* Mobile Layout */}
+          <div className="md:hidden space-y-3">
+            {/* First line - User greeting */}
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                <Car className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg font-semibold text-foreground truncate">
+                  {getGreeting()}, {user?.name || 'Usuário'}!
+                </h1>
+                <p className="text-sm text-muted-foreground">Dashboard atualizado</p>
+              </div>
+            </div>
+            
+            {/* Second line - Action buttons */}
+            <div className="flex items-center justify-between space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowProfileModal(true)}
+                className="bg-white/80 min-h-[44px]"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Perfil
+              </Button>
+              
+              <div className="flex items-center space-x-2">
+                <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+                  <SelectTrigger className="w-32 bg-white/80 min-h-[44px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hoje">Hoje</SelectItem>
+                    <SelectItem value="7dias">7 dias</SelectItem>
+                    <SelectItem value="30dias">30 dias</SelectItem>
+                    <SelectItem value="personalizado">Personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+                
                 <DateRangePicker
                   dateRange={dateRange}
                   onDateRangeChange={setDateRange}
                   onApply={handleDateRangeApply}
                 />
-              )}
+              </div>
             </div>
           </div>
         </div>
