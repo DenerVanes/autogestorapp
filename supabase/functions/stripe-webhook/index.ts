@@ -72,41 +72,6 @@ serve(async (req) => {
         break;
       }
 
-      case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
-        if (paymentIntent.payment_method_types.includes('pix')) {
-          const userId = paymentIntent.metadata?.user_id;
-          
-          if (userId) {
-            // Atualizar pagamento PIX
-            await supabaseClient
-              .from('pix_payments')
-              .update({
-                status: 'paid',
-                paid_at: new Date().toISOString()
-              })
-              .eq('stripe_payment_intent_id', paymentIntent.id);
-
-            // Criar assinatura PIX de 30 dias
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + 30);
-
-            await supabaseClient.from('user_subscriptions').insert({
-              user_id: userId,
-              plan_type: 'pro_pix',
-              status: 'active',
-              amount: paymentIntent.amount / 100,
-              payment_method: 'pix',
-              expires_at: expiresAt.toISOString()
-            });
-            
-            logStep("PIX subscription created", { userId, amount: paymentIntent.amount });
-          }
-        }
-        break;
-      }
-
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         

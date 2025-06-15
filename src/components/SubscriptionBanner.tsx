@@ -15,26 +15,14 @@ const SubscriptionBanner = () => {
 
   if (!subscription) return null;
 
-  const handleUpgrade = async (planType: 'recurring' | 'pix') => {
+  const handleUpgrade = async () => {
     setLoading(true);
     try {
-      const result = await createCheckout(planType);
-      
-      if (planType === 'pix' && result) {
-        toast.success('Pagamento PIX criado! Use o código para pagamento.');
-        // Aqui você pode mostrar o QR code ou código PIX
-      }
-      
+      await createCheckout('recurring');
       setIsOpen(false);
     } catch (error: any) {
       console.error('Error creating checkout:', error);
-      
-      // Mostrar erro específico para PIX não habilitado
-      if (error.message?.includes('PIX não está habilitado')) {
-        toast.error('PIX não está habilitado. Configure o PIX no seu Stripe Dashboard primeiro.');
-      } else {
-        toast.error('Erro ao processar pagamento. Tente novamente.');
-      }
+      toast.error('Erro ao processar pagamento. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -56,20 +44,20 @@ const SubscriptionBanner = () => {
                 Assine PRO
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Crown className="h-5 w-5 text-yellow-600" />
-                  Escolha seu Plano PRO
+                  Plano PRO
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="mt-4">
                 <Card className="border-blue-200">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-blue-700">
                       <CreditCard className="h-5 w-5" />
-                      Plano Recorrente
+                      Plano PRO - Recorrente
                     </CardTitle>
                     <CardDescription>
                       Renovação automática mensal
@@ -84,41 +72,12 @@ const SubscriptionBanner = () => {
                       <li>✅ Pode cancelar a qualquer momento</li>
                     </ul>
                     <Button 
-                      onClick={() => handleUpgrade('recurring')}
+                      onClick={handleUpgrade}
                       disabled={loading}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
                       <Zap className="mr-2 h-4 w-4" />
-                      {loading ? 'Processando...' : 'Assinar com Cartão'}
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-green-200">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-700">
-                      <Crown className="h-5 w-5" />
-                      Plano PIX
-                    </CardTitle>
-                    <CardDescription>
-                      30 dias de acesso por pagamento
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold mb-2">R$ 19,90</div>
-                    <ul className="text-sm space-y-1 mb-4">
-                      <li>✅ Acesso por 30 dias</li>
-                      <li>✅ Pagamento via PIX</li>
-                      <li>✅ Sem compromisso mensal</li>
-                      <li>✅ Pague quando quiser usar</li>
-                    </ul>
-                    <Button 
-                      onClick={() => handleUpgrade('pix')}
-                      disabled={loading}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      <Crown className="mr-2 h-4 w-4" />
-                      {loading ? 'Processando...' : 'Pagar com PIX'}
+                      {loading ? 'Processando...' : 'Assinar Agora'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -139,28 +98,28 @@ const SubscriptionBanner = () => {
             ? `Você tem ${daysRemaining} dias restantes no seu período gratuito.`
             : `Sua assinatura PRO expira em ${daysRemaining} dias.`
           }
-          {(isTrial || subscription.plan_type === 'pro_pix') && (
+          {isTrial && (
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="ml-3 border-orange-300 text-orange-700 hover:bg-orange-100">
                   <Crown className="mr-2 h-4 w-4" />
-                  {isTrial ? 'Assine PRO' : 'Renovar'}
+                  Assine PRO
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Crown className="h-5 w-5 text-yellow-600" />
-                    {isTrial ? 'Escolha seu Plano PRO' : 'Renovar Assinatura'}
+                    Assine o Plano PRO
                   </DialogTitle>
                 </DialogHeader>
                 
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                <div className="mt-4">
                   <Card className="border-blue-200">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-blue-700">
                         <CreditCard className="h-5 w-5" />
-                        Plano Recorrente
+                        Plano PRO - Recorrente
                       </CardTitle>
                       <CardDescription>
                         Renovação automática mensal
@@ -175,41 +134,12 @@ const SubscriptionBanner = () => {
                         <li>✅ Pode cancelar a qualquer momento</li>
                       </ul>
                       <Button 
-                        onClick={() => handleUpgrade('recurring')}
+                        onClick={handleUpgrade}
                         disabled={loading}
                         className="w-full bg-blue-600 hover:bg-blue-700"
                       >
                         <Zap className="mr-2 h-4 w-4" />
-                        {loading ? 'Processando...' : 'Assinar com Cartão'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-green-200">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-green-700">
-                        <Crown className="h-5 w-5" />
-                        Plano PIX
-                      </CardTitle>
-                      <CardDescription>
-                        30 dias de acesso por pagamento
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold mb-2">R$ 19,90</div>
-                      <ul className="text-sm space-y-1 mb-4">
-                        <li>✅ Acesso por 30 dias</li>
-                        <li>✅ Pagamento via PIX</li>
-                        <li>✅ Sem compromisso mensal</li>
-                        <li>✅ Pague quando quiser usar</li>
-                      </ul>
-                      <Button 
-                        onClick={() => handleUpgrade('pix')}
-                        disabled={loading}
-                        className="w-full bg-green-600 hover:bg-green-700"
-                      >
-                        <Crown className="mr-2 h-4 w-4" />
-                        {loading ? 'Processando...' : 'Pagar com PIX'}
+                        {loading ? 'Processando...' : 'Assinar Agora'}
                       </Button>
                     </CardContent>
                   </Card>

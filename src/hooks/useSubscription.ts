@@ -45,7 +45,7 @@ export const useSubscription = () => {
     checkSubscription();
   }, [user]);
 
-  const createCheckout = async (planType: 'recurring' | 'pix') => {
+  const createCheckout = async (planType: 'recurring') => {
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -57,9 +57,6 @@ export const useSubscription = () => {
     if (data.type === 'checkout') {
       // Abrir checkout do Stripe em nova aba
       window.open(data.url, '_blank');
-    } else if (data.type === 'pix') {
-      // Retornar dados do PIX para mostrar QR code
-      return data;
     }
   };
 
