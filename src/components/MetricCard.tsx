@@ -42,18 +42,6 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
     return `${changeValue} vs mês anterior`;
   };
 
-  const formatTooltipContent = () => {
-    if (!breakdown || breakdown.length === 0) return "Nenhum dado disponível";
-    
-    const detailText = title.includes("Receita") ? "Detalhamento das Receitas:" : "Detalhamento das Despesas:";
-    const items = breakdown
-      .slice(0, 5)
-      .map(item => `${item.label} - ${item.value}`)
-      .join('\n');
-    
-    return `${detailText}\n\n${items}\n\nTotal: ${value}`;
-  };
-
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
       <CardContent className="p-6">
@@ -71,7 +59,7 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
                     </TooltipTrigger>
                     <TooltipContent 
                       side="top" 
-                      className="max-w-sm p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl rounded-lg text-sm whitespace-pre-line animate-in fade-in-0 zoom-in-95 duration-200"
+                      className="z-[9999] max-w-sm p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl rounded-lg text-sm whitespace-pre-line animate-in fade-in-0 zoom-in-95 duration-200"
                     >
                       <div className="space-y-2">
                         <h4 className="font-semibold text-gray-800 border-b border-gray-200 pb-1">
