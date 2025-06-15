@@ -54,9 +54,8 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown }: Metr
                   .sort((a, b) => b.amount - a.amount)
                   .slice(0, 4)
                   .map((item, index) => (
-                    <div key={index} className="flex justify-between items-center text-xs text-gray-600">
-                      <span>{item.label}</span>
-                      <span className="font-medium">{item.value}</span>
+                    <div key={index} className="text-xs text-gray-600">
+                      <span>{item.label} - {item.value}</span>
                     </div>
                   ))}
               </div>
