@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FloatingActionButton from "./FloatingActionButton";
@@ -14,8 +14,6 @@ import DashboardRecentTransactions from "./DashboardRecentTransactions";
 import { useUser } from "@/contexts/UserContext";
 import { DateRange } from "react-day-picker";
 import { filterByPeriod } from "@/utils/dateFilters";
-import AdminDashboard from "./admin/AdminDashboard";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 type TransactionType = 'receita' | 'despesa' | 'odometro' | 'horas' | null;
 
@@ -24,11 +22,9 @@ const Dashboard = () => {
   const [modalType, setModalType] = useState<TransactionType>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>();
   
   const { user, getMetrics, getChartData, transactions } = useUser();
-  const { isAdmin } = useAdminAuth();
 
   const customStartDate = dateRange?.from;
   const customEndDate = dateRange?.to;
@@ -77,22 +73,8 @@ const Dashboard = () => {
     }
   };
 
-  // Verificar se deve mostrar admin dashboard via URL
-  React.useEffect(() => {
-    if (isAdmin && window.location.pathname === '/admin') {
-      setShowAdminDashboard(true);
-    }
-  }, [isAdmin]);
-
   if (showHistory) {
     return <HistoryPage onBack={() => setShowHistory(false)} />;
-  }
-
-  if (showAdminDashboard && isAdmin) {
-    return <AdminDashboard onBack={() => {
-      setShowAdminDashboard(false);
-      window.history.pushState({}, '', '/dashboard');
-    }} />;
   }
 
   return (

@@ -9,57 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          permissions: Json | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          permissions?: Json | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          permissions?: Json | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      analytics_events: {
-        Row: {
-          created_at: string
-          event_type: string
-          id: string
-          metadata: Json | null
-          session_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          event_type: string
-          id?: string
-          metadata?: Json | null
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          metadata?: Json | null
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       odometer_records: {
         Row: {
           created_at: string
@@ -165,42 +114,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           value?: number
-        }
-        Relationships: []
-      }
-      user_subscriptions: {
-        Row: {
-          amount: number | null
-          created_at: string
-          expires_at: string | null
-          id: string
-          plan_type: string
-          started_at: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount?: number | null
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          plan_type: string
-          started_at?: string
-          status: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number | null
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          plan_type?: string
-          started_at?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
