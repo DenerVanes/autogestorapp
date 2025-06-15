@@ -40,7 +40,11 @@ export const useAdminAuth = () => {
         } else {
           console.log('Usuário é admin:', data);
           setIsAdmin(true);
-          setAdminData(data);
+          setAdminData({
+            id: data.id,
+            email: data.email,
+            permissions: (data.permissions as Record<string, boolean>) || {}
+          });
         }
       } catch (error) {
         console.error('Erro ao verificar admin:', error);

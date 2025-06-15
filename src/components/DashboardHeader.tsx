@@ -1,9 +1,10 @@
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
-import DatePicker from "./DatePicker";
+import DatePicker from "./DateRangePicker";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Settings } from "lucide-react";
 

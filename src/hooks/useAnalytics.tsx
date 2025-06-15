@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -85,15 +84,25 @@ export const useAnalytics = () => {
 
       if (eventsError) throw eventsError;
 
-      setEvents(eventsData || []);
+      // Transform the data to match our interface types
+      const transformedEvents: AnalyticsEvent[] = (eventsData || []).map(event => ({
+        id: event.id,
+        event_type: event.event_type,
+        user_id: event.user_id || undefined,
+        session_id: event.session_id || undefined,
+        created_at: event.created_at,
+        metadata: (event.metadata as Record<string, any>) || {}
+      }));
+
+      setEvents(transformedEvents);
 
       // Calcular métricas
-      const landingPageViews = eventsData?.filter(e => e.event_type === 'landing_page_view').length || 0;
-      const signupClicks = eventsData?.filter(e => e.event_type === 'signup_click').length || 0;
-      const subscriptionClicks = eventsData?.filter(e => e.event_type === 'subscription_click').length || 0;
-      const paymentsCompleted = eventsData?.filter(e => e.event_type === 'payment_completed').length || 0;
-      const signupsCompleted = eventsData?.filter(e => e.event_type === 'signup_completed').length || 0;
-      const loginAttempts = eventsData?.filter(e => e.event_type === 'login_attempt').length || 0;
+      const landingPageViews = transformedEvents?.filter(e => e.event_type === 'landing_page_view').length || 0;
+      const signupClicks = transformedEvents?.filter(e => e.event_type === 'signup_click').length || 0;
+      const subscriptionClicks = transformedEvents?.filter(e => e.event_type === 'subscription_click').length || 0;
+      const paymentsCompleted = transformedEvents?.filter(e => e.event_type === 'payment_completed').length || 0;
+      const signupsCompleted = transformedEvents?.filter(e => e.event_type === 'signup_completed').length || 0;
+      const loginAttempts = transformedEvents?.filter(e => e.event_type === 'login_attempt').length || 0;
 
       const conversionRates = {
         signupRate: landingPageViews > 0 ? (signupClicks / landingPageViews) * 100 : 0,
