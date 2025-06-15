@@ -120,21 +120,32 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = async (updates: Partial<User>) => {
     if (!authUser || !user) throw new Error('User not authenticated');
 
+    const emailToUse = user.email || authUser.email;
+    if (!emailToUse) {
+      console.error("Cannot update profile without an email address.");
+      return;
+    }
+
     const updatedProfile = await profileService.updateUserProfile(authUser.id, {
       name: updates.name,
       vehicle_type: updates.vehicleType,
       vehicle_model: updates.vehicleModel,
-      fuel_consumption: updates.fuelConsumption
+      fuel_consumption: updates.fuelConsumption,
+      email: emailToUse
     });
 
-    setUser({
-      id: updatedProfile.id,
-      name: updatedProfile.name,
-      email: updatedProfile.email,
-      vehicleType: updatedProfile.vehicle_type,
-      vehicleModel: updatedProfile.vehicle_model,
-      fuelConsumption: updatedProfile.fuel_consumption
-    });
+    if (updatedProfile) {
+        setUser({
+          id: updatedProfile.id,
+          name: updatedProfile.name,
+          email: updatedProfile.email,
+          vehicleType: updatedProfile.vehicle_type,
+          vehicleModel: updatedProfile.vehicle_model,
+          fuelConsumption: updatedProfile.fuel_consumption
+        });
+    } else {
+        console.error("Failed to update profile. The returned profile data was null.");
+    }
   };
 
   const getMetricsWithChanges = (period: string, customStartDate?: Date, customEndDate?: Date): Metrics & { changes: Record<string, string> } => {

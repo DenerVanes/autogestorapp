@@ -21,20 +21,24 @@ export const profileService = {
   },
 
   async updateUserProfile(userId: string, updates: any) {
-    console.log('Updating user profile:', userId, updates);
+    console.log('Upserting user profile:', userId, updates);
+    const profileData = {
+      id: userId,
+      ...updates,
+    };
+
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
-      .eq('id', userId)
+      .upsert(profileData)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating user profile:', error);
+      console.error('Error upserting user profile:', error);
       throw error;
     }
 
-    console.log('User profile updated:', data);
+    console.log('User profile upserted:', data);
     return data;
   },
 };
