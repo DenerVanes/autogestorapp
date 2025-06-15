@@ -18,6 +18,7 @@ interface UserContextType {
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>;
   updateOdometerRecord: (id: string, updates: Partial<OdometerRecord>) => Promise<void>;
+  updateWorkHours: (id: string, updates: Partial<WorkHoursRecord>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   deleteOdometerRecord: (id: string) => Promise<void>;
   deleteWorkHours: (id: string) => Promise<void>;

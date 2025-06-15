@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import EditTransactionModal from "./EditTransactionModal";
 import EditOdometerModal from "./EditOdometerModal";
+import EditWorkHoursModal from "./EditWorkHoursModal";
 import type { Transaction, OdometerRecord, WorkHoursRecord } from "@/types";
 
 interface HistoryPageProps {
@@ -26,6 +27,7 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [editingOdometerRecord, setEditingOdometerRecord] = useState<OdometerRecord | null>(null);
+  const [editingWorkHours, setEditingWorkHours] = useState<WorkHoursRecord | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -240,7 +242,11 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditingWorkHours(record)}
+                        >
                           <Edit2 className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -276,6 +282,14 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
           record={editingOdometerRecord}
           isOpen={true}
           onClose={() => setEditingOdometerRecord(null)}
+        />
+      )}
+
+      {editingWorkHours && (
+        <EditWorkHoursModal
+          record={editingWorkHours}
+          isOpen={true}
+          onClose={() => setEditingWorkHours(null)}
         />
       )}
     </div>
