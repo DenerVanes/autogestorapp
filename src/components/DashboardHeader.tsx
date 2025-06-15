@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { User } from "lucide-react";
@@ -26,18 +27,20 @@ const DashboardHeader = ({
   onDateRangeApply,
   onShowProfileModal
 }: DashboardHeaderProps) => {
-  const { isAdmin, loading: adminLoading } = useAdminAuth();
+  const { isAdmin, loading: adminLoading, adminData } = useAdminAuth();
 
   console.log('🎯 DASHBOARD HEADER RENDER');
-  console.log('📊 Estado admin:', { isAdmin, adminLoading });
+  console.log('📊 Estado admin completo:', { 
+    isAdmin, 
+    adminLoading, 
+    adminEmail: adminData?.email,
+    shouldShow: isAdmin && !adminLoading 
+  });
 
-  // Só mostra o botão quando temos certeza que é admin e não está carregando
-  const shouldShowAdminButton = isAdmin === true && !adminLoading;
-  console.log('🔘 shouldShowAdminButton:', shouldShowAdminButton);
-  
-  if (shouldShowAdminButton) {
-    console.log('🎉 RENDERIZANDO BOTÃO ADMIN!');
-  }
+  const handleAdminClick = () => {
+    console.log('🖱️ Clique no botão admin - redirecionando para /admin');
+    window.location.href = '/admin';
+  };
 
   return (
     <div className="bg-white shadow-sm border-b">
@@ -54,15 +57,12 @@ const DashboardHeader = ({
             </div>
             
             <div className="flex items-center gap-2">
-              {/* Botão Admin - renderização condicional */}
-              {shouldShowAdminButton && (
+              {/* Botão Admin - mostrar se é admin e não está carregando */}
+              {isAdmin && !adminLoading && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    console.log('🖱️ Clique no botão admin - redirecionando para /admin');
-                    window.location.href = '/admin';
-                  }}
+                  onClick={handleAdminClick}
                   className="gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 font-medium"
                   title="Painel Administrativo"
                 >
