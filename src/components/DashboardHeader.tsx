@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car, User, LogOut } from "lucide-react";
@@ -63,7 +62,7 @@ const DashboardHeader = ({
               <h1 className="text-xl font-semibold text-foreground">
                 {getGreeting()}, {userName || 'Usuário'}!
               </h1>
-              <p className="text-sm text-muted-foreground">Aqui está o seu dashboard atualizado</p>
+              <p className="text-sm text-muted-foreground">Auto Gestor APP - Dashboard atualizado</p>
             </div>
           </div>
           
@@ -122,7 +121,7 @@ const DashboardHeader = ({
               <h1 className="text-lg font-semibold text-foreground truncate">
                 {getGreeting()}, {userName || 'Usuário'}!
               </h1>
-              <p className="text-sm text-muted-foreground">Dashboard atualizado</p>
+              <p className="text-sm text-muted-foreground">Auto Gestor APP</p>
             </div>
           </div>
           

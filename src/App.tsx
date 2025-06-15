@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
 import AuthGuard from "@/components/AuthGuard";
+import LandingPage from "@/components/LandingPage";
+import SignUpPage from "@/components/SignUpPage";
+import LoginScreen from "@/components/LoginScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -19,8 +22,11 @@ const App = () => (
         <AuthProvider>
           <UserProvider>
             <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/login" element={<LoginScreen />} />
               <Route
-                path="/"
+                path="/dashboard"
                 element={
                   <AuthGuard>
                     <Index />
