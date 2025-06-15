@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabaseService } from '@/services/supabaseService';
+import { profileService } from '@/services/profileService';
 import { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from '@/types';
 import { getMetrics, getChartData } from '@/utils/calculations';
 import { UserContextType } from './types';
@@ -120,7 +120,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = async (updates: Partial<User>) => {
     if (!authUser || !user) throw new Error('User not authenticated');
 
-    const updatedProfile = await supabaseService.updateUserProfile(authUser.id, {
+    const updatedProfile = await profileService.updateUserProfile(authUser.id, {
       name: updates.name,
       vehicle_type: updates.vehicleType,
       vehicle_model: updates.vehicleModel,

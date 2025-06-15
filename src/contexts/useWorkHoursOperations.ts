@@ -1,5 +1,5 @@
 
-import { supabaseService } from '@/services/supabaseService';
+import { workHoursService } from '@/services/workHoursService';
 import { WorkHoursRecord } from '@/types';
 
 export const useWorkHoursOperations = (
@@ -9,7 +9,7 @@ export const useWorkHoursOperations = (
   const addWorkHours = async (record: Omit<WorkHoursRecord, 'id'>) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    const newRecord = await supabaseService.createWorkHours({
+    const newRecord = await workHoursService.createWorkHours({
       start_date_time: record.startDateTime.toISOString(),
       end_date_time: record.endDateTime.toISOString()
     });
@@ -26,7 +26,7 @@ export const useWorkHoursOperations = (
   const updateWorkHours = async (id: string, updates: Partial<WorkHoursRecord>) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    const updatedRecord = await supabaseService.updateWorkHours(id, {
+    const updatedRecord = await workHoursService.updateWorkHours(id, {
       start_date_time: updates.startDateTime?.toISOString(),
       end_date_time: updates.endDateTime?.toISOString()
     });
@@ -45,7 +45,7 @@ export const useWorkHoursOperations = (
   const deleteWorkHours = async (id: string) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    await supabaseService.deleteWorkHours(id);
+    await workHoursService.deleteWorkHours(id);
     setWorkHours(prev => prev.filter(w => w.id !== id));
   };
 

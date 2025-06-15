@@ -1,5 +1,5 @@
 
-import { supabaseService } from '@/services/supabaseService';
+import { odometerService } from '@/services/odometerService';
 import { OdometerRecord } from '@/types';
 
 export const useOdometerOperations = (
@@ -9,7 +9,7 @@ export const useOdometerOperations = (
   const addOdometerRecord = async (record: Omit<OdometerRecord, 'id'>) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    const newRecord = await supabaseService.createOdometerRecord({
+    const newRecord = await odometerService.createOdometerRecord({
       date: record.date.toISOString(),
       type: record.type,
       value: record.value
@@ -28,7 +28,7 @@ export const useOdometerOperations = (
   const updateOdometerRecord = async (id: string, updates: Partial<OdometerRecord>) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    const updatedRecord = await supabaseService.updateOdometerRecord(id, {
+    const updatedRecord = await odometerService.updateOdometerRecord(id, {
       date: updates.date?.toISOString(),
       type: updates.type,
       value: updates.value
@@ -49,7 +49,7 @@ export const useOdometerOperations = (
   const deleteOdometerRecord = async (id: string) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    await supabaseService.deleteOdometerRecord(id);
+    await odometerService.deleteOdometerRecord(id);
     setOdometerRecords(prev => prev.filter(o => o.id !== id));
   };
 

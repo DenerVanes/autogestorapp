@@ -1,5 +1,5 @@
 
-import { supabaseService } from '@/services/supabaseService';
+import { transactionService } from '@/services/transactionService';
 import { Transaction } from '@/types';
 
 export const useTransactionOperations = (
@@ -9,7 +9,7 @@ export const useTransactionOperations = (
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    const newTransaction = await supabaseService.createTransaction({
+    const newTransaction = await transactionService.createTransaction({
       type: transaction.type,
       date: transaction.date.toISOString(),
       value: transaction.value,
@@ -38,7 +38,7 @@ export const useTransactionOperations = (
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    const updatedTransaction = await supabaseService.updateTransaction(id, {
+    const updatedTransaction = await transactionService.updateTransaction(id, {
       type: updates.type,
       date: updates.date?.toISOString(),
       value: updates.value,
@@ -69,7 +69,7 @@ export const useTransactionOperations = (
   const deleteTransaction = async (id: string) => {
     if (!authUserId) throw new Error('User not authenticated');
 
-    await supabaseService.deleteTransaction(id);
+    await transactionService.deleteTransaction(id);
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
 

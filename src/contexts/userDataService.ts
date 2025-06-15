@@ -1,16 +1,19 @@
 
-import { supabaseService } from '@/services/supabaseService';
+import { profileService } from '@/services/profileService';
+import { transactionService } from '@/services/transactionService';
+import { odometerService } from '@/services/odometerService';
+import { workHoursService } from '@/services/workHoursService';
 import { User, Transaction, OdometerRecord, WorkHoursRecord } from '@/types';
 
 export class UserDataService {
   static async loadUserProfile(authUserId: string): Promise<User> {
     let profile;
     try {
-      profile = await supabaseService.getUserProfile(authUserId);
+      profile = await profileService.getUserProfile(authUserId);
     } catch (error: any) {
       console.log('Profile not found, creating new profile');
       // Create profile if it doesn't exist
-      profile = await supabaseService.updateUserProfile(authUserId, {
+      profile = await profileService.updateUserProfile(authUserId, {
         name: 'Usuário',
         email: ''
       });
@@ -32,9 +35,9 @@ export class UserDataService {
     workHours: WorkHoursRecord[];
   }> {
     const [transactionsData, odometerData, workHoursData] = await Promise.all([
-      supabaseService.getTransactions(),
-      supabaseService.getOdometerRecords(),
-      supabaseService.getWorkHours()
+      transactionService.getTransactions(),
+      odometerService.getOdometerRecords(),
+      workHoursService.getWorkHours()
     ]);
 
     return {
