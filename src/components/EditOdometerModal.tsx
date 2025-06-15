@@ -23,7 +23,7 @@ interface EditOdometerModalProps {
 const EditOdometerModal = ({ record, isOpen, onClose }: EditOdometerModalProps) => {
   const [date, setDate] = useState<Date>(record.date);
   const [value, setValue] = useState(record.value.toString());
-  const [odometerType, setOdometerType] = useState(record.type);
+  const [odometerType, setOdometerType] = useState<'inicial' | 'final'>(record.type);
 
   const { updateOdometerRecord } = useUser();
 
@@ -40,7 +40,7 @@ const EditOdometerModal = ({ record, isOpen, onClose }: EditOdometerModalProps) 
     try {
       await updateOdometerRecord(record.id, {
         date,
-        type: odometerType as 'inicial' | 'final',
+        type: odometerType,
         value: parseInt(value)
       });
       
@@ -48,6 +48,10 @@ const EditOdometerModal = ({ record, isOpen, onClose }: EditOdometerModalProps) 
     } catch (error) {
       console.error('Erro ao atualizar registro de odômetro:', error);
     }
+  };
+
+  const handleTypeChange = (value: string) => {
+    setOdometerType(value as 'inicial' | 'final');
   };
 
   return (
@@ -93,7 +97,7 @@ const EditOdometerModal = ({ record, isOpen, onClose }: EditOdometerModalProps) 
           {/* Tipo de Registro */}
           <div className="space-y-2">
             <Label>Tipo de Registro</Label>
-            <Select value={odometerType} onValueChange={setOdometerType} required>
+            <Select value={odometerType} onValueChange={handleTypeChange} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>

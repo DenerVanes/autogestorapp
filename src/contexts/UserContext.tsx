@@ -242,6 +242,27 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     ));
   };
 
+  const updateOdometerRecord = async (id: string, updates: Partial<OdometerRecord>) => {
+    if (!authUser) throw new Error('User not authenticated');
+
+    const updatedRecord = await supabaseService.updateOdometerRecord(id, {
+      date: updates.date?.toISOString(),
+      type: updates.type,
+      value: updates.value
+    });
+
+    setOdometerRecords(prev => prev.map(o => 
+      o.id === id 
+        ? {
+            id: updatedRecord.id,
+            date: new Date(updatedRecord.date),
+            type: updatedRecord.type as 'inicial' | 'final',
+            value: updatedRecord.value
+          }
+        : o
+    ));
+  };
+
   const deleteTransaction = async (id: string) => {
     if (!authUser) throw new Error('User not authenticated');
 
@@ -284,6 +305,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         addWorkHours,
         updateUserProfile,
         updateTransaction,
+        updateOdometerRecord,
         deleteTransaction,
         deleteOdometerRecord,
         deleteWorkHours,
