@@ -48,7 +48,29 @@ const DashboardMetricsSection = ({
       .filter(item => item.amount > 0);
   };
 
+  // Calculate expense breakdown by category and description
+  const getExpenseBreakdown = () => {
+    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
+    const expenseTransactions = filteredTransactions.filter(t => t.type === 'despesa');
+    
+    return expenseTransactions
+      .map(transaction => {
+        const category = transaction.category || 'Outros';
+        const description = transaction.observation || transaction.subcategory || '';
+        const label = description ? `${category} - ${description}` : category;
+        
+        return {
+          label,
+          value: formatCurrency(transaction.value),
+          amount: transaction.value
+        };
+      })
+      .filter(item => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+  };
+
   const revenueBreakdown = getRevenueBreakdown();
+  const expenseBreakdown = getExpenseBreakdown();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6 mb-8">
@@ -66,6 +88,7 @@ const DashboardMetricsSection = ({
         icon={TrendingDown}
         color="red"
         change={metrics.changes?.despesa}
+        breakdown={expenseBreakdown}
       />
       <MetricCard
         title="Saldo Total"
