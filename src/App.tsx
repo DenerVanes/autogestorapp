@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
 import AuthGuard from "@/components/AuthGuard";
+import AdminGuard from "@/components/AdminGuard";
 import LandingPage from "@/components/LandingPage";
 import SignUpPage from "@/components/SignUpPage";
 import LoginScreen from "@/components/LoginScreen";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +32,16 @@ const App = () => (
                 element={
                   <AuthGuard>
                     <Index />
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <AuthGuard>
+                    <AdminGuard>
+                      <AdminDashboard />
+                    </AdminGuard>
                   </AuthGuard>
                 }
               />

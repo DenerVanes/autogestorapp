@@ -1,11 +1,14 @@
+
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Car, User, LogOut } from "lucide-react";
+import { Car, User, LogOut, Settings } from "lucide-react";
 import DateRangePicker from "./DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -27,6 +30,8 @@ const DashboardHeader = ({
   onShowProfileModal
 }: DashboardHeaderProps) => {
   const { signOut } = useAuth();
+  const { isAdmin } = useAdminAuth();
+  const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const getGreeting = () => {
@@ -49,6 +54,10 @@ const DashboardHeader = ({
     }
   };
 
+  const handleAdminClick = () => {
+    navigate('/admin');
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -67,6 +76,18 @@ const DashboardHeader = ({
           </div>
           
           <div className="flex items-center space-x-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAdminClick}
+                className="bg-white/80 text-blue-600 hover:text-blue-700"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Admin
+              </Button>
+            )}
+            
             <Button
               variant="outline"
               size="sm"
@@ -128,6 +149,18 @@ const DashboardHeader = ({
           {/* Second line - Action buttons */}
           <div className="flex items-center justify-between space-x-2">
             <div className="flex items-center space-x-2">
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAdminClick}
+                  className="bg-white/80 text-blue-600 hover:text-blue-700 min-h-[44px]"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Admin
+                </Button>
+              )}
+              
               <Button
                 variant="outline"
                 size="sm"

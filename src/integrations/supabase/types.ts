@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          permissions: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          permissions?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          permissions?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       odometer_records: {
         Row: {
           created_at: string
@@ -117,6 +168,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          amount: number | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          plan_type: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_type: string
+          started_at?: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_type?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       work_hours_records: {
         Row: {
           created_at: string
@@ -146,7 +233,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_statistics: {
+        Row: {
+          active_subscribers: number | null
+          daily_active_users: number | null
+          monthly_active_users: number | null
+          new_users_30_days: number | null
+          new_users_7_days: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
+      user_growth_chart: {
+        Row: {
+          date: string | null
+          new_users: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
+      user_type_distribution: {
+        Row: {
+          count: number | null
+          user_type: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
