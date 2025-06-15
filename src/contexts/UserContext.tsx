@@ -4,7 +4,7 @@ import { supabaseService } from '@/services/supabaseService';
 import { UserDataService } from '@/contexts/userDataService';
 import { UserContextType } from '@/contexts/types';
 import { User, Transaction, OdometerRecord, WorkHoursRecord } from '@/types';
-import { calculations } from '@/utils/calculations';
+import { getMetrics, getChartData } from '@/utils/calculations';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -296,12 +296,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    return calculations.calculateMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
+  const getUserMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
+    return getMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
   };
 
-  const getChartData = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    return calculations.generateChartData(transactions, period, customStartDate, customEndDate);
+  const getUserChartData = (period: string, customStartDate?: Date, customEndDate?: Date) => {
+    return getChartData(transactions, period, customStartDate, customEndDate);
   };
 
   const refreshData = async () => {
@@ -329,8 +329,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       deleteTransaction,
       deleteOdometerRecord,
       deleteWorkHours,
-      getMetrics,
-      getChartData,
+      getMetrics: getUserMetrics,
+      getChartData: getUserChartData,
       refreshData
     }}>
       {children}

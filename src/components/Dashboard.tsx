@@ -15,12 +15,12 @@ import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import HistoryPage from './HistoryPage';
 import { useUser } from '@/contexts/UserContext';
 import { filterByPeriod } from '@/utils/dateFilters';
-import { comparisonCalculator } from '@/utils/comparisonCalculator';
+import { calculatePreviousMetrics, calculatePercentageChange } from '@/utils/comparisonCalculator';
 
 type ActionType = 'receita' | 'despesa' | 'odometro' | 'horas';
 
 const Dashboard = () => {
-  const { user, transactions, getMetrics, getChartData } = useUser();
+  const { user, transactions, odometerRecords, workHours, getMetrics, getChartData } = useUser();
   
   // Modal states
   const [transactionModal, setTransactionModal] = useState<{ isOpen: boolean; type: 'receita' | 'despesa' | 'odometro' }>({
@@ -81,12 +81,24 @@ const Dashboard = () => {
   const chartData = getChartData(selectedPeriod, customStartDate, customEndDate);
   
   // Calculate comparison data
-  const changes = comparisonCalculator.calculateChanges(
+  const previousMetrics = calculatePreviousMetrics(
     transactions, 
+    odometerRecords, 
+    workHours, 
     selectedPeriod, 
     customStartDate, 
     customEndDate
   );
+
+  const changes = {
+    receita: calculatePercentageChange(metrics.receita, previousMetrics.receita),
+    despesa: calculatePercentageChange(metrics.despesa, previousMetrics.despesa),
+    saldo: calculatePercentageChange(metrics.saldo, previousMetrics.saldo),
+    kmRodado: calculatePercentageChange(metrics.kmRodado, previousMetrics.kmRodado),
+    valorPorKm: calculatePercentageChange(metrics.valorPorKm, previousMetrics.valorPorKm),
+    horasTrabalhadas: calculatePercentageChange(metrics.horasTrabalhadas, previousMetrics.horasTrabalhadas),
+    valorPorHora: calculatePercentageChange(metrics.valorPorHora, previousMetrics.valorPorHora)
+  };
 
   // Get filtered transactions for recent transactions section
   const filteredTransactions = filterByPeriod(transactions, selectedPeriod, customStartDate, customEndDate);
