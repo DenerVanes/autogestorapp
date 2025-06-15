@@ -46,6 +46,50 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
     return `${changeValue} vs mês anterior`;
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  // Group fuel expenses for expense breakdown
+  const getProcessedBreakdown = () => {
+    if (!breakdown || title !== "Despesa Total") return breakdown;
+
+    const fuelCategories = ['Combustível', 'Gasolina', 'Álcool', 'Diesel'];
+    const fuelItems: Array<{ label: string; value: string; amount: number }> = [];
+    const nonFuelItems: Array<{ label: string; value: string; amount: number }> = [];
+    
+    breakdown.forEach(item => {
+      const isFuelItem = fuelCategories.some(fuelCat => 
+        item.label.includes(fuelCat)
+      );
+      
+      if (isFuelItem) {
+        fuelItems.push(item);
+      } else {
+        nonFuelItems.push(item);
+      }
+    });
+
+    // If there are fuel items, group them
+    if (fuelItems.length > 0) {
+      const totalFuelAmount = fuelItems.reduce((sum, item) => sum + item.amount, 0);
+      const groupedFuelItem = {
+        label: "Combustível",
+        value: formatCurrency(totalFuelAmount),
+        amount: totalFuelAmount
+      };
+      
+      return [groupedFuelItem, ...nonFuelItems];
+    }
+
+    return breakdown;
+  };
+
+  const processedBreakdown = getProcessedBreakdown();
+
   return (
     <>
       <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
@@ -76,17 +120,17 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" style={{ zIndex: 999999 }}>
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-gray-800">
               {title.includes("Receita") ? "Detalhamento das Receitas" : "Detalhamento das Despesas"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {breakdown && breakdown.length > 0 ? (
+            {processedBreakdown && processedBreakdown.length > 0 ? (
               <div className="space-y-3">
                 <div className="max-h-64 overflow-y-auto space-y-2">
-                  {breakdown.map((item, index) => (
+                  {processedBreakdown.map((item, index) => (
                     <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                       <span className="font-medium text-gray-700 text-sm">{item.label}</span>
                       <span className="text-green-600 font-semibold">{item.value}</span>
