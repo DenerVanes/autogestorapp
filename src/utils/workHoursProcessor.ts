@@ -183,13 +183,48 @@ const getDateRangeForPeriod = (period: string, customStartDate?: Date, customEnd
   return { startDate, endDate };
 };
 
+// Nova função para somar tempo corretamente
+const sumWorkPeriods = (periods: { startDateTime: Date; endDateTime: Date }[]): { hours: number; minutes: number; totalDecimal: number } => {
+  let totalHours = 0;
+  let totalMinutes = 0;
+
+  console.log('=== SOMA DE PERÍODOS ===');
+  
+  periods.forEach((period, index) => {
+    const diff = period.endDateTime.getTime() - period.startDateTime.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    console.log(`Período ${index + 1}: ${format(period.startDateTime, 'HH:mm')} - ${format(period.endDateTime, 'HH:mm')} = ${hours}h ${minutes}min`);
+    
+    totalHours += hours;
+    totalMinutes += minutes;
+  });
+
+  // Converter minutos excedentes em horas
+  if (totalMinutes >= 60) {
+    const extraHours = Math.floor(totalMinutes / 60);
+    totalHours += extraHours;
+    totalMinutes = totalMinutes % 60;
+  }
+
+  // Conversão especial: tratar minutos como centavos de hora
+  // 4h50min = 4,50 (não 4,83)
+  const totalDecimal = totalHours + (totalMinutes / 100);
+
+  console.log(`Total somado: ${totalHours}h ${totalMinutes}min`);
+  console.log(`Conversão para cálculo: ${totalDecimal.toFixed(2)} (formato H,MM)`);
+
+  return { hours: totalHours, minutes: totalMinutes, totalDecimal };
+};
+
 export const calculateWorkHoursWithCutoff = (
   workHours: WorkHoursRecord[], 
   period: string, 
   customStartDate?: Date, 
   customEndDate?: Date
 ): number => {
-  console.log(`Calculando horas para período: ${period}`);
+  console.log(`=== CALCULANDO HORAS PARA PERÍODO: ${period} ===`);
   console.log(`Total de registros de entrada: ${workHours.length}`);
   
   const processedRecords = processWorkHoursWithCutoff(workHours);
@@ -218,15 +253,19 @@ export const calculateWorkHoursWithCutoff = (
   
   console.log(`Registros após filtro: ${filteredRecords.length}`);
   
-  const totalHours = filteredRecords.reduce((total, record) => {
-    const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
-    const hours = diff / (1000 * 60 * 60);
-    console.log(`Período: ${format(record.startDateTime, 'HH:mm')} - ${format(record.endDateTime, 'HH:mm')} = ${hours.toFixed(2)}h`);
-    return total + hours;
-  }, 0);
+  // Usar a nova função de soma de períodos
+  const periods = filteredRecords.map(record => ({
+    startDateTime: record.startDateTime,
+    endDateTime: record.endDateTime
+  }));
+
+  const { hours, minutes, totalDecimal } = sumWorkPeriods(periods);
   
-  console.log(`Total de horas calculadas: ${totalHours.toFixed(2)}h`);
-  return totalHours;
+  console.log(`=== RESULTADO FINAL ===`);
+  console.log(`Formato display: ${hours}h ${minutes}min`);
+  console.log(`Valor para cálculo "R$ por hora": ${totalDecimal.toFixed(2)}`);
+  
+  return totalDecimal;
 };
 
 export const groupWorkHoursByDate = (workHours: WorkHoursRecord[]): Map<string, ProcessedWorkHours[]> => {
