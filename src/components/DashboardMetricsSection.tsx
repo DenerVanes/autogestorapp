@@ -3,6 +3,8 @@ import { DollarSign, TrendingDown, Car, Clock } from "lucide-react";
 import MetricCard from "./MetricCard";
 import FuelExpenseCard from "./FuelExpenseCard";
 import type { Metrics } from "@/types";
+import { useUser } from "@/contexts/UserContext";
+import { filterByPeriod } from "@/utils/dateFilters";
 
 interface DashboardMetricsSectionProps {
   metrics: Metrics & { changes: Record<string, string> };
@@ -17,12 +19,36 @@ const DashboardMetricsSection = ({
   customStartDate, 
   customEndDate 
 }: DashboardMetricsSectionProps) => {
+  const { transactions } = useUser();
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
   };
+
+  // Calculate revenue breakdown by category
+  const getRevenueBreakdown = () => {
+    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
+    const revenueTransactions = filteredTransactions.filter(t => t.type === 'receita');
+    
+    const breakdown = revenueTransactions.reduce((acc, transaction) => {
+      const category = transaction.category || 'Outros';
+      acc[category] = (acc[category] || 0) + transaction.value;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(breakdown)
+      .map(([label, amount]) => ({
+        label,
+        value: formatCurrency(amount),
+        amount
+      }))
+      .filter(item => item.amount > 0);
+  };
+
+  const revenueBreakdown = getRevenueBreakdown();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6 mb-8">
@@ -32,6 +58,7 @@ const DashboardMetricsSection = ({
         icon={DollarSign}
         color="green"
         change={metrics.changes?.receita}
+        breakdown={revenueBreakdown}
       />
       <MetricCard
         title="Despesa Total"
