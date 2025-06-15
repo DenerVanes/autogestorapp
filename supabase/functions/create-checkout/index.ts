@@ -64,9 +64,9 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
     if (planType === 'pix') {
-      // Criar Payment Intent para PIX
+      // Criar Payment Intent para PIX - corrigindo valor para R$ 19,90
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: 2990, // R$ 29,90 em centavos
+        amount: 1990, // R$ 19,90 em centavos
         currency: 'brl',
         customer: customerId,
         payment_method_types: ['pix'],
@@ -80,7 +80,7 @@ serve(async (req) => {
       await supabaseClient.from('pix_payments').insert({
         user_id: user.id,
         stripe_payment_intent_id: paymentIntent.id,
-        amount: 2990,
+        amount: 1990, // R$ 19,90 em centavos
         status: 'pending',
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
       });
@@ -96,7 +96,7 @@ serve(async (req) => {
         status: 200,
       });
     } else {
-      // Criar Checkout Session para assinatura recorrente
+      // Criar Checkout Session para assinatura recorrente - corrigindo valor para R$ 19,90
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         line_items: [
@@ -107,7 +107,7 @@ serve(async (req) => {
                 name: "Plano PRO - Recorrente",
                 description: "Acesso completo às funcionalidades premium"
               },
-              unit_amount: 2990, // R$ 29,90
+              unit_amount: 1990, // R$ 19,90 em centavos
               recurring: { interval: "month" },
             },
             quantity: 1,

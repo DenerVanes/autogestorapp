@@ -40,8 +40,8 @@ const SubscriptionBanner = () => {
         <Crown className="h-4 w-4 text-red-600" />
         <AlertDescription className="text-red-800">
           {isTrial 
-            ? `Seu período gratuito de 7 dias expirou. Assine o plano PRO para continuar criando lançamentos.`
-            : `Sua assinatura PRO expirou. Renove para continuar com acesso completo.`
+            ? `Período gratuito expirou. Assine o PRO para continuar.`
+            : `Assinatura expirou. Renove o PRO para continuar.`
           }
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -70,7 +70,7 @@ const SubscriptionBanner = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold mb-2">R$ 29,90/mês</div>
+                    <div className="text-2xl font-bold mb-2">R$ 19,90/mês</div>
                     <ul className="text-sm space-y-1 mb-4">
                       <li>✅ Acesso completo às funcionalidades</li>
                       <li>✅ Renovação automática</li>
@@ -99,7 +99,7 @@ const SubscriptionBanner = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold mb-2">R$ 29,90</div>
+                    <div className="text-2xl font-bold mb-2">R$ 19,90</div>
                     <ul className="text-sm space-y-1 mb-4">
                       <li>✅ Acesso por 30 dias</li>
                       <li>✅ Pagamento via PIX</li>
@@ -161,7 +161,7 @@ const SubscriptionBanner = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold mb-2">R$ 29,90/mês</div>
+                      <div className="text-2xl font-bold mb-2">R$ 19,90/mês</div>
                       <ul className="text-sm space-y-1 mb-4">
                         <li>✅ Acesso completo às funcionalidades</li>
                         <li>✅ Renovação automática</li>
@@ -190,7 +190,7 @@ const SubscriptionBanner = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold mb-2">R$ 29,90</div>
+                      <div className="text-2xl font-bold mb-2">R$ 19,90</div>
                       <ul className="text-sm space-y-1 mb-4">
                         <li>✅ Acesso por 30 dias</li>
                         <li>✅ Pagamento via PIX</li>
