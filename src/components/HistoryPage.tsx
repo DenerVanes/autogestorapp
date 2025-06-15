@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { useUser } from "@/contexts/UserContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import EditTransactionModal from "./EditTransactionModal";
+import EditOdometerModal from "./EditOdometerModal";
 import type { Transaction, OdometerRecord, WorkHoursRecord } from "@/types";
 
 interface HistoryPageProps {
@@ -25,6 +25,7 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
   } = useUser();
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editingOdometerRecord, setEditingOdometerRecord] = useState<OdometerRecord | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -192,7 +193,11 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="font-semibold text-blue-600">{record.value} km</span>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditingOdometerRecord(record)}
+                        >
                           <Edit2 className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -263,6 +268,14 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
           transaction={editingTransaction}
           isOpen={true}
           onClose={() => setEditingTransaction(null)}
+        />
+      )}
+
+      {editingOdometerRecord && (
+        <EditOdometerModal
+          record={editingOdometerRecord}
+          isOpen={true}
+          onClose={() => setEditingOdometerRecord(null)}
         />
       )}
     </div>
