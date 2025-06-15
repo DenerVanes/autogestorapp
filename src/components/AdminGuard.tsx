@@ -2,15 +2,18 @@
 import { ReactNode } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AdminGuardProps {
   children: ReactNode;
 }
 
 const AdminGuard = ({ children }: AdminGuardProps) => {
-  const { isAdmin, loading } = useAdminAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdminAuth();
 
-  if (loading) {
+  // Aguardar carregamento completo
+  if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -21,10 +24,18 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
     );
   }
 
-  if (!isAdmin) {
+  // Verificação dupla de segurança
+  if (!user) {
+    console.warn('Usuário não autenticado tentando acessar área admin');
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin || user.email !== 'dennervanes@hotmail.com') {
+    console.warn('Acesso negado ao painel admin para:', user.email);
     return <Navigate to="/" replace />;
   }
 
+  console.log('Acesso autorizado ao painel admin para:', user.email);
   return <>{children}</>;
 };
 

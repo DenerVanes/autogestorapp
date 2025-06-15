@@ -15,9 +15,15 @@ export const useAdminAuth = () => {
         return;
       }
 
-      // Verificar se o email do usuário é o admin autorizado
+      // Verificação rigorosa do email do admin
       const adminEmail = 'dennervanes@hotmail.com';
-      const userIsAdmin = user.email === adminEmail;
+      const userIsAdmin = user.email?.toLowerCase().trim() === adminEmail.toLowerCase().trim();
+      
+      console.log('Admin check:', {
+        userEmail: user.email,
+        adminEmail,
+        isAdmin: userIsAdmin
+      });
       
       setIsAdmin(userIsAdmin);
       setLoading(false);
