@@ -44,11 +44,16 @@ export const getMetrics = (
   customStartDate?: Date,
   customEndDate?: Date
 ): Metrics & { changes: Record<string, string> } => {
+  console.log(`=== Calculando métricas para período: ${period} ===`);
+  
   const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
+  console.log(`Transações filtradas: ${filteredTransactions.length}`);
   
   const receita = filteredTransactions
     .filter(t => t.type === 'receita')
     .reduce((sum, t) => sum + t.value, 0);
+  
+  console.log(`Receita total: R$ ${receita.toFixed(2)}`);
   
   const despesa = filteredTransactions
     .filter(t => t.type === 'despesa')
@@ -60,7 +65,10 @@ export const getMetrics = (
   
   // Use the new logic to calculate work hours
   const horasTrabalhadas = calculateWorkHours(workHours, period, customStartDate, customEndDate);
+  console.log(`Horas trabalhadas: ${horasTrabalhadas.toFixed(2)}h`);
+  
   const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
+  console.log(`R$ por hora: R$ ${valorPorHora.toFixed(2)} (${receita.toFixed(2)} ÷ ${horasTrabalhadas.toFixed(2)})`);
 
   // Calculate previous month metrics for comparison
   const previousMetrics = calculatePreviousMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);

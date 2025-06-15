@@ -1,5 +1,5 @@
 
-import { format, startOfDay, addDays, subDays } from "date-fns";
+import { format, startOfDay, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import type { WorkHoursRecord } from "@/types";
 
 export interface ProcessedWorkHours {
@@ -22,12 +22,16 @@ export const processWorkHoursWithCutoff = (workHours: WorkHoursRecord[]): Proces
     const startDate = new Date(record.startDateTime);
     const endDate = new Date(record.endDateTime);
     
+    console.log(`Processando registro: ${format(startDate, 'dd/MM/yyyy HH:mm')} - ${format(endDate, 'dd/MM/yyyy HH:mm')}`);
+    
     // Verifica se o registro atravessa o horário de corte (04:00)
     const crossesCutoff = shouldSplitRecord(startDate, endDate);
     
     if (!crossesCutoff) {
       // Registro normal - não atravessa 04:00
       const workingDate = getWorkingDate(startDate);
+      
+      console.log(`Registro normal - Data de trabalho: ${format(workingDate, 'dd/MM/yyyy')}`);
       
       processedRecords.push({
         id: record.id,
@@ -39,7 +43,11 @@ export const processWorkHoursWithCutoff = (workHours: WorkHoursRecord[]): Proces
       });
     } else {
       // Registro atravessa 04:00 - dividir em dois
+      console.log('Registro atravessa 04:00 - dividindo em dois períodos');
       const splitRecords = splitRecordAtCutoff(record);
+      splitRecords.forEach(split => {
+        console.log(`Período dividido: ${format(split.startDateTime, 'dd/MM/yyyy HH:mm')} - ${format(split.endDateTime, 'dd/MM/yyyy HH:mm')} (Data trabalho: ${format(split.workingDate, 'dd/MM/yyyy')})`);
+      });
       processedRecords.push(...splitRecords);
     }
   });
@@ -126,25 +134,99 @@ const getWorkingDate = (dateTime: Date): Date => {
   }
 };
 
+const getDateRangeForPeriod = (period: string, customStartDate?: Date, customEndDate?: Date) => {
+  const now = new Date();
+  let startDate: Date;
+  let endDate: Date;
+
+  if (period === 'personalizado' && customStartDate && customEndDate) {
+    startDate = startOfDay(customStartDate);
+    endDate = startOfDay(addDays(customEndDate, 1)); // Include the end date
+  } else if (period === 'todos') {
+    // Para "todos", não aplicar filtro de data
+    return null;
+  } else {
+    switch (period) {
+      case 'hoje':
+        startDate = startOfDay(now);
+        endDate = startOfDay(addDays(now, 1));
+        break;
+      case 'ontem':
+        const yesterday = subDays(now, 1);
+        startDate = startOfDay(yesterday);
+        endDate = startOfDay(now);
+        break;
+      case 'esta-semana':
+        startDate = startOfWeek(now, { weekStartsOn: 1 });
+        endDate = startOfDay(addDays(endOfWeek(now, { weekStartsOn: 1 }), 1));
+        break;
+      case 'semana-passada':
+        const lastWeek = subWeeks(now, 1);
+        startDate = startOfWeek(lastWeek, { weekStartsOn: 1 });
+        endDate = startOfDay(addDays(endOfWeek(lastWeek, { weekStartsOn: 1 }), 1));
+        break;
+      case 'este-mes':
+        startDate = startOfMonth(now);
+        endDate = startOfDay(addDays(endOfMonth(now), 1));
+        break;
+      case 'mes-passado':
+        const lastMonth = subMonths(now, 1);
+        startDate = startOfMonth(lastMonth);
+        endDate = startOfDay(addDays(endOfMonth(lastMonth), 1));
+        break;
+      default:
+        startDate = startOfDay(now);
+        endDate = startOfDay(addDays(now, 1));
+    }
+  }
+
+  return { startDate, endDate };
+};
+
 export const calculateWorkHoursWithCutoff = (
   workHours: WorkHoursRecord[], 
   period: string, 
   customStartDate?: Date, 
   customEndDate?: Date
 ): number => {
+  console.log(`Calculando horas para período: ${period}`);
+  console.log(`Total de registros de entrada: ${workHours.length}`);
+  
   const processedRecords = processWorkHoursWithCutoff(workHours);
+  console.log(`Total de registros processados: ${processedRecords.length}`);
   
   // Aplicar filtro de período baseado na data de trabalho
-  const filteredRecords = processedRecords.filter(record => {
-    // Aqui você aplicaria o mesmo filtro de período, mas baseado na workingDate
-    // Por simplicidade, vou retornar todos por enquanto
-    return true;
-  });
+  const dateRange = getDateRangeForPeriod(period, customStartDate, customEndDate);
   
-  return filteredRecords.reduce((total, record) => {
+  let filteredRecords = processedRecords;
+  
+  if (dateRange) {
+    const { startDate, endDate } = dateRange;
+    console.log(`Filtrando por período: ${format(startDate, 'dd/MM/yyyy')} a ${format(endDate, 'dd/MM/yyyy')}`);
+    
+    filteredRecords = processedRecords.filter(record => {
+      const workingDate = record.workingDate;
+      const isInRange = workingDate >= startDate && workingDate < endDate;
+      
+      if (isInRange) {
+        console.log(`Registro incluído: ${format(record.startDateTime, 'dd/MM/yyyy HH:mm')} - ${format(record.endDateTime, 'dd/MM/yyyy HH:mm')} (Data trabalho: ${format(workingDate, 'dd/MM/yyyy')})`);
+      }
+      
+      return isInRange;
+    });
+  }
+  
+  console.log(`Registros após filtro: ${filteredRecords.length}`);
+  
+  const totalHours = filteredRecords.reduce((total, record) => {
     const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
-    return total + (diff / (1000 * 60 * 60));
+    const hours = diff / (1000 * 60 * 60);
+    console.log(`Período: ${format(record.startDateTime, 'HH:mm')} - ${format(record.endDateTime, 'HH:mm')} = ${hours.toFixed(2)}h`);
+    return total + hours;
   }, 0);
+  
+  console.log(`Total de horas calculadas: ${totalHours.toFixed(2)}h`);
+  return totalHours;
 };
 
 export const groupWorkHoursByDate = (workHours: WorkHoursRecord[]): Map<string, ProcessedWorkHours[]> => {
