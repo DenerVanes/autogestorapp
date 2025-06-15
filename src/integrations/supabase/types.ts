@@ -90,45 +90,6 @@ export type Database = {
         }
         Relationships: []
       }
-      pix_payments: {
-        Row: {
-          amount: number
-          created_at: string
-          currency: string | null
-          expires_at: string
-          id: string
-          paid_at: string | null
-          status: string
-          stripe_payment_intent_id: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          currency?: string | null
-          expires_at: string
-          id?: string
-          paid_at?: string | null
-          status: string
-          stripe_payment_intent_id: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          currency?: string | null
-          expires_at?: string
-          id?: string
-          paid_at?: string | null
-          status?: string
-          stripe_payment_intent_id?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
@@ -211,57 +172,33 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string
-          current_period_end: string | null
-          current_period_start: string | null
           expires_at: string | null
           id: string
-          payment_method: string | null
           plan_type: string
           started_at: string
           status: string
-          stripe_customer_id: string | null
-          stripe_price_id: string | null
-          stripe_subscription_id: string | null
-          trial_end_date: string | null
-          trial_start_date: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           amount?: number | null
           created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
           expires_at?: string | null
           id?: string
-          payment_method?: string | null
           plan_type: string
           started_at?: string
           status: string
-          stripe_customer_id?: string | null
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
-          trial_end_date?: string | null
-          trial_start_date?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number | null
           created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
           expires_at?: string | null
           id?: string
-          payment_method?: string | null
           plan_type?: string
           started_at?: string
           status?: string
-          stripe_customer_id?: string | null
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
-          trial_end_date?: string | null
-          trial_start_date?: string | null
           updated_at?: string
           user_id?: string
         }

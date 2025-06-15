@@ -1,119 +1,75 @@
 
-import React, { useState } from 'react';
-import { DateRange } from 'react-day-picker';
-import DashboardHeader from './DashboardHeader';
-import DashboardMetricsSection from './DashboardMetricsSection';
-import DashboardChartSection from './DashboardChartSection';
-import DashboardRecentTransactions from './DashboardRecentTransactions';
-import FloatingActionButton from './FloatingActionButton';
-import TransactionModal from './TransactionModal';
-import OdometerModal from './OdometerModal';
-import WorkHoursModal from './WorkHoursModal';
-import ProfileModal from './ProfileModal';
-import SubscriptionStatus from '@/components/subscription/SubscriptionStatus';
-import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
-import HistoryPage from './HistoryPage';
-import { useUser } from '@/contexts/UserContext';
-import { filterByPeriod } from '@/utils/dateFilters';
-import { calculatePreviousMetrics, calculatePercentageChange } from '@/utils/comparisonCalculator';
+import { useState } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import FloatingActionButton from "./FloatingActionButton";
+import TransactionModal from "./TransactionModal";
+import WorkHoursModal from "./WorkHoursModal";
+import UserProfileModal from "./UserProfileModal";
+import HistoryPage from "./HistoryPage";
+import DashboardHeader from "./DashboardHeader";
+import DashboardMetricsSection from "./DashboardMetricsSection";
+import DashboardChartSection from "./DashboardChartSection";
+import DashboardRecentTransactions from "./DashboardRecentTransactions";
+import { useUser } from "@/contexts/UserContext";
+import { DateRange } from "react-day-picker";
+import { filterByPeriod } from "@/utils/dateFilters";
 
-type ActionType = 'receita' | 'despesa' | 'odometro' | 'horas';
+type TransactionType = 'receita' | 'despesa' | 'odometro' | 'horas' | null;
 
 const Dashboard = () => {
-  const { user, transactions, odometerRecords, workHours, getMetrics, getChartData } = useUser();
-  
-  // Modal states
-  const [transactionModal, setTransactionModal] = useState<{ isOpen: boolean; type: 'receita' | 'despesa' | 'odometro' }>({
-    isOpen: false,
-    type: 'receita'
-  });
-  const [isOdometerModalOpen, setIsOdometerModalOpen] = useState(false);
-  const [isWorkHoursModalOpen, setIsWorkHoursModalOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState("hoje");
+  const [modalType, setModalType] = useState<TransactionType>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>();
+  
+  const { user, getMetrics, getChartData, transactions } = useUser();
 
-  // Period and date filter states
-  const [selectedPeriod, setSelectedPeriod] = useState('este-mes');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [customStartDate, setCustomStartDate] = useState<Date>();
-  const [customEndDate, setCustomEndDate] = useState<Date>();
+  const customStartDate = dateRange?.from;
+  const customEndDate = dateRange?.to;
 
-  const handlePeriodChange = (value: string) => {
-    setSelectedPeriod(value);
-    if (value !== 'personalizado') {
-      setDateRange(undefined);
-      setCustomStartDate(undefined);
-      setCustomEndDate(undefined);
-    }
-  };
-
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-  };
-
-  const handleDateRangeApply = () => {
-    if (dateRange?.from && dateRange?.to) {
-      setCustomStartDate(dateRange.from);
-      setCustomEndDate(dateRange.to);
-      setSelectedPeriod('personalizado');
-    }
-  };
-
-  const handleFloatingAction = (type: ActionType) => {
-    if (type === 'odometro') {
-      setIsOdometerModalOpen(true);
-    } else if (type === 'horas') {
-      setIsWorkHoursModalOpen(true);
-    } else {
-      setTransactionModal({
-        isOpen: true,
-        type: type as 'receita' | 'despesa'
-      });
-    }
-  };
-
-  const handleShowHistory = () => {
-    setShowHistory(true);
-  };
-
-  // Calculate metrics and chart data
   const metrics = getMetrics(selectedPeriod, customStartDate, customEndDate);
   const chartData = getChartData(selectedPeriod, customStartDate, customEndDate);
   
-  // Calculate comparison data
-  const previousMetrics = calculatePreviousMetrics(
-    transactions, 
-    odometerRecords, 
-    workHours, 
-    selectedPeriod, 
-    customStartDate, 
-    customEndDate
-  );
+  // Apply the same date filter to recent transactions
+  const filteredTransactions = filterByPeriod(transactions, selectedPeriod, customStartDate, customEndDate);
 
-  const changes = {
-    receita: calculatePercentageChange(metrics.receita, previousMetrics.receita),
-    despesa: calculatePercentageChange(metrics.despesa, previousMetrics.despesa),
-    saldo: calculatePercentageChange(metrics.saldo, previousMetrics.saldo),
-    kmRodado: calculatePercentageChange(metrics.kmRodado, previousMetrics.kmRodado),
-    valorPorKm: calculatePercentageChange(metrics.valorPorKm, previousMetrics.valorPorKm),
-    horasTrabalhadas: calculatePercentageChange(metrics.horasTrabalhadas, previousMetrics.horasTrabalhadas),
-    valorPorHora: calculatePercentageChange(metrics.valorPorHora, previousMetrics.valorPorHora)
+  const handleFloatingButtonClick = (type: TransactionType) => {
+    setModalType(type);
   };
 
-  // Get filtered transactions for recent transactions section
-  const filteredTransactions = filterByPeriod(transactions, selectedPeriod, customStartDate, customEndDate);
-  
-  // Get period label
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    // Clear custom date range when selecting predefined periods
+    setDateRange(undefined);
+  };
+
+  const handleDateRangeApply = () => {
+    setSelectedPeriod('personalizado');
+  };
+
   const getPeriodLabel = () => {
     switch (selectedPeriod) {
-      case 'hoje': return 'de hoje';
-      case 'ontem': return 'de ontem';
-      case 'esta-semana': return 'desta semana';
-      case 'semana-passada': return 'da semana passada';
-      case 'este-mes': return 'deste mês';
-      case 'mes-passado': return 'do mês passado';
-      case 'personalizado': return 'do período selecionado';
-      default: return 'do período';
+      case 'hoje':
+        return 'de hoje';
+      case 'ontem':
+        return 'de ontem';
+      case 'esta-semana':
+        return 'desta semana';
+      case 'semana-passada':
+        return 'da semana passada';
+      case 'este-mes':
+        return 'deste mês';
+      case 'mes-passado':
+        return 'do mês passado';
+      case 'personalizado':
+        if (customStartDate && customEndDate) {
+          return `de ${format(customStartDate, 'dd/MM', { locale: ptBR })} a ${format(customEndDate, 'dd/MM', { locale: ptBR })}`;
+        }
+        return 'do período personalizado';
+      default:
+        return 'do período selecionado';
     }
   };
 
@@ -123,66 +79,57 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <DashboardHeader 
-          userName={user?.name}
-          selectedPeriod={selectedPeriod}
-          onPeriodChange={handlePeriodChange}
-          dateRange={dateRange}
-          onDateRangeChange={handleDateRangeChange}
-          onDateRangeApply={handleDateRangeApply}
-          onShowProfileModal={() => setIsProfileModalOpen(true)}
-        />
-        
-        {/* Status da Assinatura */}
-        <div className="mb-6">
-          <SubscriptionStatus />
-        </div>
+      <DashboardHeader
+        userName={user?.name}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={handlePeriodChange}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        onDateRangeApply={handleDateRangeApply}
+        onShowProfileModal={() => setShowProfileModal(true)}
+      />
 
-        {/* Métricas - sempre visíveis */}
-        <DashboardMetricsSection 
-          metrics={{ ...metrics, changes }}
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <DashboardMetricsSection
+          metrics={metrics}
           period={selectedPeriod}
           customStartDate={customStartDate}
           customEndDate={customEndDate}
         />
 
-        {/* Seção de Gráficos - sempre visível */}
         <DashboardChartSection chartData={chartData} />
 
-        {/* Transações Recentes - protegida para edição */}
-        <SubscriptionGuard feature="edição de transações" showUpgrade={false}>
-          <DashboardRecentTransactions 
-            filteredTransactions={filteredTransactions}
-            periodLabel={getPeriodLabel()}
-            onShowHistory={handleShowHistory}
-          />
-        </SubscriptionGuard>
-
-        {/* Botão flutuante - protegido */}
-        <SubscriptionGuard feature="criação de novos registros" showUpgrade={false}>
-          <FloatingActionButton onAction={handleFloatingAction} />
-        </SubscriptionGuard>
-
-        {/* Modais */}
-        <TransactionModal 
-          type={transactionModal.type}
-          isOpen={transactionModal.isOpen}
-          onClose={() => setTransactionModal({ isOpen: false, type: 'receita' })}
-        />
-        <OdometerModal 
-          isOpen={isOdometerModalOpen}
-          onClose={() => setIsOdometerModalOpen(false)}
-        />
-        <WorkHoursModal 
-          isOpen={isWorkHoursModalOpen}
-          onClose={() => setIsWorkHoursModalOpen(false)}
-        />
-        <ProfileModal 
-          isOpen={isProfileModalOpen}
-          onClose={() => setIsProfileModalOpen(false)}
+        <DashboardRecentTransactions
+          filteredTransactions={filteredTransactions}
+          periodLabel={getPeriodLabel()}
+          onShowHistory={() => setShowHistory(true)}
         />
       </div>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton onAction={handleFloatingButtonClick} />
+
+      {/* Modals */}
+      {modalType && modalType !== 'horas' && (
+        <TransactionModal
+          type={modalType}
+          isOpen={true}
+          onClose={() => setModalType(null)}
+        />
+      )}
+
+      {modalType === 'horas' && (
+        <WorkHoursModal
+          isOpen={true}
+          onClose={() => setModalType(null)}
+        />
+      )}
+
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </div>
   );
 };
