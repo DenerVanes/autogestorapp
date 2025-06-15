@@ -43,7 +43,7 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
   };
 
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative">
+    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -54,13 +54,14 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info 
-                        className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors relative z-10" 
+                        className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors" 
                       />
                     </TooltipTrigger>
                     <TooltipContent 
                       side="top" 
-                      className="fixed z-[99999] max-w-sm p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl rounded-lg text-sm whitespace-pre-line animate-in fade-in-0 zoom-in-95 duration-200"
+                      className="z-[99999] max-w-sm p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl rounded-lg text-sm whitespace-pre-line animate-in fade-in-0 zoom-in-95 duration-200 fixed"
                       sideOffset={8}
+                      style={{ zIndex: 99999, position: 'fixed' }}
                     >
                       <div className="space-y-2">
                         <h4 className="font-semibold text-gray-800 border-b border-gray-200 pb-1">
