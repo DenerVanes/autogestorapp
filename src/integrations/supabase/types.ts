@@ -135,7 +135,7 @@ export type Database = {
           email: string
           fuel_consumption: number | null
           id: string
-          name: string
+          name: string | null
           updated_at: string
           vehicle_model: string | null
           vehicle_type: string | null
@@ -145,7 +145,7 @@ export type Database = {
           email: string
           fuel_consumption?: number | null
           id: string
-          name: string
+          name?: string | null
           updated_at?: string
           vehicle_model?: string | null
           vehicle_type?: string | null
@@ -155,7 +155,7 @@ export type Database = {
           email?: string
           fuel_consumption?: number | null
           id?: string
-          name?: string
+          name?: string | null
           updated_at?: string
           vehicle_model?: string | null
           vehicle_type?: string | null
