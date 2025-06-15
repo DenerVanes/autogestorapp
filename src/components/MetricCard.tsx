@@ -49,7 +49,7 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <p className="text-sm font-medium text-muted-foreground">{title}</p>
-              {showInfoIcon && breakdown && breakdown.length > 0 && (
+              {showInfoIcon && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -67,14 +67,20 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
                         <h4 className="font-semibold text-gray-800 border-b border-gray-200 pb-1">
                           {title.includes("Receita") ? "Detalhamento das Receitas" : "Detalhamento das Despesas"}
                         </h4>
-                        <div className="space-y-1">
-                          {breakdown.slice(0, 5).map((item, index) => (
-                            <div key={index} className="flex justify-between items-center text-gray-700">
-                              <span className="font-medium">{item.label}</span>
-                              <span className="text-green-600 font-semibold">{item.value}</span>
-                            </div>
-                          ))}
-                        </div>
+                        {breakdown && breakdown.length > 0 ? (
+                          <div className="space-y-1">
+                            {breakdown.slice(0, 5).map((item, index) => (
+                              <div key={index} className="flex justify-between items-center text-gray-700">
+                                <span className="font-medium">{item.label}</span>
+                                <span className="text-green-600 font-semibold">{item.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-gray-600">
+                            Nenhum dado disponível para o período selecionado
+                          </div>
+                        )}
                         <div className="border-t border-gray-200 pt-2 mt-3">
                           <div className="flex justify-between items-center font-bold text-gray-800">
                             <span>Total:</span>
