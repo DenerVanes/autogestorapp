@@ -4,28 +4,39 @@ import { transactionService } from '@/services/transactionService';
 import { odometerService } from '@/services/odometerService';
 import { workHoursService } from '@/services/workHoursService';
 import { User, Transaction, OdometerRecord, WorkHoursRecord } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 export class UserDataService {
   static async loadUserProfile(authUserId: string): Promise<User> {
-    let profile;
-    try {
-      profile = await profileService.getUserProfile(authUserId);
-    } catch (error: any) {
-      console.log('Profile not found, creating new profile');
-      // Create profile if it doesn't exist
-      profile = await profileService.updateUserProfile(authUserId, {
-        name: 'Usuário',
-        email: ''
-      });
+    // Retry logic to handle potential delay in profile creation after signup
+    for (let i = 0; i < 3; i++) {
+      try {
+        const profile = await profileService.getUserProfile(authUserId);
+        // Profile found, return mapped data
+        return {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          vehicleType: profile.vehicle_type,
+          vehicleModel: profile.vehicle_model,
+          fuelConsumption: profile.fuel_consumption
+        };
+      } catch (error) {
+        console.log(`Attempt ${i + 1}: Profile not found, retrying in 1 second...`);
+        if (i < 2) await new Promise(res => setTimeout(res, 1000));
+      }
     }
 
+    // Fallback if profile is still not found after retries
+    console.error("Failed to load profile after multiple retries. Using fallback data from auth.");
+    const { data: { user: authUser } } = await supabase.auth.getUser();
     return {
-      id: profile.id,
-      name: profile.name,
-      email: profile.email,
-      vehicleType: profile.vehicle_type,
-      vehicleModel: profile.vehicle_model,
-      fuelConsumption: profile.fuel_consumption
+      id: authUserId,
+      name: authUser?.user_metadata.name || 'Usuário',
+      email: authUser?.email || '',
+      vehicleType: '',
+      vehicleModel: '',
+      fuelConsumption: undefined,
     };
   }
 

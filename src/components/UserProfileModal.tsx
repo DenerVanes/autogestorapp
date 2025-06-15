@@ -51,8 +51,10 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
       toast.error("Modelo do veículo é obrigatório");
       return;
     }
-    if (!formData.fuelConsumption || parseFloat(formData.fuelConsumption) <= 0) {
-      toast.error("Consumo médio é obrigatório e deve ser maior que zero");
+    
+    const consumption = parseFloat(formData.fuelConsumption);
+    if (isNaN(consumption) || consumption <= 0) {
+      toast.error("Consumo médio é obrigatório e deve ser um número maior que zero");
       return;
     }
 
@@ -62,7 +64,7 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
         name: formData.name,
         vehicleType: formData.vehicleType,
         vehicleModel: formData.vehicleModel,
-        fuelConsumption: parseFloat(formData.fuelConsumption)
+        fuelConsumption: consumption
       });
       toast.success("Perfil atualizado com sucesso!");
       onClose();
