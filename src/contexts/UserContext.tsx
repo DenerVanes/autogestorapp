@@ -1,12 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabaseService } from '@/services/supabaseService';
 import { UserDataService } from '@/contexts/userDataService';
 import { UserContextType } from '@/contexts/types';
 import { User, Transaction, OdometerRecord, WorkHoursRecord } from '@/types';
-import { metricsCalculator } from '@/utils/metricsCalculator';
-import { chartDataGenerator } from '@/utils/chartDataGenerator';
+import { calculations } from '@/utils/calculations';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -299,11 +297,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getMetrics = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    return metricsCalculator.calculateMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
+    return calculations.calculateMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
   };
 
   const getChartData = (period: string, customStartDate?: Date, customEndDate?: Date) => {
-    return chartDataGenerator.generateChartData(transactions, period, customStartDate, customEndDate);
+    return calculations.generateChartData(transactions, period, customStartDate, customEndDate);
   };
 
   const refreshData = async () => {
