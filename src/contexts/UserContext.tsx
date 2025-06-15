@@ -9,21 +9,45 @@ import { UserDataService } from './userDataService';
 import { useTransactionOperations } from './useTransactionOperations';
 import { useOdometerOperations } from './useOdometerOperations';
 import { useWorkHoursOperations } from './useWorkHoursOperations';
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser, loading: authLoading } = useAuth();
+  const { requireAccess } = useAccessControl();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [odometerRecords, setOdometerRecords] = useState<OdometerRecord[]>([]);
   const [workHours, setWorkHours] = useState<WorkHoursRecord[]>([]);
 
-  // Initialize operation hooks
+  // Wrap operations with access control
   const transactionOps = useTransactionOperations(setTransactions, authUser?.id);
   const odometerOps = useOdometerOperations(setOdometerRecords, authUser?.id);
   const workHoursOps = useWorkHoursOperations(setWorkHours, authUser?.id);
+
+  // Wrap operations that require access control
+  const protectedTransactionOps = {
+    ...transactionOps,
+    addTransaction: (transaction: any) => requireAccess(() => transactionOps.addTransaction(transaction)),
+    updateTransaction: (id: string, updates: any) => requireAccess(() => transactionOps.updateTransaction(id, updates)),
+    deleteTransaction: (id: string) => requireAccess(() => transactionOps.deleteTransaction(id))
+  };
+
+  const protectedOdometerOps = {
+    ...odometerOps,
+    addOdometerRecord: (record: any) => requireAccess(() => odometerOps.addOdometerRecord(record)),
+    updateOdometerRecord: (id: string, updates: any) => requireAccess(() => odometerOps.updateOdometerRecord(id, updates)),
+    deleteOdometerRecord: (id: string) => requireAccess(() => odometerOps.deleteOdometerRecord(id))
+  };
+
+  const protectedWorkHoursOps = {
+    ...workHoursOps,
+    addWorkHours: (record: any) => requireAccess(() => workHoursOps.addWorkHours(record)),
+    updateWorkHours: (id: string, updates: any) => requireAccess(() => workHoursOps.updateWorkHours(id, updates)),
+    deleteWorkHours: (id: string) => requireAccess(() => workHoursOps.deleteWorkHours(id))
+  };
 
   // Load user data when auth user changes
   useEffect(() => {
@@ -106,9 +130,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         transactions,
         odometerRecords,
         workHours,
-        ...transactionOps,
-        ...odometerOps,
-        ...workHoursOps,
+        ...protectedTransactionOps,
+        ...protectedOdometerOps,
+        ...protectedWorkHoursOps,
         updateUserProfile,
         getMetrics: getMetricsWithChanges,
         getChartData: getChartDataFiltered,

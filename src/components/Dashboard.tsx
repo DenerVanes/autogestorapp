@@ -11,7 +11,9 @@ import DashboardHeader from "./DashboardHeader";
 import DashboardMetricsSection from "./DashboardMetricsSection";
 import DashboardChartSection from "./DashboardChartSection";
 import DashboardRecentTransactions from "./DashboardRecentTransactions";
+import SubscriptionBanner from "./SubscriptionBanner";
 import { useUser } from "@/contexts/UserContext";
+import { useAccessControl } from "@/hooks/useAccessControl";
 import { DateRange } from "react-day-picker";
 import { filterByPeriod } from "@/utils/dateFilters";
 
@@ -25,6 +27,7 @@ const Dashboard = () => {
   const [dateRange, setDateRange] = useState<DateRange>();
   
   const { user, getMetrics, getChartData, transactions } = useUser();
+  const { requireAccess } = useAccessControl();
 
   const customStartDate = dateRange?.from;
   const customEndDate = dateRange?.to;
@@ -36,7 +39,9 @@ const Dashboard = () => {
   const filteredTransactions = filterByPeriod(transactions, selectedPeriod, customStartDate, customEndDate);
 
   const handleFloatingButtonClick = (type: TransactionType) => {
-    setModalType(type);
+    requireAccess(() => {
+      setModalType(type);
+    }, 'criar novos lançamentos');
   };
 
   const handlePeriodChange = (value: string) => {
@@ -91,6 +96,8 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
+        <SubscriptionBanner />
+        
         <DashboardMetricsSection
           metrics={metrics}
           period={selectedPeriod}

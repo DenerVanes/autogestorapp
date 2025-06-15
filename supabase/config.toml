@@ -1,1 +1,48 @@
+
 project_id = "ymytximfmqcubhdvkruu"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+port = 54327
+
+[auth]
+enabled = true
+port = 54328
+
+[edge_runtime]
+enabled = true
+port = 54329
+
+[[edge_runtime.env_vars]]
+name = "SUPABASE_URL"
+value = "https://ymytximfmqcubhdvkruu.supabase.co"
+
+[[edge_runtime.env_vars]]
+name = "SUPABASE_ANON_KEY"
+value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlteXR4aW1mbXFjdWJoZHZrcnV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MzM0NDAsImV4cCI6MjA2NTMwOTQ0MH0.tPKhBe4bFm_OhFRELbP5aowAUDGLmhyps-J-d9TCTlk"
+
+[[edge_runtime.env_vars]]
+name = "SUPABASE_SERVICE_ROLE_KEY"
+
+[functions.stripe-webhook]
+verify_jwt = false
