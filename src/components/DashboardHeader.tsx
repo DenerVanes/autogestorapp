@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { User } from "lucide-react";
@@ -33,6 +32,7 @@ const DashboardHeader = ({
   console.log('isAdmin:', isAdmin);
   console.log('adminLoading:', adminLoading);
   console.log('Deve mostrar botão admin?', !adminLoading && isAdmin);
+  console.log('Renderizando botões - isAdmin:', isAdmin, 'loading:', adminLoading);
 
   return (
     <div className="bg-white shadow-sm border-b">
@@ -49,8 +49,6 @@ const DashboardHeader = ({
             </div>
             
             <div className="flex items-center gap-2">
-              {console.log('Renderizando botões - isAdmin:', isAdmin, 'loading:', adminLoading)}
-              
               {/* Botão Admin - sempre visível se for admin */}
               {isAdmin && (
                 <Button
