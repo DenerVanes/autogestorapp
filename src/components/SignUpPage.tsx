@@ -20,26 +20,51 @@ const SignUpPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Nova sequência de validações
+    if (!name.trim()) {
+      toast.error("Por favor, digite seu nome completo.");
+      return;
+    }
+    if (!email.trim()) {
+      toast.error("Por favor, digite o e-mail.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error("As senhas não coincidem.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      if (password !== confirmPassword) {
-        toast.error("As senhas não coincidem");
-        return;
-      }
+      // Definir a URL de redirecionamento para o e-mail de confirmação
+      const emailRedirectTo = `${window.location.origin}/`;
 
-      if (password.length < 6) {
-        toast.error("A senha deve ter pelo menos 6 caracteres");
-        return;
-      }
+      const { error } = await signUp(email, password, {
+        name: name.trim(),
+        emailRedirectTo,
+      });
 
-      const { error } = await signUp(email, password, { name });
       if (error) {
-        toast.error(error.message);
+        // Mensagens de erro amigáveis
+        if (error.message.includes('duplicate key value')) {
+          toast.error("Já existe uma conta cadastrada com este email.");
+        } else if (error.message.toLowerCase().includes('violates not-null constraint')) {
+          toast.error("Erro no cadastro: dados obrigatórios ausentes.");
+        } else if (error.message.toLowerCase().includes('trigger') && error.message.toLowerCase().includes('name')) {
+          toast.error("Erro no cadastro: nome obrigatório, por favor preencha corretamente.");
+        } else {
+          toast.error(error.message || "Ocorreu um erro inesperado ao criar a conta.");
+        }
       } else {
-        toast.success("Conta criada com sucesso! Verifique seu email para confirmar.");
+        toast.success("Conta criada com sucesso! Verifique seu e-mail para confirmar.");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Ocorreu um erro inesperado");
     } finally {
       setIsLoading(false);
