@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { User } from "lucide-react";
@@ -31,11 +30,10 @@ const DashboardHeader = ({
 
   console.log('🎯 DASHBOARD HEADER RENDER');
   console.log('📊 Estado admin:', { isAdmin, adminLoading });
-  console.log('✅ Deve mostrar botão admin?', isAdmin === true && !adminLoading);
 
+  // Só mostra o botão quando temos certeza que é admin e não está carregando
   const shouldShowAdminButton = isAdmin === true && !adminLoading;
   console.log('🔘 shouldShowAdminButton:', shouldShowAdminButton);
-  console.log('🔍 Renderizando área de botões - shouldShowAdminButton:', shouldShowAdminButton);
   
   if (shouldShowAdminButton) {
     console.log('🎉 RENDERIZANDO BOTÃO ADMIN!');
@@ -71,13 +69,6 @@ const DashboardHeader = ({
                   <Settings className="h-4 w-4" />
                   <span className="hidden sm:inline">Admin</span>
                 </Button>
-              )}
-              
-              {/* Debug: Mostrar estado sempre */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-gray-400 ml-2">
-                  Admin: {isAdmin ? '✅' : '❌'} | Loading: {adminLoading ? '⏳' : '✅'}
-                </div>
               )}
               
               <Button

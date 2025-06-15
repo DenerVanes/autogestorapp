@@ -17,7 +17,7 @@ export const useAdminAuth = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      console.log('=== VERIFICANDO STATUS DE ADMIN (NOVA VERIFICAÇÃO) ===');
+      console.log('=== VERIFICANDO STATUS DE ADMIN ===');
       
       if (!user) {
         console.log('❌ Usuário não logado');
@@ -47,6 +47,7 @@ export const useAdminAuth = () => {
           setAdminData(null);
         } else if (!data || data.length === 0) {
           console.log('❌ Usuário não é admin - nenhum registro encontrado');
+          console.log('💡 Para tornar-se admin, execute: INSERT INTO admin_users (user_id, email) VALUES (\'' + user.id + '\', \'' + user.email + '\');');
           setIsAdmin(false);
           setAdminData(null);
         } else {
