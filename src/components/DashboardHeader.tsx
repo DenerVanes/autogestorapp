@@ -7,6 +7,7 @@ import { DateRange } from "react-day-picker";
 import DateRangePicker from "./DateRangePicker";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -28,6 +29,7 @@ const DashboardHeader = ({
   onShowProfileModal
 }: DashboardHeaderProps) => {
   const { isAdmin, loading: adminLoading, adminData } = useAdminAuth();
+  const navigate = useNavigate();
 
   console.log('🎯 DASHBOARD HEADER RENDER');
   console.log('📊 Estado admin completo:', { 
@@ -38,8 +40,8 @@ const DashboardHeader = ({
   });
 
   const handleAdminClick = () => {
-    console.log('🖱️ Clique no botão admin - redirecionando para /admin');
-    window.location.href = '/admin';
+    console.log('🖱️ Clique no botão admin - navegando para /admin');
+    navigate('/admin');
   };
 
   return (
@@ -60,10 +62,10 @@ const DashboardHeader = ({
               {/* Botão Admin - mostrar se é admin e não está carregando */}
               {isAdmin && !adminLoading && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={handleAdminClick}
-                  className="gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 font-medium"
+                  className="gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200 font-medium"
                   title="Painel Administrativo"
                 >
                   <Settings className="h-4 w-4" />

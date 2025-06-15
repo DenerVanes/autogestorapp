@@ -33,47 +33,46 @@ export const useAdminAuth = () => {
           email: user.email
         });
         
-        // Tentar primeiro por user_id
+        // Buscar por user_id primeiro
         let { data, error } = await supabase
           .from('admin_users')
           .select('*')
           .eq('user_id', user.id)
-          .limit(1);
+          .single();
 
         console.log('📊 Resultado da consulta por user_id:', { data, error });
 
         // Se não encontrou por user_id, tentar por email
-        if ((!data || data.length === 0) && !error) {
+        if (error && error.code === 'PGRST116') {
           console.log('🔄 Tentando buscar por email...');
           const emailResult = await supabase
             .from('admin_users')
             .select('*')
             .eq('email', user.email)
-            .limit(1);
+            .single();
           
           console.log('📊 Resultado da consulta por email:', emailResult);
           data = emailResult.data;
           error = emailResult.error;
         }
 
-        if (error) {
+        if (error && error.code !== 'PGRST116') {
           console.log('⚠️ Erro na consulta:', error.message);
           setIsAdmin(false);
           setAdminData(null);
-        } else if (!data || data.length === 0) {
+        } else if (!data) {
           console.log('❌ Usuário não é admin - nenhum registro encontrado');
           console.log('💡 Para tornar-se admin, execute:');
           console.log(`INSERT INTO admin_users (user_id, email) VALUES ('${user.id}', '${user.email}');`);
           setIsAdmin(false);
           setAdminData(null);
         } else {
-          const adminRecord = data[0];
-          console.log('✅ USUÁRIO É ADMIN! Dados:', adminRecord);
+          console.log('✅ USUÁRIO É ADMIN! Dados:', data);
           setIsAdmin(true);
           setAdminData({
-            id: adminRecord.id,
-            email: adminRecord.email,
-            permissions: (adminRecord.permissions as Record<string, boolean>) || { full_access: true }
+            id: data.id,
+            email: data.email,
+            permissions: (data.permissions as Record<string, boolean>) || { full_access: true }
           });
         }
       } catch (error) {
@@ -89,7 +88,6 @@ export const useAdminAuth = () => {
     checkAdminStatus();
   }, [user]);
 
-  // Log adicional para debug
   console.log('🔄 Hook useAdminAuth retornando:', {
     isAdmin,
     adminData: adminData?.email,
