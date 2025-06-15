@@ -2,6 +2,7 @@
 import { DollarSign, TrendingDown, Car, Clock } from "lucide-react";
 import MetricCard from "./MetricCard";
 import FuelExpenseCard from "./FuelExpenseCard";
+import ProfitCard from "./ProfitCard";
 import type { Metrics } from "@/types";
 import { useUser } from "@/contexts/UserContext";
 import { filterByPeriod } from "@/utils/dateFilters";
@@ -110,7 +111,7 @@ const DashboardMetricsSection = ({
           change={metrics.changes?.kmRodado}
         />
         
-        {/* Segunda fileira - 3 cards + FuelExpenseCard */}
+        {/* Segunda fileira - 2 cards + FuelExpenseCard + ProfitCard */}
         <MetricCard
           title="R$ por KM"
           value={formatCurrency(metrics.valorPorKm)}
@@ -125,13 +126,16 @@ const DashboardMetricsSection = ({
           color="green"
           change={metrics.changes?.valorPorHora}
         />
-        <div className="lg:col-span-2">
-          <FuelExpenseCard
-            period={period}
-            customStartDate={customStartDate}
-            customEndDate={customEndDate}
-          />
-        </div>
+        <FuelExpenseCard
+          period={period}
+          customStartDate={customStartDate}
+          customEndDate={customEndDate}
+        />
+        <ProfitCard
+          period={period}
+          customStartDate={customStartDate}
+          customEndDate={customEndDate}
+        />
       </div>
     </div>
   );
