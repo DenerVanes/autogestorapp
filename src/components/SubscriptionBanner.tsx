@@ -26,9 +26,15 @@ const SubscriptionBanner = () => {
       }
       
       setIsOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating checkout:', error);
-      toast.error('Erro ao processar pagamento. Tente novamente.');
+      
+      // Mostrar erro específico para PIX não habilitado
+      if (error.message?.includes('PIX não está habilitado')) {
+        toast.error('PIX não está habilitado. Configure o PIX no seu Stripe Dashboard primeiro.');
+      } else {
+        toast.error('Erro ao processar pagamento. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }

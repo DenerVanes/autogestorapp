@@ -22,6 +22,7 @@ serve(async (req) => {
     logStep("Function started");
 
     const { planType } = await req.json();
+    logStep("Plan type received", { planType });
     
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -64,37 +65,59 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
     if (planType === 'pix') {
-      // Criar Payment Intent para PIX - corrigindo valor para R$ 19,90
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: 1990, // R$ 19,90 em centavos
-        currency: 'brl',
-        customer: customerId,
-        payment_method_types: ['pix'],
-        metadata: {
+      logStep("Creating PIX payment intent");
+      
+      try {
+        // Criar Payment Intent para PIX - corrigindo valor para R$ 19,90
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: 1990, // R$ 19,90 em centavos
+          currency: 'brl',
+          customer: customerId,
+          payment_method_types: ['pix'],
+          metadata: {
+            user_id: user.id,
+            plan_type: 'pro_pix'
+          }
+        });
+
+        // Salvar no banco de dados
+        await supabaseClient.from('pix_payments').insert({
           user_id: user.id,
-          plan_type: 'pro_pix'
+          stripe_payment_intent_id: paymentIntent.id,
+          amount: 1990, // R$ 19,90 em centavos
+          status: 'pending',
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
+        });
+
+        logStep("PIX payment created", { paymentIntentId: paymentIntent.id });
+
+        return new Response(JSON.stringify({ 
+          type: 'pix',
+          client_secret: paymentIntent.client_secret,
+          payment_intent_id: paymentIntent.id
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      } catch (stripeError: any) {
+        logStep("Stripe PIX error", { 
+          message: stripeError.message, 
+          type: stripeError.type,
+          code: stripeError.code 
+        });
+        
+        // Verificar se é erro de PIX não habilitado
+        if (stripeError.message?.includes('payment method type') && stripeError.message?.includes('pix')) {
+          return new Response(JSON.stringify({ 
+            error: "PIX não está habilitado em sua conta Stripe. Ative o PIX no Stripe Dashboard em Account Settings > Payment methods." 
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          });
         }
-      });
-
-      // Salvar no banco de dados
-      await supabaseClient.from('pix_payments').insert({
-        user_id: user.id,
-        stripe_payment_intent_id: paymentIntent.id,
-        amount: 1990, // R$ 19,90 em centavos
-        status: 'pending',
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
-      });
-
-      logStep("PIX payment created", { paymentIntentId: paymentIntent.id });
-
-      return new Response(JSON.stringify({ 
-        type: 'pix',
-        client_secret: paymentIntent.client_secret,
-        payment_intent_id: paymentIntent.id
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+        
+        throw stripeError;
+      }
     } else {
       // Criar Checkout Session para assinatura recorrente - corrigindo valor para R$ 19,90
       const session = await stripe.checkout.sessions.create({
