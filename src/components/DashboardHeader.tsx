@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
-import DatePicker from "./DateRangePicker";
+import DateRangePicker from "./DateRangePicker";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Settings } from "lucide-react";
 
@@ -87,18 +87,11 @@ const DashboardHeader = ({
               </select>
 
               {selectedPeriod === 'personalizado' && (
-                <DatePicker
-                  mode="range"
-                  defaultMonth={new Date()}
-                  selected={dateRange}
-                  onSelect={onDateRangeChange}
+                <DateRangePicker
+                  dateRange={dateRange}
+                  onDateRangeChange={onDateRangeChange}
+                  onApply={onDateRangeApply}
                 />
-              )}
-
-              {selectedPeriod === 'personalizado' && (
-                <Button onClick={onDateRangeApply} variant="outline">
-                  Aplicar
-                </Button>
               )}
             </div>
           </div>
