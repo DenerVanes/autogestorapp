@@ -42,13 +42,13 @@ const SignUpPage = () => {
     setIsLoading(true);
 
     try {
-      // Definir a URL de redirecionamento para o e-mail de confirmação
+      // URL de redirecionamento para o e-mail de confirmação
       const emailRedirectTo = `${window.location.origin}/`;
-
+      // Aqui ajustamos para passar emailRedirectTo pelo options correto
+      // Precisa garantir que useAuth contemple esse campo como options!
       const { error } = await signUp(email, password, {
         name: name.trim(),
-        emailRedirectTo,
-      });
+      }, emailRedirectTo);
 
       if (error) {
         // Mensagens de erro amigáveis
