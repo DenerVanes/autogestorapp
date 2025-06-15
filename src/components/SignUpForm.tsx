@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SignUpForm() {
   const { signUp } = useAuth();
@@ -42,7 +42,7 @@ export default function SignUpForm() {
 
     try {
       const emailRedirectTo = `${window.location.origin}/`;
-      const { error } = await signUp(
+      const { data, error } = await signUp(
         email,
         password,
         { name: name.trim() },
@@ -59,7 +59,26 @@ export default function SignUpForm() {
         } else {
           toast.error(error.message || "Ocorreu um erro inesperado ao criar a conta.");
         }
-      } else {
+      } else if (data.user) {
+        // Initialize trial subscription for the new user
+        try {
+          console.log('Initializing trial for user:', data.user.id);
+          const { error: trialError } = await supabase.functions.invoke('initialize-trial', {
+            body: { userId: data.user.id }
+          });
+
+          if (trialError) {
+            console.error('Error initializing trial:', trialError);
+            // Don't show error to user since account was created successfully
+            // Trial can be created later if needed
+          } else {
+            console.log('Trial initialized successfully');
+          }
+        } catch (trialError) {
+          console.error('Error calling initialize-trial function:', trialError);
+          // Don't show error to user since account was created successfully
+        }
+
         toast.success("Conta criada com sucesso! Verifique seu e-mail para confirmar.");
       }
     } catch (error: any) {
