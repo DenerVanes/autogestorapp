@@ -15,38 +15,62 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser, loading: authLoading } = useAuth();
-  const { requireAccess } = useAccessControl();
+  const { checkAccess } = useAccessControl();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [odometerRecords, setOdometerRecords] = useState<OdometerRecord[]>([]);
   const [workHours, setWorkHours] = useState<WorkHoursRecord[]>([]);
 
-  // Wrap operations with access control
+  // Get operations without access control wrapper
   const transactionOps = useTransactionOperations(setTransactions, authUser?.id);
   const odometerOps = useOdometerOperations(setOdometerRecords, authUser?.id);
   const workHoursOps = useWorkHoursOperations(setWorkHours, authUser?.id);
 
-  // Wrap operations that require access control
+  // Wrap operations with access control that return promises
   const protectedTransactionOps = {
-    ...transactionOps,
-    addTransaction: (transaction: any) => requireAccess(() => transactionOps.addTransaction(transaction)),
-    updateTransaction: (id: string, updates: any) => requireAccess(() => transactionOps.updateTransaction(id, updates)),
-    deleteTransaction: (id: string) => requireAccess(() => transactionOps.deleteTransaction(id))
+    addTransaction: async (transaction: any): Promise<void> => {
+      if (!checkAccess()) return;
+      return transactionOps.addTransaction(transaction);
+    },
+    updateTransaction: async (id: string, updates: any): Promise<void> => {
+      if (!checkAccess()) return;
+      return transactionOps.updateTransaction(id, updates);
+    },
+    deleteTransaction: async (id: string): Promise<void> => {
+      if (!checkAccess()) return;
+      return transactionOps.deleteTransaction(id);
+    }
   };
 
   const protectedOdometerOps = {
-    ...odometerOps,
-    addOdometerRecord: (record: any) => requireAccess(() => odometerOps.addOdometerRecord(record)),
-    updateOdometerRecord: (id: string, updates: any) => requireAccess(() => odometerOps.updateOdometerRecord(id, updates)),
-    deleteOdometerRecord: (id: string) => requireAccess(() => odometerOps.deleteOdometerRecord(id))
+    addOdometerRecord: async (record: any): Promise<void> => {
+      if (!checkAccess()) return;
+      return odometerOps.addOdometerRecord(record);
+    },
+    updateOdometerRecord: async (id: string, updates: any): Promise<void> => {
+      if (!checkAccess()) return;
+      return odometerOps.updateOdometerRecord(id, updates);
+    },
+    deleteOdometerRecord: async (id: string): Promise<void> => {
+      if (!checkAccess()) return;
+      return odometerOps.deleteOdometerRecord(id);
+    }
   };
 
   const protectedWorkHoursOps = {
-    ...workHoursOps,
-    addWorkHours: (record: any) => requireAccess(() => workHoursOps.addWorkHours(record)),
-    updateWorkHours: (id: string, updates: any) => requireAccess(() => workHoursOps.updateWorkHours(id, updates)),
-    deleteWorkHours: (id: string) => requireAccess(() => workHoursOps.deleteWorkHours(id))
+    addWorkHours: async (record: any): Promise<void> => {
+      if (!checkAccess()) return;
+      return workHoursOps.addWorkHours(record);
+    },
+    updateWorkHours: async (id: string, updates: any): Promise<void> => {
+      if (!checkAccess()) return;
+      return workHoursOps.updateWorkHours(id, updates);
+    },
+    deleteWorkHours: async (id: string): Promise<void> => {
+      if (!checkAccess()) return;
+      return workHoursOps.deleteWorkHours(id);
+    }
   };
 
   // Load user data when auth user changes
