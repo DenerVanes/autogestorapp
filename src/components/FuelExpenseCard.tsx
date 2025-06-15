@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Fuel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
-import { calculateKmRodado } from "@/utils/calculations";
+import { calculateKmRodado } from "@/utils/kmCalculator";
 import { subDays } from "date-fns";
 
 interface FuelExpenseCardProps {
