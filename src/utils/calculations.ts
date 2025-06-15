@@ -1,4 +1,3 @@
-
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO, subMonths, addDays, startOfWeek, endOfWeek } from "date-fns";
 import type { Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from "@/types";
 import { filterByPeriod, filterWorkHoursByPeriod } from "./dateFilters";
@@ -40,7 +39,6 @@ export const calculateKmRodado = (odometerRecords: OdometerRecord[], period: str
   }, 0);
 };
 
-// Calculate metrics for the same day of the previous month for comparison
 const getPreviousMonthDates = (period: string, customStartDate?: Date, customEndDate?: Date) => {
   const now = new Date();
   let currentStart: Date;
@@ -255,9 +253,9 @@ export const getChartData = (transactions: Transaction[], period: string, custom
     referenceDate = now;
   }
   
-  // Get the week containing the reference date
-  const weekStart = startOfWeek(referenceDate, { weekStartsOn: 0 }); // Sunday = 0
-  const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 0 });
+  // Get the week containing the reference date (Monday to Sunday - Uber/99 standard)
+  const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 }); // Monday = 1
+  const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 }); // Sunday
   
   // Create array of all days in the week
   const allDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
