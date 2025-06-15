@@ -6,11 +6,6 @@ import EditOdometerModal from "./EditOdometerModal";
 import EditWorkHoursModal from "./EditWorkHoursModal";
 import HistoryHeader from "./history/HistoryHeader";
 import HistoryTabsContent from "./history/HistoryTabsContent";
-import RevenueHistoryTab from "./history/RevenueHistoryTab";
-import ExpenseHistoryTab from "./history/ExpenseHistoryTab";
-import OdometerHistoryTab from "./history/OdometerHistoryTab";
-import WorkHoursHistoryTab from "./history/WorkHoursHistoryTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Transaction, OdometerRecord, WorkHoursRecord } from "@/types";
 
 interface HistoryPageProps {
@@ -47,42 +42,14 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
       <HistoryHeader onBack={onBack} />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <Tabs defaultValue="receitas" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="receitas">Receitas</TabsTrigger>
-            <TabsTrigger value="despesas">Despesas</TabsTrigger>
-            <TabsTrigger value="odometro">Odômetro</TabsTrigger>
-            <TabsTrigger value="horas">Horas</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="receitas">
-            <RevenueHistoryTab 
-              onEditTransaction={setEditingTransaction}
-              onDeleteTransaction={handleDeleteTransaction}
-            />
-          </TabsContent>
-
-          <TabsContent value="despesas">
-            <ExpenseHistoryTab 
-              onEditTransaction={setEditingTransaction}
-              onDeleteTransaction={handleDeleteTransaction}
-            />
-          </TabsContent>
-
-          <TabsContent value="odometro">
-            <OdometerHistoryTab 
-              onEditOdometerRecord={setEditingOdometerRecord}
-              onDeleteOdometerRecord={handleDeleteOdometerRecord}
-            />
-          </TabsContent>
-
-          <TabsContent value="horas">
-            <WorkHoursHistoryTab 
-              onEditWorkHours={setEditingWorkHours}
-              onDeleteWorkHours={handleDeleteWorkHours}
-            />
-          </TabsContent>
-        </Tabs>
+        <HistoryTabsContent
+          onEditTransaction={setEditingTransaction}
+          onDeleteTransaction={handleDeleteTransaction}
+          onEditOdometerRecord={setEditingOdometerRecord}
+          onDeleteOdometerRecord={handleDeleteOdometerRecord}
+          onEditWorkHours={setEditingWorkHours}
+          onDeleteWorkHours={handleDeleteWorkHours}
+        />
       </div>
 
       {editingTransaction && (
