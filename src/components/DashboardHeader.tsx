@@ -29,6 +29,11 @@ const DashboardHeader = ({
 }: DashboardHeaderProps) => {
   const { isAdmin, loading: adminLoading } = useAdminAuth();
 
+  console.log('=== DASHBOARD HEADER RENDER ===');
+  console.log('isAdmin:', isAdmin);
+  console.log('adminLoading:', adminLoading);
+  console.log('Deve mostrar botão admin?', !adminLoading && isAdmin);
+
   return (
     <div className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -44,17 +49,22 @@ const DashboardHeader = ({
             </div>
             
             <div className="flex items-center gap-2">
-              {/* Botão Admin - apenas para administradores */}
-              {!adminLoading && isAdmin && (
+              {console.log('Renderizando botões - isAdmin:', isAdmin, 'loading:', adminLoading)}
+              
+              {/* Botão Admin - sempre visível se for admin */}
+              {isAdmin && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.location.href = '/admin'}
-                  className="gap-2 text-gray-600 hover:text-gray-900"
+                  onClick={() => {
+                    console.log('Clique no botão admin - redirecionando para /admin');
+                    window.location.href = '/admin';
+                  }}
+                  className="gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200"
                   title="Painel Administrativo"
                 >
                   <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">Admin</span>
+                  <span className="hidden sm:inline font-medium">Admin</span>
                 </Button>
               )}
               
