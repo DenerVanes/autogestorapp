@@ -2,7 +2,7 @@
 import { format, subMonths, startOfDay, endOfDay, subDays } from "date-fns";
 import type { Transaction, OdometerRecord, WorkHoursRecord, Metrics } from "@/types";
 import { calculateWorkHoursWithCutoff } from "./workHoursProcessor";
-import { calculateKmForAllRecords } from "./kmCalculator";
+import { calculateKmForAllRecords, calculateKmRodado } from "./kmCalculator";
 
 const getPreviousMonthDates = (period: string, customStartDate?: Date, customEndDate?: Date) => {
   const now = new Date();
@@ -91,4 +91,77 @@ export const calculatePercentageChange = (current: number, previous: number): st
   const change = ((current - previous) / previous) * 100;
   const sign = change >= 0 ? '+' : '';
   return `${sign}${change.toFixed(1)}%`;
+};
+
+// New function to calculate previous fuel expense
+export const calculatePreviousFuelExpense = (
+  transactions: Transaction[],
+  odometerRecords: OdometerRecord[],
+  user: any,
+  period: string,
+  customStartDate?: Date,
+  customEndDate?: Date
+): number => {
+  if (!user?.vehicleType || !user?.vehicleModel || !user?.fuelConsumption) {
+    return 0;
+  }
+
+  const { previousStart, previousEnd } = getPreviousMonthDates(period, customStartDate, customEndDate);
+  
+  // Get km driven in the previous period
+  const filteredOdometer = odometerRecords.filter(o => {
+    const itemDate = new Date(o.date);
+    return itemDate >= previousStart && itemDate <= previousEnd;
+  });
+  
+  const kmDriven = calculateKmForAllRecords(filteredOdometer);
+  
+  if (kmDriven === 0) {
+    return 0;
+  }
+
+  // Calculate liters consumed
+  const litersConsumed = kmDriven / user.fuelConsumption;
+
+  // Get average fuel price from last 7 days
+  const sevenDaysAgo = subDays(new Date(), 7);
+  const recentFuelTransactions = transactions.filter(t => 
+    t.type === 'despesa' && 
+    t.fuelType && 
+    t.pricePerLiter && 
+    t.date >= sevenDaysAgo
+  );
+
+  if (recentFuelTransactions.length === 0) {
+    return 0;
+  }
+
+  const averagePricePerLiter = recentFuelTransactions.reduce((sum, t) => sum + (t.pricePerLiter || 0), 0) / recentFuelTransactions.length;
+  
+  return litersConsumed * averagePricePerLiter;
+};
+
+// New function to calculate previous profit
+export const calculatePreviousProfit = (
+  transactions: Transaction[],
+  odometerRecords: OdometerRecord[],
+  user: any,
+  period: string,
+  customStartDate?: Date,
+  customEndDate?: Date
+): number => {
+  const { previousStart, previousEnd } = getPreviousMonthDates(period, customStartDate, customEndDate);
+  
+  const filteredTransactions = transactions.filter(t => {
+    const itemDate = new Date(t.date);
+    return itemDate >= previousStart && itemDate <= previousEnd;
+  });
+  
+  const totalRevenue = filteredTransactions
+    .filter(t => t.type === 'receita')
+    .reduce((sum, t) => sum + t.value, 0);
+
+  const fuelExpense = calculatePreviousFuelExpense(transactions, odometerRecords, user, period, customStartDate, customEndDate);
+  
+  return totalRevenue - fuelExpense;
 };

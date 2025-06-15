@@ -4,6 +4,7 @@ import { Fuel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
 import { calculateKmRodado } from "@/utils/kmCalculator";
+import { calculatePreviousFuelExpense, calculatePercentageChange } from "@/utils/comparisonCalculator";
 import { subDays } from "date-fns";
 
 interface FuelExpenseCardProps {
@@ -28,7 +29,8 @@ const FuelExpenseCard = ({ period, customStartDate, customEndDate }: FuelExpense
       return {
         value: 0,
         subtitle: "Configure seu perfil",
-        error: true
+        error: true,
+        change: undefined
       };
     }
 
@@ -39,7 +41,8 @@ const FuelExpenseCard = ({ period, customStartDate, customEndDate }: FuelExpense
       return {
         value: 0,
         subtitle: "Sem dados do período",
-        error: true
+        error: true,
+        change: undefined
       };
     }
 
@@ -59,7 +62,8 @@ const FuelExpenseCard = ({ period, customStartDate, customEndDate }: FuelExpense
       return {
         value: 0,
         subtitle: "Dados insuficientes",
-        error: true
+        error: true,
+        change: undefined
       };
     }
 
@@ -68,20 +72,42 @@ const FuelExpenseCard = ({ period, customStartDate, customEndDate }: FuelExpense
     // Calculate total fuel expense
     const totalExpense = litersConsumed * averagePricePerLiter;
 
+    // Calculate previous period fuel expense for comparison
+    const previousFuelExpense = calculatePreviousFuelExpense(transactions, odometerRecords, user, period, customStartDate, customEndDate);
+    const change = calculatePercentageChange(totalExpense, previousFuelExpense);
+
     return {
       value: totalExpense,
       subtitle: `Baseado em ${kmDriven}km rodados`,
-      error: false
+      error: false,
+      change
     };
   };
 
   const fuelData = calculateFuelExpense();
 
+  const getChangeColor = (changeValue?: string) => {
+    if (!changeValue || changeValue === "Sem dados anteriores para comparar") return "text-gray-500";
+    const isPositive = changeValue.startsWith('+');
+    const isNegative = changeValue.startsWith('-');
+    
+    // For fuel expense, negative change is good (less expense)
+    if (isPositive) return "text-red-600";
+    if (isNegative) return "text-green-600";
+    return "text-gray-500";
+  };
+
+  const getChangeText = (changeValue?: string) => {
+    if (!changeValue) return "";
+    if (changeValue === "Sem dados anteriores para comparar") return changeValue;
+    return `${changeValue} vs mês anterior`;
+  };
+
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground mb-1">Gasto de Combustível</p>
             <p className={cn(
               "text-2xl font-bold",
@@ -92,6 +118,11 @@ const FuelExpenseCard = ({ period, customStartDate, customEndDate }: FuelExpense
             {!fuelData.error && (
               <p className="text-xs mt-1 font-medium text-gray-600">
                 {fuelData.subtitle}
+              </p>
+            )}
+            {fuelData.change && (
+              <p className={cn("text-xs mt-1 font-medium", getChangeColor(fuelData.change))}>
+                {getChangeText(fuelData.change)}
               </p>
             )}
           </div>

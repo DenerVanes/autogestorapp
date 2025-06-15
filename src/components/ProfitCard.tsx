@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
 import { calculateKmRodado } from "@/utils/kmCalculator";
+import { calculatePreviousProfit, calculatePercentageChange } from "@/utils/comparisonCalculator";
 import { filterByPeriod } from "@/utils/dateFilters";
 import { subDays } from "date-fns";
 
@@ -63,11 +64,16 @@ const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps)
     // Calculate profit
     const profit = totalRevenue - fuelExpense;
 
+    // Calculate previous period profit for comparison
+    const previousProfit = calculatePreviousProfit(transactions, odometerRecords, user, period, customStartDate, customEndDate);
+    const change = calculatePercentageChange(profit, previousProfit);
+
     return {
       value: profit,
       revenue: totalRevenue,
       fuelExpense: fuelExpense,
-      hasData: totalRevenue > 0 || fuelExpense > 0
+      hasData: totalRevenue > 0 || fuelExpense > 0,
+      change
     };
   };
 
@@ -96,6 +102,22 @@ const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps)
     }
   };
 
+  const getChangeColor = (changeValue?: string) => {
+    if (!changeValue || changeValue === "Sem dados anteriores para comparar") return "text-gray-500";
+    const isPositive = changeValue.startsWith('+');
+    const isNegative = changeValue.startsWith('-');
+    
+    if (isPositive) return "text-green-600";
+    if (isNegative) return "text-red-600";
+    return "text-gray-500";
+  };
+
+  const getChangeText = (changeValue?: string) => {
+    if (!changeValue) return "";
+    if (changeValue === "Sem dados anteriores para comparar") return changeValue;
+    return `${changeValue} vs mês anterior`;
+  };
+
   const { color, icon: Icon, textColor } = getColorAndIcon();
 
   return (
@@ -110,6 +132,11 @@ const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps)
             <p className="text-xs mt-1 font-medium text-gray-600">
               Receita - Combustível
             </p>
+            {profitData.change && (
+              <p className={cn("text-xs mt-1 font-medium", getChangeColor(profitData.change))}>
+                {getChangeText(profitData.change)}
+              </p>
+            )}
           </div>
           <div className={cn("p-3 rounded-full", color)}>
             <Icon className="w-6 h-6" />
