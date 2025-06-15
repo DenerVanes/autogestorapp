@@ -59,9 +59,12 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
                     </TooltipTrigger>
                     <TooltipContent 
                       side="top" 
-                      className="z-[99999] max-w-sm p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl rounded-lg text-sm whitespace-pre-line animate-in fade-in-0 zoom-in-95 duration-200 fixed"
+                      className="max-w-sm p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl rounded-lg text-sm whitespace-pre-line animate-in fade-in-0 zoom-in-95 duration-200"
                       sideOffset={8}
-                      style={{ zIndex: 99999, position: 'fixed' }}
+                      style={{ 
+                        zIndex: 999999,
+                        position: 'fixed'
+                      }}
                     >
                       <div className="space-y-2">
                         <h4 className="font-semibold text-gray-800 border-b border-gray-200 pb-1">
