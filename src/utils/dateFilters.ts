@@ -22,13 +22,15 @@ export const filterByPeriod = <T extends { date: Date }>(items: T[], period: str
         endDate = endOfDay(yesterday);
         break;
       case 'esta-semana':
-        startDate = startOfWeek(now, { weekStartsOn: 0, locale: ptBR }); // Domingo
-        endDate = endOfWeek(now, { weekStartsOn: 0, locale: ptBR }); // Sábado
+        // Esta semana: do domingo atual até hoje (ou sábado se já passou)
+        startDate = startOfWeek(now, { weekStartsOn: 0 }); // Domingo = 0
+        endDate = endOfWeek(now, { weekStartsOn: 0 }); // Sábado
         break;
       case 'semana-passada':
+        // Semana passada: do domingo da semana anterior até sábado da semana anterior
         const lastWeek = subWeeks(now, 1);
-        startDate = startOfWeek(lastWeek, { weekStartsOn: 0, locale: ptBR });
-        endDate = endOfWeek(lastWeek, { weekStartsOn: 0, locale: ptBR });
+        startDate = startOfWeek(lastWeek, { weekStartsOn: 0 }); // Domingo = 0
+        endDate = endOfWeek(lastWeek, { weekStartsOn: 0 }); // Sábado
         break;
       case 'este-mes':
         startDate = startOfMonth(now);
@@ -45,10 +47,21 @@ export const filterByPeriod = <T extends { date: Date }>(items: T[], period: str
     }
   }
 
-  return items.filter(item => {
-    const itemDate = new Date(item.date);
-    return itemDate >= startDate && itemDate <= endDate;
+  console.log(`Filtro ${period}:`, {
+    startDate: format(startDate, 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+    endDate: format(endDate, 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+    totalItems: items.length
   });
+
+  const filteredItems = items.filter(item => {
+    const itemDate = new Date(item.date);
+    const isInRange = itemDate >= startDate && itemDate <= endDate;
+    return isInRange;
+  });
+
+  console.log(`Itens filtrados para ${period}:`, filteredItems.length);
+  
+  return filteredItems;
 };
 
 export const filterWorkHoursByPeriod = (items: { startDateTime: Date; endDateTime: Date }[], period: string, customStartDate?: Date, customEndDate?: Date) => {
@@ -71,13 +84,15 @@ export const filterWorkHoursByPeriod = (items: { startDateTime: Date; endDateTim
         endDate = endOfDay(yesterday);
         break;
       case 'esta-semana':
-        startDate = startOfWeek(now, { weekStartsOn: 0, locale: ptBR });
-        endDate = endOfWeek(now, { weekStartsOn: 0, locale: ptBR });
+        // Esta semana: do domingo atual até hoje (ou sábado se já passou)
+        startDate = startOfWeek(now, { weekStartsOn: 0 }); // Domingo = 0
+        endDate = endOfWeek(now, { weekStartsOn: 0 }); // Sábado
         break;
       case 'semana-passada':
+        // Semana passada: do domingo da semana anterior até sábado da semana anterior
         const lastWeek = subWeeks(now, 1);
-        startDate = startOfWeek(lastWeek, { weekStartsOn: 0, locale: ptBR });
-        endDate = endOfWeek(lastWeek, { weekStartsOn: 0, locale: ptBR });
+        startDate = startOfWeek(lastWeek, { weekStartsOn: 0 }); // Domingo = 0
+        endDate = endOfWeek(lastWeek, { weekStartsOn: 0 }); // Sábado
         break;
       case 'este-mes':
         startDate = startOfMonth(now);
