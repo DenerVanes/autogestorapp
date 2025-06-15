@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabaseService } from '@/services/supabaseService';
@@ -15,7 +14,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser, loading: authLoading } = useAuth();
-  const { checkAccess } = useAccessControl();
+  const { checkAccess, isExpired } = useAccessControl();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -30,45 +29,45 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   // Wrap operations with access control that return promises
   const protectedTransactionOps = {
     addTransaction: async (transaction: any): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('adicionar transações')) return;
       return transactionOps.addTransaction(transaction);
     },
     updateTransaction: async (id: string, updates: any): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('editar transações')) return;
       return transactionOps.updateTransaction(id, updates);
     },
     deleteTransaction: async (id: string): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('remover transações')) return;
       return transactionOps.deleteTransaction(id);
     }
   };
 
   const protectedOdometerOps = {
     addOdometerRecord: async (record: any): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('adicionar registros de hodômetro')) return;
       return odometerOps.addOdometerRecord(record);
     },
     updateOdometerRecord: async (id: string, updates: any): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('editar registros de hodômetro')) return;
       return odometerOps.updateOdometerRecord(id, updates);
     },
     deleteOdometerRecord: async (id: string): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('remover registros de hodômetro')) return;
       return odometerOps.deleteOdometerRecord(id);
     }
   };
 
   const protectedWorkHoursOps = {
     addWorkHours: async (record: any): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('adicionar horas trabalhadas')) return;
       return workHoursOps.addWorkHours(record);
     },
     updateWorkHours: async (id: string, updates: any): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('editar horas trabalhadas')) return;
       return workHoursOps.updateWorkHours(id, updates);
     },
     deleteWorkHours: async (id: string): Promise<void> => {
-      if (!checkAccess()) return;
+      if (isExpired || !checkAccess('remover horas trabalhadas')) return;
       return workHoursOps.deleteWorkHours(id);
     }
   };
