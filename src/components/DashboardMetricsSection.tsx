@@ -81,6 +81,7 @@ const DashboardMetricsSection = ({
         color="green"
         change={metrics.changes?.receita}
         breakdown={revenueBreakdown}
+        showInfoIcon={true}
       />
       <MetricCard
         title="Despesa Total"
@@ -89,6 +90,7 @@ const DashboardMetricsSection = ({
         color="red"
         change={metrics.changes?.despesa}
         breakdown={expenseBreakdown}
+        showInfoIcon={true}
       />
       <MetricCard
         title="Saldo Total"

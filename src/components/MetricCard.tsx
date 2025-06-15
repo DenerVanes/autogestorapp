@@ -1,7 +1,13 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MetricCardProps {
   title: string;
@@ -10,9 +16,10 @@ interface MetricCardProps {
   color: 'green' | 'red' | 'blue';
   change?: string;
   breakdown?: Array<{ label: string; value: string; amount: number }>;
+  showInfoIcon?: boolean;
 }
 
-const MetricCard = ({ title, value, icon: Icon, color, change, breakdown }: MetricCardProps) => {
+const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showInfoIcon }: MetricCardProps) => {
   const colorClasses = {
     green: "text-green-600 bg-green-50",
     red: "text-red-600 bg-red-50",
@@ -35,12 +42,43 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown }: Metr
     return `${changeValue} vs mês anterior`;
   };
 
+  const formatTooltipContent = () => {
+    if (!breakdown || breakdown.length === 0) return "Nenhum dado disponível";
+    
+    const detailText = title.includes("Receita") ? "Detalhamento das Receitas:" : "Detalhamento das Despesas:";
+    const items = breakdown
+      .slice(0, 5)
+      .map(item => `${item.label} - ${item.value}`)
+      .join('\n');
+    
+    return `${detailText}\n\n${items}\n\nTotal: ${value}`;
+  };
+
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+              {showInfoIcon && breakdown && breakdown.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info 
+                        className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors" 
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="top" 
+                      className="max-w-xs p-3 text-sm whitespace-pre-line"
+                    >
+                      {formatTooltipContent()}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <p className={cn("text-2xl font-bold", `text-${color}-600`)}>{value}</p>
             {change && (
               <p className={cn("text-xs mt-1 font-medium", getChangeColor(change))}>
