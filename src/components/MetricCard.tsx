@@ -71,9 +71,27 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
                     </TooltipTrigger>
                     <TooltipContent 
                       side="top" 
-                      className="max-w-xs p-3 text-sm whitespace-pre-line"
+                      className="max-w-sm p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-xl rounded-lg text-sm whitespace-pre-line animate-in fade-in-0 zoom-in-95 duration-200"
                     >
-                      {formatTooltipContent()}
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-gray-800 border-b border-gray-200 pb-1">
+                          {title.includes("Receita") ? "Detalhamento das Receitas" : "Detalhamento das Despesas"}
+                        </h4>
+                        <div className="space-y-1">
+                          {breakdown.slice(0, 5).map((item, index) => (
+                            <div key={index} className="flex justify-between items-center text-gray-700">
+                              <span className="font-medium">{item.label}</span>
+                              <span className="text-green-600 font-semibold">{item.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="border-t border-gray-200 pt-2 mt-3">
+                          <div className="flex justify-between items-center font-bold text-gray-800">
+                            <span>Total:</span>
+                            <span className={cn("text-lg", `text-${color}-600`)}>{value}</span>
+                          </div>
+                        </div>
+                      </div>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -84,19 +102,6 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
               <p className={cn("text-xs mt-1 font-medium", getChangeColor(change))}>
                 {getChangeText(change)}
               </p>
-            )}
-            
-            {breakdown && breakdown.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {breakdown
-                  .sort((a, b) => b.amount - a.amount)
-                  .slice(0, 4)
-                  .map((item, index) => (
-                    <div key={index} className="text-xs text-gray-600">
-                      <span>{item.label} - {item.value}</span>
-                    </div>
-                  ))}
-              </div>
             )}
           </div>
           <div className={cn("p-3 rounded-full", colorClasses[color])}>
