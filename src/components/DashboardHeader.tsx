@@ -35,6 +35,11 @@ const DashboardHeader = ({
 
   const shouldShowAdminButton = isAdmin === true && !adminLoading;
   console.log('🔘 shouldShowAdminButton:', shouldShowAdminButton);
+  console.log('🔍 Renderizando área de botões - shouldShowAdminButton:', shouldShowAdminButton);
+  
+  if (shouldShowAdminButton) {
+    console.log('🎉 RENDERIZANDO BOTÃO ADMIN!');
+  }
 
   return (
     <div className="bg-white shadow-sm border-b">
@@ -51,26 +56,21 @@ const DashboardHeader = ({
             </div>
             
             <div className="flex items-center gap-2">
-              {console.log('🔍 Renderizando área de botões - shouldShowAdminButton:', shouldShowAdminButton)}
-              
               {/* Botão Admin - renderização condicional */}
               {shouldShowAdminButton && (
-                <>
-                  {console.log('🎉 RENDERIZANDO BOTÃO ADMIN!')}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      console.log('🖱️ Clique no botão admin - redirecionando para /admin');
-                      window.location.href = '/admin';
-                    }}
-                    className="gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 font-medium"
-                    title="Painel Administrativo"
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline">Admin</span>
-                  </Button>
-                </>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    console.log('🖱️ Clique no botão admin - redirecionando para /admin');
+                    window.location.href = '/admin';
+                  }}
+                  className="gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 font-medium"
+                  title="Painel Administrativo"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Button>
               )}
               
               {/* Debug: Mostrar estado sempre */}
