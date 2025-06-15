@@ -17,10 +17,10 @@ export const useAdminAuth = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      console.log('=== VERIFICANDO STATUS DE ADMIN ===');
+      console.log('=== VERIFICANDO STATUS DE ADMIN (NOVA VERIFICAÇÃO) ===');
       
       if (!user) {
-        console.log('Usuário não logado');
+        console.log('❌ Usuário não logado');
         setIsAdmin(false);
         setAdminData(null);
         setLoading(false);
@@ -28,32 +28,39 @@ export const useAdminAuth = () => {
       }
 
       try {
-        console.log('Verificando status de admin para usuário:', {
+        console.log('🔍 Verificando status de admin para usuário:', {
           id: user.id,
           email: user.email
         });
         
+        // Fazer a consulta diretamente
         const { data, error } = await supabase
           .from('admin_users')
           .select('*')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
+
+        console.log('📊 Resultado da consulta admin_users:', { data, error });
 
         if (error) {
-          console.log('Erro ou usuário não é admin:', error.message);
+          console.log('⚠️ Erro na consulta:', error.message);
+          setIsAdmin(false);
+          setAdminData(null);
+        } else if (!data || data.length === 0) {
+          console.log('❌ Usuário não é admin - nenhum registro encontrado');
           setIsAdmin(false);
           setAdminData(null);
         } else {
-          console.log('✅ USUÁRIO É ADMIN:', data);
+          const adminRecord = data[0];
+          console.log('✅ USUÁRIO É ADMIN! Dados:', adminRecord);
           setIsAdmin(true);
           setAdminData({
-            id: data.id,
-            email: data.email,
-            permissions: (data.permissions as Record<string, boolean>) || { full_access: true }
+            id: adminRecord.id,
+            email: adminRecord.email,
+            permissions: (adminRecord.permissions as Record<string, boolean>) || { full_access: true }
           });
         }
       } catch (error) {
-        console.error('Erro ao verificar admin:', error);
+        console.error('💥 Erro ao verificar admin:', error);
         setIsAdmin(false);
         setAdminData(null);
       } finally {
@@ -65,7 +72,7 @@ export const useAdminAuth = () => {
     checkAdminStatus();
   }, [user]);
 
-  console.log('Hook useAdminAuth retornando:', {
+  console.log('🔄 Hook useAdminAuth retornando:', {
     isAdmin,
     adminData: adminData?.email,
     loading,
