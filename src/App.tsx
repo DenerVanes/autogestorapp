@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,6 +10,7 @@ import SignUpPage from "@/components/SignUpPage";
 import LoginScreen from "@/components/LoginScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +27,14 @@ const App = () => (
               <Route path="/login" element={<LoginScreen />} />
               <Route
                 path="/dashboard"
+                element={
+                  <AuthGuard>
+                    <Index />
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/admin"
                 element={
                   <AuthGuard>
                     <Index />
