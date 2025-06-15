@@ -2,13 +2,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { X, Clock, Play, Square } from "lucide-react";
+import { X, Clock } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useUser } from "@/contexts/UserContext";
 import WorkHoursInfoCard from "./WorkHoursInfoCard";
+import WorkSessionStatus from "./WorkSessionStatus";
+import WorkHoursForm from "./WorkHoursForm";
+import WorkHoursButtons from "./WorkHoursButtons";
 
 interface WorkHoursModalProps {
   isOpen: boolean;
@@ -115,98 +115,32 @@ const WorkHoursModal = ({ isOpen, onClose }: WorkHoursModalProps) => {
           </Button>
         </CardHeader>
         <CardContent>
-          {/* Informativo sobre como funciona */}
           <WorkHoursInfoCard />
 
-          {isWorkInProgress && savedStartDateTime && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800 font-medium">
-                Jornada iniciada em:
-              </p>
-              <p className="text-sm text-green-700">
-                {format(savedStartDateTime, 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-              </p>
-            </div>
-          )}
+          <WorkSessionStatus 
+            isWorkInProgress={isWorkInProgress}
+            savedStartDateTime={savedStartDateTime}
+          />
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isWorkInProgress ? (
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Data e Hora de Início</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    required
-                    placeholder="HH:MM"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="endDate">Data e Hora de Fim</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    required
-                    placeholder="HH:MM"
-                  />
-                </div>
-              </div>
-            )}
+            <WorkHoursForm
+              isWorkInProgress={isWorkInProgress}
+              startDate={startDate}
+              startTime={startTime}
+              endDate={endDate}
+              endTime={endTime}
+              onStartDateChange={setStartDate}
+              onStartTimeChange={setStartTime}
+              onEndDateChange={setEndDate}
+              onEndTimeChange={setEndTime}
+            />
 
-            <div className="flex justify-end space-x-2 pt-4">
-              {isWorkInProgress && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleCancelWork}
-                  className="border-red-300 text-red-600 hover:bg-red-50"
-                >
-                  Cancelar Jornada
-                </Button>
-              )}
-              <Button type="button" variant="outline" onClick={onClose}>
-                Fechar
-              </Button>
-              <Button 
-                type="submit" 
-                className={`${
-                  isWorkInProgress 
-                    ? 'bg-red-600 hover:bg-red-700' 
-                    : 'bg-green-600 hover:bg-green-700'
-                }`}
-              >
-                {isWorkInProgress ? (
-                  <>
-                    <Square className="w-4 h-4 mr-2" />
-                    Finalizar
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Iniciar
-                  </>
-                )}
-              </Button>
-            </div>
+            <WorkHoursButtons
+              isWorkInProgress={isWorkInProgress}
+              onCancel={onClose}
+              onClose={onClose}
+              onCancelWork={handleCancelWork}
+            />
           </form>
         </CardContent>
       </Card>
