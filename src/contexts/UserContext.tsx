@@ -307,6 +307,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         updateUserProfile,
         updateTransaction,
         updateOdometerRecord,
+        updateWorkHours,
         deleteTransaction,
         deleteOdometerRecord,
         deleteWorkHours,
