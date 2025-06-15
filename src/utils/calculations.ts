@@ -1,14 +1,11 @@
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO, subMonths, addDays, startOfWeek, endOfWeek } from "date-fns";
 import type { Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from "@/types";
 import { filterByPeriod, filterWorkHoursByPeriod } from "./dateFilters";
+import { calculateWorkHoursWithCutoff, processWorkHoursWithCutoff } from "./workHoursProcessor";
 
 export const calculateWorkHours = (workHours: WorkHoursRecord[], period: string, customStartDate?: Date, customEndDate?: Date): number => {
-  const filteredWorkHours = filterWorkHoursByPeriod(workHours, period, customStartDate, customEndDate);
-  
-  return filteredWorkHours.reduce((total, record) => {
-    const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
-    return total + (diff / (1000 * 60 * 60)); // Convert to hours
-  }, 0);
+  // Usar a nova lógica com corte às 04:00
+  return calculateWorkHoursWithCutoff(workHours, period, customStartDate, customEndDate);
 };
 
 export const calculateKmRodado = (odometerRecords: OdometerRecord[], period: string, customStartDate?: Date, customEndDate?: Date): number => {
@@ -123,16 +120,14 @@ const calculatePreviousMetrics = (
     return total;
   }, 0);
   
-  // Calculate previous period work hours
+  // Calculate previous period work hours usando a nova lógica
   const filteredWorkHours = workHours.filter(w => {
     const itemStartDate = new Date(w.startDateTime);
     return itemStartDate >= previousStart && itemStartDate <= previousEnd;
   });
   
-  const horasTrabalhadas = filteredWorkHours.reduce((total, record) => {
-    const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
-    return total + (diff / (1000 * 60 * 60));
-  }, 0);
+  // Usar a nova lógica para calcular horas trabalhadas
+  const horasTrabalhadas = calculateWorkHoursWithCutoff(filteredWorkHours, 'personalizado', previousStart, previousEnd);
   
   const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
   const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
@@ -187,11 +182,8 @@ export const calculateMetrics = (
     return total;
   }, 0);
   
-  // Calculate work hours
-  const horasTrabalhadas = workHours.reduce((total, record) => {
-    const diff = record.endDateTime.getTime() - record.startDateTime.getTime();
-    return total + (diff / (1000 * 60 * 60));
-  }, 0);
+  // Calculate work hours usando a nova lógica
+  const horasTrabalhadas = calculateWorkHoursWithCutoff(workHours, 'todos');
   
   const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
   const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
@@ -220,6 +212,8 @@ export const getMetrics = (
   const saldo = receita - despesa;
   const kmRodado = calculateKmRodado(odometerRecords, period, customStartDate, customEndDate);
   const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
+  
+  // Usar a nova lógica para calcular horas trabalhadas
   const horasTrabalhadas = calculateWorkHours(workHours, period, customStartDate, customEndDate);
   const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
 

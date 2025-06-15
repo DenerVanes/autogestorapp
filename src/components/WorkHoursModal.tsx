@@ -8,6 +8,7 @@ import { X, Clock, Play, Square } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useUser } from "@/contexts/UserContext";
+import WorkHoursInfoCard from "./WorkHoursInfoCard";
 
 interface WorkHoursModalProps {
   isOpen: boolean;
@@ -101,7 +102,7 @@ const WorkHoursModal = ({ isOpen, onClose }: WorkHoursModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md bg-white">
+      <Card className="w-full max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="flex items-center space-x-2">
             <Clock className="w-5 h-5 text-purple-600" />
@@ -114,6 +115,9 @@ const WorkHoursModal = ({ isOpen, onClose }: WorkHoursModalProps) => {
           </Button>
         </CardHeader>
         <CardContent>
+          {/* Informativo sobre como funciona */}
+          <WorkHoursInfoCard />
+
           {isWorkInProgress && savedStartDateTime && (
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-800 font-medium">

@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, DollarSign, TrendingDown, Navigation, Clock, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, DollarSign, TrendingDown, Navigation, Clock, Edit2, Trash2, AlertTriangle } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import EditTransactionModal from "./EditTransactionModal";
 import EditOdometerModal from "./EditOdometerModal";
 import EditWorkHoursModal from "./EditWorkHoursModal";
+import { processWorkHoursWithCutoff } from "@/utils/workHoursProcessor";
 import type { Transaction, OdometerRecord, WorkHoursRecord } from "@/types";
 
 interface HistoryPageProps {
@@ -29,6 +30,9 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
   const [editingOdometerRecord, setEditingOdometerRecord] = useState<OdometerRecord | null>(null);
   const [editingWorkHours, setEditingWorkHours] = useState<WorkHoursRecord | null>(null);
 
+  // Processar registros de horas para mostrar divisões automáticas
+  const processedWorkHours = processWorkHoursWithCutoff(workHours);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -38,6 +42,10 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
 
   const formatDate = (date: Date) => {
     return format(date, 'dd/MM/yyyy HH:mm', { locale: ptBR });
+  };
+
+  const formatWorkingDate = (date: Date) => {
+    return format(date, 'dd/MM/yyyy', { locale: ptBR });
   };
 
   const calculateWorkDuration = (start: Date, end: Date) => {
@@ -64,6 +72,15 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
       deleteWorkHours(id);
     }
   };
+
+  // Agrupar registros processados por registro original
+  const groupedWorkHours = processedWorkHours.reduce((acc, record) => {
+    if (!acc[record.originalId]) {
+      acc[record.originalId] = [];
+    }
+    acc[record.originalId].push(record);
+    return acc;
+  }, {} as Record<string, typeof processedWorkHours>);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -229,36 +246,80 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {workHours.map((record) => (
-                    <div key={record.id} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Jornada de Trabalho</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(record.startDateTime)} - {formatDate(record.endDateTime)}
-                        </p>
-                        <p className="text-xs text-purple-600 font-medium">
-                          Duração: {calculateWorkDuration(record.startDateTime, record.endDateTime)}
-                        </p>
+                <div className="space-y-4">
+                  {Object.entries(groupedWorkHours).map(([originalId, records]) => {
+                    const originalRecord = workHours.find(w => w.id === originalId);
+                    if (!originalRecord) return null;
+
+                    const hasMultipleRecords = records.length > 1;
+
+                    return (
+                      <div key={originalId} className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        {/* Cabeçalho do registro original */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-medium text-purple-900">Jornada de Trabalho</h3>
+                            {hasMultipleRecords && (
+                              <div className="flex items-center space-x-1 text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                                <AlertTriangle className="w-3 h-3" />
+                                <span>Dividido às 04:00</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setEditingWorkHours(originalRecord)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDeleteWorkHours(originalRecord.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Detalhes dos períodos */}
+                        <div className="space-y-2">
+                          {records.map((record, index) => (
+                            <div key={record.id} className="text-sm">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    {hasMultipleRecords ? `Período ${index + 1}: ` : ''}
+                                    {formatDate(record.startDateTime)} - {formatDate(record.endDateTime)}
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-purple-600 font-medium">
+                                    {calculateWorkDuration(record.startDateTime, record.endDateTime)}
+                                  </span>
+                                  <div className="text-xs text-purple-500">
+                                    Contabilizado em: {formatWorkingDate(record.workingDate)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Duração total */}
+                        <div className="mt-2 pt-2 border-t border-purple-200">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-purple-700 font-medium">Duração total:</span>
+                            <span className="text-purple-600 font-semibold">
+                              {calculateWorkDuration(originalRecord.startDateTime, originalRecord.endDateTime)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setEditingWorkHours(record)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDeleteWorkHours(record.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {workHours.length === 0 && (
                     <p className="text-center text-muted-foreground py-8">Nenhuma hora trabalhada registrada</p>
                   )}
