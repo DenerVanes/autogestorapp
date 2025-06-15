@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabaseService } from '@/services/supabaseService';
@@ -283,6 +282,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     await supabaseService.deleteWorkHours(id);
     setWorkHours(prev => prev.filter(w => w.id !== id));
+  };
+
+  const updateWorkHours = async (id: string, updates: Partial<WorkHoursRecord>) => {
+    if (!authUser) throw new Error('User not authenticated');
+
+    const updatedRecord = await supabaseService.updateWorkHours(id, {
+      start_date_time: updates.startDateTime?.toISOString(),
+      end_date_time: updates.endDateTime?.toISOString()
+    });
+
+    setWorkHours(prev => prev.map(w => 
+      w.id === id 
+        ? {
+            id: updatedRecord.id,
+            startDateTime: new Date(updatedRecord.start_date_time),
+            endDateTime: new Date(updatedRecord.end_date_time)
+          }
+        : w
+    ));
   };
 
   const getMetricsWithChanges = (period: string, customStartDate?: Date, customEndDate?: Date): Metrics & { changes: Record<string, string> } => {
