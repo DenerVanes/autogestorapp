@@ -22,15 +22,15 @@ export const filterByPeriod = <T extends { date: Date }>(items: T[], period: str
         endDate = endOfDay(yesterday);
         break;
       case 'esta-semana':
-        // Esta semana: do domingo atual até hoje (ou sábado se já passou)
-        startDate = startOfWeek(now, { weekStartsOn: 0 }); // Domingo = 0
-        endDate = endOfWeek(now, { weekStartsOn: 0 }); // Sábado
+        // Esta semana: da segunda-feira atual até domingo atual (padrão Uber/99)
+        startDate = startOfWeek(now, { weekStartsOn: 1 }); // Segunda-feira = 1
+        endDate = endOfWeek(now, { weekStartsOn: 1 }); // Domingo
         break;
       case 'semana-passada':
-        // Semana passada: do domingo da semana anterior até sábado da semana anterior
+        // Semana passada: da segunda-feira da semana anterior até domingo da semana anterior
         const lastWeek = subWeeks(now, 1);
-        startDate = startOfWeek(lastWeek, { weekStartsOn: 0 }); // Domingo = 0
-        endDate = endOfWeek(lastWeek, { weekStartsOn: 0 }); // Sábado
+        startDate = startOfWeek(lastWeek, { weekStartsOn: 1 }); // Segunda-feira = 1
+        endDate = endOfWeek(lastWeek, { weekStartsOn: 1 }); // Domingo
         break;
       case 'este-mes':
         startDate = startOfMonth(now);
@@ -84,15 +84,15 @@ export const filterWorkHoursByPeriod = (items: { startDateTime: Date; endDateTim
         endDate = endOfDay(yesterday);
         break;
       case 'esta-semana':
-        // Esta semana: do domingo atual até hoje (ou sábado se já passou)
-        startDate = startOfWeek(now, { weekStartsOn: 0 }); // Domingo = 0
-        endDate = endOfWeek(now, { weekStartsOn: 0 }); // Sábado
+        // Esta semana: da segunda-feira atual até domingo atual (padrão Uber/99)
+        startDate = startOfWeek(now, { weekStartsOn: 1 }); // Segunda-feira = 1
+        endDate = endOfWeek(now, { weekStartsOn: 1 }); // Domingo
         break;
       case 'semana-passada':
-        // Semana passada: do domingo da semana anterior até sábado da semana anterior
+        // Semana passada: da segunda-feira da semana anterior até domingo da semana anterior
         const lastWeek = subWeeks(now, 1);
-        startDate = startOfWeek(lastWeek, { weekStartsOn: 0 }); // Domingo = 0
-        endDate = endOfWeek(lastWeek, { weekStartsOn: 0 }); // Sábado
+        startDate = startOfWeek(lastWeek, { weekStartsOn: 1 }); // Segunda-feira = 1
+        endDate = endOfWeek(lastWeek, { weekStartsOn: 1 }); // Domingo
         break;
       case 'este-mes':
         startDate = startOfMonth(now);
