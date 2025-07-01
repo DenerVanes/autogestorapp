@@ -1,4 +1,3 @@
-
 project_id = "ymytximfmqcubhdvkruu"
 
 [api]
@@ -23,26 +22,21 @@ pop3_port = 54326
 
 [storage]
 enabled = true
-port = 54327
 
 [auth]
-enabled = true
-port = 54328
+# enable_signup = true
+# external_labels = ["GitHub", "GitLab"]
+# log_level = "info"
+# password_min_length = 8
+#
+# [auth.email]
+# enable_signup = true
+# double_confirm_changes = true
+# enable_confirmations = true
 
 [edge_runtime]
+# import_map_path = "import_map.json"
 enabled = true
-port = 54329
-
-[[edge_runtime.env_vars]]
-name = "SUPABASE_URL"
-value = "https://ymytximfmqcubhdvkruu.supabase.co"
-
-[[edge_runtime.env_vars]]
-name = "SUPABASE_ANON_KEY"
-value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlteXR4aW1mbXFjdWJoZHZrcnV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MzM0NDAsImV4cCI6MjA2NTMwOTQ0MH0.tPKhBe4bFm_OhFRELbP5aowAUDGLmhyps-J-d9TCTlk"
-
-[[edge_runtime.env_vars]]
-name = "SUPABASE_SERVICE_ROLE_KEY"
 
 [functions.stripe-webhook]
 verify_jwt = false

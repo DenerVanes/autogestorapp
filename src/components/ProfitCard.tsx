@@ -1,21 +1,23 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
-import { calculateKmRodado } from "@/utils/kmCalculator";
 import { calculatePreviousProfit, calculatePercentageChange } from "@/utils/comparisonCalculator";
 import { filterByPeriod } from "@/utils/dateFilters";
 import { subDays } from "date-fns";
+import type { Metrics } from "@/types";
 
 interface ProfitCardProps {
+  metrics: Metrics & { changes: Record<string, string> };
   period: string;
   customStartDate?: Date;
   customEndDate?: Date;
 }
 
-const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps) => {
-  const { user, transactions, odometerRecords } = useUser();
+const ProfitCard = ({ metrics, period, customStartDate, customEndDate }: ProfitCardProps) => {
+  const { user, transactions, lancamentos } = useUser();
+  const safeTransactions = transactions ?? [];
+  const safeLancamentos = lancamentos ?? [];
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -26,7 +28,7 @@ const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps)
 
   const calculateProfit = () => {
     // Get filtered transactions for the selected period
-    const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
+    const filteredTransactions = filterByPeriod(safeTransactions, period, customStartDate, customEndDate);
     
     // Calculate total revenue
     const totalRevenue = filteredTransactions
@@ -38,8 +40,8 @@ const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps)
 
     // Check if user profile is complete for fuel calculation
     if (user?.vehicleType && user?.vehicleModel && user?.fuelConsumption) {
-      // Get km driven in the selected period
-      const kmDriven = calculateKmRodado(odometerRecords, period, customStartDate, customEndDate);
+      // Get km driven from the metrics object
+      const kmDriven = metrics.kmRodado;
       
       if (kmDriven > 0) {
         // Calculate liters consumed
@@ -47,7 +49,7 @@ const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps)
 
         // Get average fuel price from last 7 days
         const sevenDaysAgo = subDays(new Date(), 7);
-        const recentFuelTransactions = transactions.filter(t => 
+        const recentFuelTransactions = safeTransactions.filter(t => 
           t.type === 'despesa' && 
           t.fuelType && 
           t.pricePerLiter && 
@@ -65,7 +67,7 @@ const ProfitCard = ({ period, customStartDate, customEndDate }: ProfitCardProps)
     const profit = totalRevenue - fuelExpense;
 
     // Calculate previous period profit for comparison
-    const previousProfit = calculatePreviousProfit(transactions, odometerRecords, user, period, customStartDate, customEndDate);
+    const previousProfit = calculatePreviousProfit(safeTransactions, safeLancamentos, user, period, customStartDate, customEndDate);
     const change = calculatePercentageChange(profit, previousProfit);
 
     return {

@@ -1,4 +1,3 @@
-
 import { odometerService } from '@/services/odometerService';
 import { OdometerRecord } from '@/types';
 
@@ -10,7 +9,7 @@ export const useOdometerOperations = (
     if (!authUserId) throw new Error('User not authenticated');
 
     const newRecord = await odometerService.createOdometerRecord({
-      date: record.date.toISOString(),
+      date: typeof record.date === 'string' ? record.date : record.date.toISOString(),
       type: record.type,
       value: record.value
     });

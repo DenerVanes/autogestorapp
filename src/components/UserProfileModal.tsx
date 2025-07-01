@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
+import ManageSubscriptionModal from "./ManageSubscriptionModal";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -15,6 +17,8 @@ interface UserProfileModalProps {
 
 const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
   const { user, updateUserProfile } = useUser();
+  const { session } = useAuth();
+  const { hasAccess } = useSubscription();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -22,6 +26,7 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
     vehicleModel: "",
     fuelConsumption: ""
   });
+  const [manageModalOpen, setManageModalOpen] = useState(false);
 
   // Load user data when modal opens or user data changes
   useEffect(() => {
@@ -76,11 +81,47 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    if (!window.confirm("Tem certeza que deseja cancelar seu plano PRO?")) return;
+    if (!session?.access_token) {
+      toast.error("Usuário não autenticado.");
+      return;
+    }
+    try {
+      const res = await fetch(
+        "https://ymytximfmqcubhdvkruu.supabase.co/functions/v1/cancel-subscription",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Plano PRO cancelado com sucesso!");
+        onClose();
+      } else {
+        toast.error("Erro ao cancelar plano: " + (data.error || "Tente novamente."));
+      }
+    } catch (err: any) {
+      toast.error("Erro ao cancelar plano: " + err.message);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Configurações do Perfil</DialogTitle>
+          {hasAccess && (
+            <div className="pt-2 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setManageModalOpen(true)}>
+                Gerenciar Assinatura
+              </Button>
+            </div>
+          )}
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -138,6 +179,15 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
             </Button>
           </div>
         </form>
+        {/* Modal de gerenciamento de assinatura será implementado aqui */}
+        {user && session?.access_token && (
+          <ManageSubscriptionModal
+            isOpen={manageModalOpen}
+            onClose={() => setManageModalOpen(false)}
+            userId={user.id}
+            accessToken={session.access_token}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

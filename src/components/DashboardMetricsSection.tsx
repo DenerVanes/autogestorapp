@@ -1,4 +1,3 @@
-
 import { DollarSign, TrendingDown, Car, Clock } from "lucide-react";
 import MetricCard from "./MetricCard";
 import FuelExpenseCard from "./FuelExpenseCard";
@@ -6,21 +5,50 @@ import ProfitCard from "./ProfitCard";
 import type { Metrics } from "@/types";
 import { useUser } from "@/contexts/UserContext";
 import { filterByPeriod } from "@/utils/dateFilters";
+import React from "react";
+import { calculatePreviousMetrics } from "@/utils/comparisonCalculator";
 
 interface DashboardMetricsSectionProps {
-  metrics: Metrics & { changes: Record<string, string> };
+  metrics: Metrics;
   period: string;
   customStartDate?: Date;
   customEndDate?: Date;
+  children?: React.ReactNode;
+}
+
+function getPreviousPeriod(period: string) {
+  switch (period) {
+    case "este-mes": return "mes-passado";
+    case "esta-semana": return "semana-passada";
+    case "hoje": return "ontem";
+    default: return "mes-passado";
+  }
+}
+
+function getSimpleChange(current: number, previous: number) {
+  console.log("getSimpleChange", { current, previous }); // log para depuração
+  if (Math.abs(previous) < 0.01) previous = 0;
+  if (Math.abs(current) < 0.01) current = 0;
+
+  if (current === 0 && previous === 0) {
+    return "0% vs mês anterior";
+  }
+  if (previous === 0) {
+    return current > 0 ? "+100% vs mês anterior" : "0% vs mês anterior";
+  }
+  const percent = ((current - previous) / previous) * 100;
+  const sign = percent > 0 ? "+" : "";
+  return `${sign}${percent.toFixed(1)}% vs mês anterior`;
 }
 
 const DashboardMetricsSection = ({ 
   metrics, 
   period, 
   customStartDate, 
-  customEndDate 
+  customEndDate,
+  children
 }: DashboardMetricsSectionProps) => {
-  const { transactions } = useUser();
+  const { transactions, lancamentos, workHours } = useUser();
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -28,6 +56,22 @@ const DashboardMetricsSection = ({
       currency: 'BRL'
     }).format(value);
   };
+
+  // Cálculo dos valores do período anterior usando a lógica correta de intervalo
+  const prevMetrics = calculatePreviousMetrics(
+    transactions,
+    lancamentos,
+    workHours,
+    period,
+    customStartDate,
+    customEndDate
+  );
+  const prevReceita = prevMetrics.receita;
+  const prevDespesa = prevMetrics.despesa;
+  const prevSaldo = prevMetrics.saldo;
+  const prevKmRodado = prevMetrics.kmRodado;
+  const prevValorPorKm = prevMetrics.valorPorKm;
+  const prevValorPorHora = prevMetrics.valorPorHora;
 
   // Calculate revenue breakdown by category
   const getRevenueBreakdown = () => {
@@ -75,67 +119,75 @@ const DashboardMetricsSection = ({
 
   return (
     <div className="mb-8">
-      {/* Layout responsivo com 2 fileiras em desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Primeira fileira - 4 cards */}
+      {/* Primeira fileira - 4 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <MetricCard
           title="Receita Total"
           value={formatCurrency(metrics.receita)}
           icon={DollarSign}
           color="green"
-          change={metrics.changes?.receita}
           breakdown={revenueBreakdown}
           showInfoIcon={true}
+          change={getSimpleChange(metrics.receita, prevReceita)}
         />
         <MetricCard
           title="Despesa Total"
           value={formatCurrency(metrics.despesa)}
           icon={TrendingDown}
           color="red"
-          change={metrics.changes?.despesa}
           breakdown={expenseBreakdown}
           showInfoIcon={true}
+          change={getSimpleChange(metrics.despesa, prevDespesa)}
         />
         <MetricCard
           title="Saldo Total"
           value={formatCurrency(metrics.saldo)}
           icon={DollarSign}
           color={metrics.saldo >= 0 ? "green" : "red"}
-          change={metrics.changes?.saldo}
+          change={getSimpleChange(metrics.saldo, prevSaldo)}
         />
         <MetricCard
           title="KM Rodado"
           value={`${metrics.kmRodado} km`}
           icon={Car}
           color="blue"
-          change={metrics.changes?.kmRodado}
+          change={getSimpleChange(metrics.kmRodado, prevKmRodado)}
         />
-        
-        {/* Segunda fileira - 2 cards + FuelExpenseCard + ProfitCard */}
+      </div>
+      {/* Segunda fileira - Lucro e outros cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <ProfitCard
+          metrics={metrics}
+          period={period}
+          customStartDate={customStartDate}
+          customEndDate={customEndDate}
+        />
         <MetricCard
           title="R$ por KM"
           value={formatCurrency(metrics.valorPorKm)}
           icon={DollarSign}
           color="green"
-          change={metrics.changes?.valorPorKm}
+          change={getSimpleChange(metrics.valorPorKm, prevValorPorKm)}
         />
         <MetricCard
           title="R$ por Hora"
           value={formatCurrency(metrics.valorPorHora)}
           icon={Clock}
           color="green"
-          change={metrics.changes?.valorPorHora}
+          change={getSimpleChange(metrics.valorPorHora, prevValorPorHora)}
         />
         <FuelExpenseCard
+          metrics={metrics}
           period={period}
           customStartDate={customStartDate}
           customEndDate={customEndDate}
         />
-        <ProfitCard
-          period={period}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
-        />
+      </div>
+      {/* Terceira fileira - Card de Metas */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div>
+          {children}
+        </div>
       </div>
     </div>
   );

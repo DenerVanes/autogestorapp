@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import EditTransactionModal from "./EditTransactionModal";
@@ -6,7 +5,8 @@ import EditOdometerModal from "./EditOdometerModal";
 import EditWorkHoursModal from "./EditWorkHoursModal";
 import HistoryHeader from "./history/HistoryHeader";
 import HistoryTabsContent from "./history/HistoryTabsContent";
-import type { Transaction, OdometerRecord, WorkHoursRecord } from "@/types";
+import { Transaction, WorkHoursRecord } from "@/types";
+import { Lancamento } from "@/lib/types";
 
 interface HistoryPageProps {
   onBack: () => void;
@@ -16,7 +16,7 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
   const { deleteTransaction, deleteOdometerRecord, deleteWorkHours } = useUser();
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [editingOdometerRecord, setEditingOdometerRecord] = useState<OdometerRecord | null>(null);
+  const [editingViagem, setEditingViagem] = useState<any | null>(null);
   const [editingWorkHours, setEditingWorkHours] = useState<WorkHoursRecord | null>(null);
 
   const handleDeleteTransaction = (id: string) => {
@@ -25,9 +25,9 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
     }
   };
 
-  const handleDeleteOdometerRecord = (id: string) => {
+  const handleDeleteOdometer = (ids: string[]) => {
     if (confirm('Tem certeza que deseja excluir este registro de odômetro?')) {
-      deleteOdometerRecord(id);
+      ids.forEach(id => deleteOdometerRecord(id));
     }
   };
 
@@ -45,8 +45,8 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
         <HistoryTabsContent
           onEditTransaction={setEditingTransaction}
           onDeleteTransaction={handleDeleteTransaction}
-          onEditOdometerRecord={setEditingOdometerRecord}
-          onDeleteOdometerRecord={handleDeleteOdometerRecord}
+          onEditOdometer={setEditingViagem}
+          onDeleteOdometer={handleDeleteOdometer}
           onEditWorkHours={setEditingWorkHours}
           onDeleteWorkHours={handleDeleteWorkHours}
         />
@@ -60,11 +60,11 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
         />
       )}
 
-      {editingOdometerRecord && (
+      {editingViagem && (
         <EditOdometerModal
-          record={editingOdometerRecord}
+          cicloParaEditar={editingViagem}
           isOpen={true}
-          onClose={() => setEditingOdometerRecord(null)}
+          onClose={() => setEditingViagem(null)}
         />
       )}
 

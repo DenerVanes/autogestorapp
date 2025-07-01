@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -37,7 +37,7 @@ serve(async (req) => {
       throw new Error("No signature provided");
     }
 
-    const event = stripe.webhooks.constructEvent(
+    const event = await stripe.webhooks.constructEventAsync(
       body,
       signature,
       Deno.env.get("STRIPE_WEBHOOK_SECRET") || ""
@@ -52,10 +52,12 @@ serve(async (req) => {
         
         if (userId) {
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          const expiresAt = new Date(subscription.current_period_end * 1000).toISOString();
+          logStep("Creating subscription", { userId, subscriptionId: session.subscription, expiresAt, current_period_end: subscription.current_period_end });
           
-          await supabaseClient.from('user_subscriptions').insert({
+          await supabaseClient.from('user_subscriptions').upsert({
             user_id: userId,
-            plan_type: 'pro_recurring',
+            plan_type: 'pro',
             status: 'active',
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
@@ -64,8 +66,8 @@ serve(async (req) => {
             payment_method: 'card',
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            expires_at: new Date(subscription.current_period_end * 1000).toISOString()
-          });
+            expires_at: expiresAt
+          }, { onConflict: 'user_id' });
           
           logStep("Subscription created", { userId, subscriptionId: session.subscription });
         }
@@ -78,6 +80,8 @@ serve(async (req) => {
         if (invoice.subscription) {
           const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
           const userId = subscription.metadata?.user_id;
+          const expiresAt = new Date(subscription.current_period_end * 1000).toISOString();
+          logStep("Renewing subscription", { userId, subscriptionId: subscription.id, expiresAt, current_period_end: subscription.current_period_end });
           
           if (userId) {
             await supabaseClient
@@ -85,7 +89,7 @@ serve(async (req) => {
               .update({
                 current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
                 current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-                expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+                expires_at: expiresAt,
                 status: 'active'
               })
               .eq('stripe_subscription_id', subscription.id);
@@ -101,7 +105,7 @@ serve(async (req) => {
         
         await supabaseClient
           .from('user_subscriptions')
-          .update({ status: 'cancelled' })
+          .update({ status: 'canceled' })
           .eq('stripe_subscription_id', subscription.id);
         
         logStep("Subscription cancelled", { subscriptionId: subscription.id });

@@ -71,14 +71,20 @@ export interface DatabaseTransaction {
   updated_at: string;
 }
 
-export interface DatabaseOdometerRecord {
+export interface DatabaseOdometerCiclo {
   id: string;
   user_id: string;
   date: string;
   type: 'inicial' | 'final';
   value: number;
+  pair_id?: string;
+  odometro_inicial?: number;
+  odometro_final?: number;
+  ciclo?: number;
   created_at: string;
   updated_at: string;
+  estado?: string;
+  distancia?: number;
 }
 
 export interface DatabaseWorkHours {
@@ -99,4 +105,18 @@ export interface DatabaseProfile {
   fuel_consumption?: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface OdometerRecordFull {
+  id: string;
+  user_id: string;
+  date: Date;
+  type: 'inicial' | 'final';
+  value: number;
+  pair_id?: string;
+  odometro_inicial?: number;
+  odometro_final?: number;
+  ciclo?: number;
+  created_at: Date;
+  updated_at: Date;
 }

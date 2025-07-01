@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,9 +18,11 @@ interface MetricCardProps {
   change?: string;
   breakdown?: Array<{ label: string; value: string; amount: number }>;
   showInfoIcon?: boolean;
+  subtitle?: string;
+  comparison?: string;
 }
 
-const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showInfoIcon }: MetricCardProps) => {
+const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showInfoIcon, subtitle, comparison }: MetricCardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const colorClasses = {
@@ -38,12 +39,6 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
     if (isPositive) return "text-green-600";
     if (isNegative) return "text-red-600";
     return "text-gray-500";
-  };
-
-  const getChangeText = (changeValue?: string) => {
-    if (!changeValue) return "";
-    if (changeValue === "Sem dados anteriores para comparar") return changeValue;
-    return `${changeValue} vs mês anterior`;
   };
 
   const formatCurrency = (value: number) => {
@@ -106,9 +101,15 @@ const MetricCard = ({ title, value, icon: Icon, color, change, breakdown, showIn
                 )}
               </div>
               <p className={cn("text-2xl font-bold", `text-${color}-600`)}>{value}</p>
+              {subtitle && (
+                <p className="text-xs text-gray-500 mt-1 mb-0 font-normal">{subtitle}</p>
+              )}
+              {comparison && (
+                <p className="text-xs text-gray-700 mt-1 mb-0 font-medium">{comparison}</p>
+              )}
               {change && (
                 <p className={cn("text-xs mt-1 font-medium", getChangeColor(change))}>
-                  {getChangeText(change)}
+                  {change}
                 </p>
               )}
             </div>

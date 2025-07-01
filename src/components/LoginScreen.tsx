@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +41,7 @@ const LoginScreen = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/landing')}
             className="flex items-center"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

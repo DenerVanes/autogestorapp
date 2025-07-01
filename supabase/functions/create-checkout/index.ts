@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -62,22 +62,24 @@ serve(async (req) => {
       logStep("Created new customer", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = req.headers.get("origin") || "http://localhost:8080";
     
-    // Criar Checkout Session para assinatura recorrente - R$ 19,90
+    // Mapeamento de planos para Price IDs do Stripe
+    const priceIds: { [key: string]: string } = {
+      'recurring': 'price_1RaKW3Guu8wWEcd11D2Uv47Q', // Price ID atualizado para R$ 19,90
+    };
+
+    const priceId = priceIds[planType];
+    if (!priceId) {
+      throw new Error(`Plano '${planType}' não encontrado.`);
+    }
+
+    // Criar Checkout Session usando o Price ID do produto que você criou
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
         {
-          price_data: {
-            currency: "brl",
-            product_data: { 
-              name: "Plano PRO - Recorrente",
-              description: "Acesso completo às funcionalidades premium"
-            },
-            unit_amount: 1990, // R$ 19,90 em centavos
-            recurring: { interval: "month" },
-          },
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -86,11 +88,11 @@ serve(async (req) => {
       cancel_url: `${origin}/dashboard?canceled=true`,
       metadata: {
         user_id: user.id,
-        plan_type: 'pro_recurring'
+        plan_type: planType
       }
     });
 
-    logStep("Checkout session created", { sessionId: session.id });
+    logStep("Checkout session created with Price ID", { sessionId: session.id, priceId: priceId });
 
     return new Response(JSON.stringify({ 
       type: 'checkout',

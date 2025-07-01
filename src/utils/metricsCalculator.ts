@@ -1,86 +1,56 @@
+import type { Transaction, WorkHoursRecord, Metrics, OdometerCiclo } from "@/types";
+import { Lancamento } from "@/lib/types";
+import { calculateKmRodado } from "@/utils/kmCalculator";
 
-import type { Transaction, OdometerRecord, WorkHoursRecord, Metrics } from "@/types";
-import { filterByPeriod } from "./dateFilters";
-import { calculateWorkHoursWithCutoff } from "./workHoursProcessor";
-import { calculateKmRodado, calculateKmForAllRecords } from "./kmCalculator";
-import { calculatePreviousMetrics, calculatePercentageChange } from "./comparisonCalculator";
+/**
+ * Calcula o total de horas trabalhadas a partir de um array de registros de horas.
+ * @param workHours Array de registros de horas trabalhadas
+ * @returns Total de horas em formato decimal (ex: 7.5 para 7h30min)
+ */
+export function calculateWorkHours(workHours: WorkHoursRecord[]): number {
+  let totalMs = 0;
+  workHours.forEach(record => {
+    if (record.startDateTime && record.endDateTime) {
+      const start = record.startDateTime instanceof Date ? record.startDateTime : new Date(record.startDateTime);
+      const end = record.endDateTime instanceof Date ? record.endDateTime : new Date(record.endDateTime);
+      totalMs += end.getTime() - start.getTime();
+    }
+  });
+  // converter ms para horas decimais
+  return +(totalMs / (1000 * 60 * 60)).toFixed(2);
+}
 
-export const calculateWorkHours = (workHours: WorkHoursRecord[], period: string, customStartDate?: Date, customEndDate?: Date): number => {
-  // Use the new logic with 4 AM cutoff
-  return calculateWorkHoursWithCutoff(workHours, period, customStartDate, customEndDate);
-};
-
-export const calculateMetrics = (
+/**
+ * Calcula métricas financeiras a partir de transações, registros de odômetro e horas trabalhadas.
+ */
+export function calculateMetrics(
   transactions: Transaction[],
-  odometerRecords: OdometerRecord[],
-  workHours: WorkHoursRecord[]
-): Metrics => {
-  const receita = transactions
-    .filter(t => t.type === 'receita')
-    .reduce((sum, t) => sum + t.value, 0);
-  
-  const despesa = transactions
-    .filter(t => t.type === 'despesa')
-    .reduce((sum, t) => sum + t.value, 0);
-
+  odometerRecords: OdometerCiclo[],
+  workHours: WorkHoursRecord[],
+  period?: string,
+  customStartDate?: Date,
+  customEndDate?: Date
+): Metrics {
+  const receita = transactions.filter(t => t.type === 'receita').reduce((sum, t) => sum + t.value, 0);
+  const despesa = transactions.filter(t => t.type === 'despesa').reduce((sum, t) => sum + t.value, 0);
   const saldo = receita - despesa;
-  
-  const kmRodado = calculateKmForAllRecords(odometerRecords);
-  
-  // Calculate work hours using the new logic
-  const horasTrabalhadas = calculateWorkHoursWithCutoff(workHours, 'todos');
-  
+
+  // Novo cálculo de KM rodado usando odometerRecords
+  const kmRodado = calculateKmRodado(odometerRecords, period || 'este-mes', customStartDate, customEndDate);
   const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
+
+  let totalMs = 0;
+  workHours.forEach(record => {
+    if (record.startDateTime && record.endDateTime) {
+      const start = record.startDateTime instanceof Date ? record.startDateTime : new Date(record.startDateTime);
+      const end = record.endDateTime instanceof Date ? record.endDateTime : new Date(record.endDateTime);
+      totalMs += end.getTime() - start.getTime();
+    }
+  });
+  const horasTrabalhadas = +(totalMs / (1000 * 60 * 60)).toFixed(2);
   const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
 
   return { receita, despesa, saldo, kmRodado, valorPorKm, horasTrabalhadas, valorPorHora };
-};
+}
 
-export const getMetrics = (
-  transactions: Transaction[],
-  odometerRecords: OdometerRecord[],
-  workHours: WorkHoursRecord[],
-  period: string,
-  customStartDate?: Date,
-  customEndDate?: Date
-): Metrics & { changes: Record<string, string> } => {
-  console.log(`=== Calculando métricas para período: ${period} ===`);
-  
-  const filteredTransactions = filterByPeriod(transactions, period, customStartDate, customEndDate);
-  console.log(`Transações filtradas: ${filteredTransactions.length}`);
-  
-  const receita = filteredTransactions
-    .filter(t => t.type === 'receita')
-    .reduce((sum, t) => sum + t.value, 0);
-  
-  console.log(`Receita total: R$ ${receita.toFixed(2)}`);
-  
-  const despesa = filteredTransactions
-    .filter(t => t.type === 'despesa')
-    .reduce((sum, t) => sum + t.value, 0);
-
-  const saldo = receita - despesa;
-  const kmRodado = calculateKmRodado(odometerRecords, period, customStartDate, customEndDate);
-  const valorPorKm = kmRodado > 0 ? receita / kmRodado : 0;
-  
-  // Use the new logic to calculate work hours
-  const horasTrabalhadas = calculateWorkHours(workHours, period, customStartDate, customEndDate);
-  console.log(`Horas trabalhadas: ${horasTrabalhadas.toFixed(2)}h`);
-  
-  const valorPorHora = horasTrabalhadas > 0 ? receita / horasTrabalhadas : 0;
-  console.log(`R$ por hora: R$ ${valorPorHora.toFixed(2)} (${receita.toFixed(2)} ÷ ${horasTrabalhadas.toFixed(2)})`);
-
-  // Calculate previous month metrics for comparison
-  const previousMetrics = calculatePreviousMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
-  
-  const changes = {
-    receita: calculatePercentageChange(receita, previousMetrics.receita),
-    despesa: calculatePercentageChange(despesa, previousMetrics.despesa),
-    saldo: calculatePercentageChange(saldo, previousMetrics.saldo),
-    kmRodado: calculatePercentageChange(kmRodado, previousMetrics.kmRodado),
-    valorPorKm: calculatePercentageChange(valorPorKm, previousMetrics.valorPorKm),
-    valorPorHora: calculatePercentageChange(valorPorHora, previousMetrics.valorPorHora)
-  };
-
-  return { receita, despesa, saldo, kmRodado, valorPorKm, horasTrabalhadas, valorPorHora, changes };
-};
+export const getMetrics = calculateMetrics; 

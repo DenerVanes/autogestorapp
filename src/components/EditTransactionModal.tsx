@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,30 +21,42 @@ interface EditTransactionModalProps {
 
 const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionModalProps) => {
   const [date, setDate] = useState<Date>(transaction.date);
-  const [value, setValue] = useState(transaction.value.toString());
+  const [value, setValue] = useState(transaction.id ? transaction.value.toString() : "");
   const [category, setCategory] = useState(transaction.category);
   const [fuelType, setFuelType] = useState(transaction.fuelType || "");
   const [pricePerLiter, setPricePerLiter] = useState(transaction.pricePerLiter?.toString() || "");
   const [subcategory, setSubcategory] = useState(transaction.subcategory || "");
   const [observation, setObservation] = useState(transaction.observation || "");
 
-  const { updateTransaction } = useUser();
+  const { updateTransaction, addTransaction } = useUser();
 
   const getModalConfig = () => {
+    const isNewTransaction = !transaction.id;
+    const action = isNewTransaction ? 'Nova' : 'Editar';
+    
     switch (transaction.type) {
       case 'receita':
         return {
-          title: 'Editar Receita',
+          title: `${action} Receita`,
           icon: DollarSign,
           color: 'text-green-600',
-          categories: ['Uber', '99', 'InDrive', 'Gorjetas', 'Corridas Particulares']
+          categories: ['Uber', '99', 'InDrive', 'iFood', 'Gorjetas', 'Corridas Particulares']
         };
       case 'despesa':
         return {
-          title: 'Editar Despesa',
+          title: `${action} Despesa`,
           icon: TrendingDown,
           color: 'text-red-600',
-          categories: ['Combustível', 'Alimentação', 'Manutenção']
+          categories: [
+            'Combustível',
+            'Alimentação',
+            'Manutenção',
+            'IPVA',
+            'Financiamento',
+            'Aluguel Veículo',
+            'Lava Rápido',
+            'Seguro'
+          ]
         };
       default:
         return { title: '', icon: DollarSign, color: '', categories: [] };
@@ -55,10 +66,15 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
   const config = getModalConfig();
   const IconComponent = config.icon;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const updatedTransaction: Partial<Transaction> = {
+    console.log('EditTransactionModal - handleSubmit chamado');
+    console.log('Transaction ID:', transaction.id);
+    console.log('Transaction type:', transaction.type);
+    
+    const transactionData = {
+      type: transaction.type,
       date,
       value: parseFloat(value),
       category,
@@ -72,8 +88,25 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
       })
     };
 
-    updateTransaction(transaction.id, updatedTransaction);
-    onClose();
+    console.log('Transaction data to save:', transactionData);
+
+    try {
+      if (!transaction.id) {
+        // Nova transação
+        console.log('Criando nova transação...');
+        await addTransaction(transactionData);
+        console.log('Transação criada com sucesso!');
+      } else {
+        // Editar transação existente
+        console.log('Editando transação existente...');
+        await updateTransaction(transaction.id, transactionData);
+        console.log('Transação editada com sucesso!');
+      }
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar transação:', error);
+      alert('Erro ao salvar transação. Tente novamente.');
+    }
   };
 
   return (
@@ -122,7 +155,7 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
             <Input
               type="number"
               step="0.01"
-              placeholder="0,00"
+              placeholder="Digite o valor"
               value={value}
               onChange={(e) => setValue(e.target.value)}
               required

@@ -9,6 +9,8 @@ import { useTransactionOperations } from './useTransactionOperations';
 import { useOdometerOperations } from './useOdometerOperations';
 import { useWorkHoursOperations } from './useWorkHoursOperations';
 import { useAccessControl } from '@/hooks/useAccessControl';
+import { lancamentoService } from '@/services/lancamentoService';
+import { filterByPeriod } from '@/utils/dateFilters';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -20,6 +22,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [odometerRecords, setOdometerRecords] = useState<OdometerRecord[]>([]);
   const [workHours, setWorkHours] = useState<WorkHoursRecord[]>([]);
+  const [lancamentos, setLancamentos] = useState([]);
 
   // Get operations without access control wrapper
   const transactionOps = useTransactionOperations(setTransactions, authUser?.id);
@@ -29,7 +32,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   // Wrap operations with access control that return promises
   const protectedTransactionOps = {
     addTransaction: async (transaction: any): Promise<void> => {
-      if (isExpired || !checkAccess('adicionar transações')) return;
+      console.log('UserContext - addTransaction chamada');
+      console.log('Transaction data:', transaction);
+      console.log('isExpired:', isExpired);
+      console.log('checkAccess result:', checkAccess('adicionar transações'));
+      
+      if (isExpired || !checkAccess('adicionar transações')) {
+        console.log('Acesso negado para adicionar transação');
+        return;
+      }
+      
+      console.log('Chamando transactionOps.addTransaction...');
       return transactionOps.addTransaction(transaction);
     },
     updateTransaction: async (id: string, updates: any): Promise<void> => {
@@ -72,6 +85,32 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Operações de Lançamento
+  const addLancamento = async (lancamento) => {
+    if (isExpired || !checkAccess('adicionar lançamentos')) {
+      throw new Error('Acesso bloqueado: Assine o PRO para continuar.');
+    }
+    if (!authUser) throw new Error('User not authenticated');
+    const novoLancamento = await lancamentoService.createLancamento(lancamento, authUser.id);
+    setLancamentos((prev) => [novoLancamento, ...prev]);
+    return novoLancamento;
+  };
+  const updateLancamento = async (id, updates) => {
+    if (isExpired || !checkAccess('editar lançamentos')) {
+      throw new Error('Acesso bloqueado: Assine o PRO para continuar.');
+    }
+    const atualizado = await lancamentoService.updateLancamento(id, updates);
+    setLancamentos((prev) => prev.map(l => l.id === id ? atualizado : l));
+    return atualizado;
+  };
+  const deleteLancamento = async (id) => {
+    if (isExpired || !checkAccess('remover lançamentos')) {
+      throw new Error('Acesso bloqueado: Assine o PRO para continuar.');
+    }
+    await lancamentoService.deleteLancamento(id);
+    setLancamentos((prev) => prev.filter(l => l.id !== id));
+  };
+
   // Load user data when auth user changes
   useEffect(() => {
     const loadUserData = async () => {
@@ -80,6 +119,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setTransactions([]);
         setOdometerRecords([]);
         setWorkHours([]);
+        setLancamentos([]);
         setLoading(false);
         return;
       }
@@ -112,6 +152,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setTransactions(data.transactions);
       setOdometerRecords(data.odometerRecords);
       setWorkHours(data.workHours);
+      setLancamentos(data.lancamentos || []);
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
@@ -148,8 +189,130 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getMetricsWithChanges = (period: string, customStartDate?: Date, customEndDate?: Date): Metrics & { changes: Record<string, string> } => {
-    return getMetrics(transactions, odometerRecords, workHours, period, customStartDate, customEndDate);
+  function filterLancamentosByPeriod(lancamentos, period, customStartDate, customEndDate) {
+    const lancs = Array.isArray(lancamentos) ? lancamentos : [];
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+    switch (period) {
+      case "hoje":
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      case "ontem":
+        const ontem = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        startDate = new Date(ontem.getFullYear(), ontem.getMonth(), ontem.getDate(), 0, 0, 0, 0);
+        endDate = new Date(ontem.getFullYear(), ontem.getMonth(), ontem.getDate(), 23, 59, 59, 999);
+        break;
+      case "esta-semana": {
+        const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek + 1, 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      }
+      case "semana-passada": {
+        const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+        const lastWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek - 6, 0, 0, 0, 0);
+        const lastWeekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 23, 59, 59, 999);
+        startDate = lastWeekStart;
+        endDate = lastWeekEnd;
+        break;
+      }
+      case "este-mes":
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      case "mes-passado": {
+        const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+        const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        startDate = firstDayLastMonth;
+        endDate = lastDayLastMonth;
+        break;
+      }
+      case "personalizado":
+        if (customStartDate && customEndDate) {
+          startDate = new Date(customStartDate.getFullYear(), customStartDate.getMonth(), customStartDate.getDate(), 0, 0, 0, 0);
+          endDate = new Date(customEndDate.getFullYear(), customEndDate.getMonth(), customEndDate.getDate(), 23, 59, 59, 999);
+          break;
+        }
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    }
+    return lancs.filter(l => {
+      if (!l.dataLancamento) return false;
+      const lDate = l.dataLancamento instanceof Date ? l.dataLancamento : new Date(l.dataLancamento);
+      return lDate >= startDate && lDate <= endDate;
+    });
+  }
+
+  function filterWorkHoursByPeriod(workHours, period, customStartDate, customEndDate) {
+    const whs = Array.isArray(workHours) ? workHours : [];
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+    switch (period) {
+      case "hoje":
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      case "ontem":
+        const ontem = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        startDate = new Date(ontem.getFullYear(), ontem.getMonth(), ontem.getDate(), 0, 0, 0, 0);
+        endDate = new Date(ontem.getFullYear(), ontem.getMonth(), ontem.getDate(), 23, 59, 59, 999);
+        break;
+      case "esta-semana": {
+        const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek + 1, 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      }
+      case "semana-passada": {
+        const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+        const lastWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek - 6, 0, 0, 0, 0);
+        const lastWeekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 23, 59, 59, 999);
+        startDate = lastWeekStart;
+        endDate = lastWeekEnd;
+        break;
+      }
+      case "este-mes":
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      case "mes-passado": {
+        const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+        const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        startDate = firstDayLastMonth;
+        endDate = lastDayLastMonth;
+        break;
+      }
+      case "personalizado":
+        if (customStartDate && customEndDate) {
+          startDate = new Date(customStartDate.getFullYear(), customStartDate.getMonth(), customStartDate.getDate(), 0, 0, 0, 0);
+          endDate = new Date(customEndDate.getFullYear(), customEndDate.getMonth(), customEndDate.getDate(), 23, 59, 59, 999);
+          break;
+        }
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    }
+    return whs.filter(w => {
+      if (!w.startDateTime) return false;
+      const wDate = w.startDateTime instanceof Date ? w.startDateTime : new Date(w.startDateTime);
+      return wDate >= startDate && wDate <= endDate;
+    });
+  }
+
+  const getMetricsWithChanges = (period: string, customStartDate?: Date, customEndDate?: Date): Metrics => {
+    const filteredTransactions = filterByPeriod(Array.isArray(transactions) ? transactions : [], period, customStartDate, customEndDate);
+    const filteredWorkHours = filterWorkHoursByPeriod(workHours, period, customStartDate, customEndDate);
+    return getMetrics(filteredTransactions, odometerRecords, filteredWorkHours, period, customStartDate, customEndDate);
   };
 
   const getChartDataFiltered = (period: string, customStartDate?: Date, customEndDate?: Date): ChartData[] => {
@@ -164,9 +327,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         transactions,
         odometerRecords,
         workHours,
+        lancamentos,
         ...protectedTransactionOps,
         ...protectedOdometerOps,
         ...protectedWorkHoursOps,
+        addLancamento,
+        updateLancamento,
+        deleteLancamento,
         updateUserProfile,
         getMetrics: getMetricsWithChanges,
         getChartData: getChartDataFiltered,
@@ -184,4 +351,4 @@ export const useUser = () => {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
-};
+}; 

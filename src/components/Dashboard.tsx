@@ -1,144 +1,211 @@
-
 import { useState } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import FloatingActionButton from "./FloatingActionButton";
-import TransactionModal from "./TransactionModal";
-import WorkHoursModal from "./WorkHoursModal";
-import UserProfileModal from "./UserProfileModal";
-import HistoryPage from "./HistoryPage";
 import DashboardHeader from "./DashboardHeader";
 import DashboardMetricsSection from "./DashboardMetricsSection";
 import DashboardChartSection from "./DashboardChartSection";
 import DashboardRecentTransactions from "./DashboardRecentTransactions";
-import SubscriptionBanner from "./SubscriptionBanner";
 import { useUser } from "@/contexts/UserContext";
-import { useAccessControl } from "@/hooks/useAccessControl";
-import { DateRange } from "react-day-picker";
 import { filterByPeriod } from "@/utils/dateFilters";
-
-type TransactionType = 'receita' | 'despesa' | 'odometro' | 'horas' | null;
+import FloatingActionButton from "./FloatingActionButton";
+import EditTransactionModal from "./EditTransactionModal";
+import EditOdometerModal from "./EditOdometerModal";
+import WorkHoursModal from "./WorkHoursModal";
+import { Transaction } from "@/types";
+import { Lancamento } from "@/lib/types";
+import { useNavigate } from "react-router-dom";
+import UserProfileModal from "./UserProfileModal";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Crown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Zap, CreditCard } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GoalsSummary } from "./GoalsSummary";
 
 const Dashboard = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState("hoje");
-  const [modalType, setModalType] = useState<TransactionType>(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const { user, transactions, getMetrics, getChartData, loading } = useUser();
+  const [selectedPeriod, setSelectedPeriod] = useState("este-mes");
+  const [dateRange, setDateRange] = useState();
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange>();
-  
-  const { user, getMetrics, getChartData, transactions } = useUser();
-  const { requireAccess } = useAccessControl();
+  const [openAction, setOpenAction] = useState<null | 'receita' | 'despesa' | 'odometro' | 'horas'>(null);
+  const [showProDialog, setShowProDialog] = useState(false);
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
 
-  const customStartDate = dateRange?.from;
-  const customEndDate = dateRange?.to;
+  const navigate = useNavigate();
+  const { hasAccess, createCheckout } = useSubscription();
 
-  const metrics = getMetrics(selectedPeriod, customStartDate, customEndDate);
-  const chartData = getChartData(selectedPeriod, customStartDate, customEndDate);
-  
-  // Apply the same date filter to recent transactions
-  const filteredTransactions = filterByPeriod(transactions, selectedPeriod, customStartDate, customEndDate);
-
-  const handleFloatingButtonClick = (type: TransactionType) => {
-    requireAccess(() => {
-      setModalType(type);
-    }, 'criar novos lançamentos');
+  const emptyTransaction: Transaction = {
+    id: '',
+    type: 'receita',
+    value: 0,
+    date: new Date(),
+    category: '',
+  };
+  const emptyLancamento: Lancamento = {
+    id: '',
+    dataLancamento: new Date().toISOString(),
+    horaInicial: new Date().toISOString().slice(11, 19),
+    odometroInicial: 0,
+    status: 'pendente',
   };
 
-  const handlePeriodChange = (value: string) => {
-    setSelectedPeriod(value);
-    // Clear custom date range when selecting predefined periods
-    setDateRange(undefined);
-  };
-
-  const handleDateRangeApply = () => {
-    setSelectedPeriod('personalizado');
-  };
-
-  const getPeriodLabel = () => {
-    switch (selectedPeriod) {
-      case 'hoje':
-        return 'de hoje';
-      case 'ontem':
-        return 'de ontem';
-      case 'esta-semana':
-        return 'desta semana';
-      case 'semana-passada':
-        return 'da semana passada';
-      case 'este-mes':
-        return 'deste mês';
-      case 'mes-passado':
-        return 'do mês passado';
-      case 'personalizado':
-        if (customStartDate && customEndDate) {
-          return `de ${format(customStartDate, 'dd/MM', { locale: ptBR })} a ${format(customEndDate, 'dd/MM', { locale: ptBR })}`;
-        }
-        return 'do período personalizado';
-      default:
-        return 'do período selecionado';
-    }
-  };
-
-  if (showHistory) {
-    return <HistoryPage onBack={() => setShowHistory(false)} />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <DashboardHeader
-        userName={user?.name}
-        selectedPeriod={selectedPeriod}
-        onPeriodChange={handlePeriodChange}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        onDateRangeApply={handleDateRangeApply}
-        onShowProfileModal={() => setShowProfileModal(true)}
-      />
+  try {
+    const handlePeriodChange = (value) => setSelectedPeriod(value);
+    const handleDateRangeChange = (range) => setDateRange(range);
+    const handleDateRangeApply = () => setSelectedPeriod('personalizado');
+    const handleShowProfileModal = () => setShowProfileModal(true);
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <SubscriptionBanner />
-        
-        <DashboardMetricsSection
-          metrics={metrics}
-          period={selectedPeriod}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
+    const filteredTransactions = filterByPeriod(
+      transactions,
+      selectedPeriod,
+      dateRange?.from ?? undefined,
+      dateRange?.to ?? undefined
+    );
+    const periodLabel = selectedPeriod;
+    const metrics = getMetrics(selectedPeriod, dateRange?.from ?? undefined, dateRange?.to ?? undefined);
+    const chartData = getChartData(selectedPeriod, dateRange?.from ?? undefined, dateRange?.to ?? undefined);
+
+    const handleFabAction = (type) => {
+      if (!hasAccess) {
+        toast.error("Sua assinatura PRO expirou. Para continuar usando os lançamentos, assine o PRO novamente.");
+        return;
+      }
+      setOpenAction(type);
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <DashboardHeader
+          userName={user?.name}
+          selectedPeriod={selectedPeriod}
+          onPeriodChange={handlePeriodChange}
+          dateRange={dateRange}
+          onDateRangeChange={handleDateRangeChange}
+          onDateRangeApply={handleDateRangeApply}
+          onShowProfileModal={handleShowProfileModal}
         />
-
-        <DashboardChartSection chartData={chartData} />
-
-        <DashboardRecentTransactions
-          filteredTransactions={filteredTransactions}
-          periodLabel={getPeriodLabel()}
-          onShowHistory={() => setShowHistory(true)}
-        />
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          {!hasAccess && (
+            <Alert className="mb-8 border-red-200 bg-red-50 w-full flex items-center justify-between px-8 py-4">
+              <div className="flex items-center gap-3">
+                <Crown className="h-6 w-6 text-black" />
+                <AlertDescription className="text-red-800 text-base font-medium">
+                  Assinatura expirou. Renove o PRO para continuar.
+                </AlertDescription>
+              </div>
+              <Button
+                className="flex items-center px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded transition-colors text-base"
+                onClick={() => setShowProDialog(true)}
+              >
+                <Crown className="h-5 w-5 mr-2" />
+                Assine PRO
+              </Button>
+              <Dialog open={showProDialog} onOpenChange={setShowProDialog}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Crown className="h-5 w-5 text-yellow-600" />
+                      Plano PRO
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-4">
+                    <Card className="border-blue-200">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-blue-700">
+                          <CreditCard className="h-5 w-5" />
+                          Plano PRO - Recorrente
+                        </CardTitle>
+                        <CardDescription>
+                          Renovação automática mensal
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold mb-2">R$ 19,90/mês</div>
+                        <ul className="text-sm space-y-1 mb-4">
+                          <li>✅ Acesso completo às funcionalidades</li>
+                          <li>✅ Renovação automática</li>
+                          <li>✅ Sem preocupação com vencimento</li>
+                          <li>✅ Pode cancelar a qualquer momento</li>
+                        </ul>
+                        <Button
+                          onClick={async () => {
+                            setLoadingCheckout(true);
+                            await createCheckout('recurring');
+                            setLoadingCheckout(false);
+                          }}
+                          disabled={loadingCheckout}
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Zap className="mr-2 h-4 w-4" />
+                          {loadingCheckout ? 'Processando...' : 'Assinar Agora'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </Alert>
+          )}
+          <DashboardMetricsSection metrics={metrics} period={selectedPeriod} customStartDate={dateRange?.from ?? undefined} customEndDate={dateRange?.to ?? undefined} />
+          <div className="flex w-full justify-start mt-0 mb-8">
+            <GoalsSummary />
+          </div>
+          <DashboardChartSection chartData={chartData} />
+          <DashboardRecentTransactions 
+            filteredTransactions={filteredTransactions} 
+            periodLabel={periodLabel} 
+            onShowHistory={() => navigate('/historico')} 
+          />
+        </div>
+        <FloatingActionButton onAction={handleFabAction} />
+        {hasAccess && openAction === 'receita' && (
+          <EditTransactionModal
+            transaction={{ ...emptyTransaction, type: 'receita' }}
+            isOpen={true}
+            onClose={() => setOpenAction(null)}
+          />
+        )}
+        {hasAccess && openAction === 'despesa' && (
+          <EditTransactionModal
+            transaction={{ ...emptyTransaction, type: 'despesa' }}
+            isOpen={true}
+            onClose={() => setOpenAction(null)}
+          />
+        )}
+        {hasAccess && openAction === 'odometro' && (
+          <EditOdometerModal
+            lancamento={emptyLancamento}
+            isOpen={true}
+            onClose={() => setOpenAction(null)}
+          />
+        )}
+        {hasAccess && openAction === 'horas' && (
+          <WorkHoursModal
+            isOpen={true}
+            onClose={() => setOpenAction(null)}
+          />
+        )}
+        <UserProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
       </div>
-
-      {/* Floating Action Button */}
-      <FloatingActionButton onAction={handleFloatingButtonClick} />
-
-      {/* Modals */}
-      {modalType && modalType !== 'horas' && (
-        <TransactionModal
-          type={modalType}
-          isOpen={true}
-          onClose={() => setModalType(null)}
-        />
-      )}
-
-      {modalType === 'horas' && (
-        <WorkHoursModal
-          isOpen={true}
-          onClose={() => setModalType(null)}
-        />
-      )}
-
-      <UserProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-      />
-    </div>
-  );
+    );
+  } catch (err) {
+    if (err instanceof Error) {
+      return <div style={{ color: 'red', padding: 32 }}>Erro no Dashboard: {err.message}<br/>{err.stack}</div>;
+    }
+    return <div style={{ color: 'red', padding: 32 }}>Erro desconhecido no Dashboard.</div>;
+  }
 };
 
-export default Dashboard;
+export default Dashboard; 

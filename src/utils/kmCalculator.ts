@@ -1,9 +1,8 @@
-
 import { format } from "date-fns";
-import type { OdometerRecord } from "@/types";
+import type { OdometerCiclo } from "@/types";
 import { filterByPeriod } from "./dateFilters";
 
-export const calculateKmRodado = (odometerRecords: OdometerRecord[], period: string, customStartDate?: Date, customEndDate?: Date): number => {
+export const calculateKmRodado = (odometerRecords: OdometerCiclo[], period: string, customStartDate?: Date, customEndDate?: Date): number => {
   const filteredOdometer = filterByPeriod(odometerRecords, period, customStartDate, customEndDate);
   
   // Group odometer records by date and calculate daily KM
@@ -31,7 +30,7 @@ export const calculateKmRodado = (odometerRecords: OdometerRecord[], period: str
   }, 0);
 };
 
-export const calculateKmForAllRecords = (odometerRecords: OdometerRecord[]): number => {
+export const calculateKmForAllRecords = (odometerRecords: OdometerCiclo[]): number => {
   const kmByDate = new Map<string, { inicial?: number; final?: number }>();
   
   odometerRecords.forEach(record => {

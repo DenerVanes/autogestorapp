@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,6 +59,11 @@ export const useSubscription = () => {
     checkSubscription();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Log para depuração do status de assinatura
+  useEffect(() => {
+    console.log('Subscription status:', subscription);
+  }, [subscription]);
 
   const createCheckout = async (planType: 'recurring') => {
     if (!user) throw new Error('User not authenticated');

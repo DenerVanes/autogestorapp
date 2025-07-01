@@ -1,8 +1,8 @@
-
 import { profileService } from '@/services/profileService';
 import { transactionService } from '@/services/transactionService';
 import { odometerService } from '@/services/odometerService';
 import { workHoursService } from '@/services/workHoursService';
+import { lancamentoService } from '@/services/lancamentoService';
 import { User, Transaction, OdometerRecord, WorkHoursRecord } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -44,11 +44,13 @@ export class UserDataService {
     transactions: Transaction[];
     odometerRecords: OdometerRecord[];
     workHours: WorkHoursRecord[];
+    lancamentos: any[];
   }> {
-    const [transactionsData, odometerData, workHoursData] = await Promise.all([
+    const [transactionsData, odometerData, workHoursData, lancamentosData] = await Promise.all([
       transactionService.getTransactions(),
       odometerService.getOdometerRecords(),
-      workHoursService.getWorkHours()
+      workHoursService.getWorkHours(),
+      lancamentoService.getLancamentos()
     ]);
 
     return {
@@ -65,15 +67,23 @@ export class UserDataService {
       })),
       odometerRecords: odometerData.map(o => ({
         id: o.id,
+        user_id: o.user_id,
         date: new Date(o.date),
         type: o.type as 'inicial' | 'final',
-        value: o.value
+        value: o.value,
+        pair_id: o.pair_id,
+        odometro_inicial: o.odometro_inicial,
+        odometro_final: o.odometro_final,
+        ciclo: o.ciclo,
+        created_at: o.created_at ? new Date(o.created_at) : undefined,
+        updated_at: o.updated_at ? new Date(o.updated_at) : undefined,
       })),
       workHours: workHoursData.map(w => ({
         id: w.id,
         startDateTime: new Date(w.start_date_time),
         endDateTime: new Date(w.end_date_time)
-      }))
+      })),
+      lancamentos: lancamentosData
     };
   }
-}
+} 

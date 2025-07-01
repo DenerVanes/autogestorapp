@@ -1,8 +1,7 @@
-
 import { format, subMonths, startOfDay, endOfDay, subDays } from "date-fns";
-import type { Transaction, OdometerRecord, WorkHoursRecord, Metrics } from "@/types";
+import type { Transaction, WorkHoursRecord, Metrics } from "@/types";
+import { Lancamento } from "@/lib/types";
 import { calculateWorkHoursWithCutoff } from "./workHoursProcessor";
-import { calculateKmForAllRecords, calculateKmRodado } from "./kmCalculator";
 
 const getPreviousMonthDates = (period: string, customStartDate?: Date, customEndDate?: Date) => {
   const now = new Date();
@@ -38,7 +37,7 @@ const getPreviousMonthDates = (period: string, customStartDate?: Date, customEnd
 
 export const calculatePreviousMetrics = (
   transactions: Transaction[],
-  odometerRecords: OdometerRecord[],
+  lancamentos: Lancamento[],
   workHours: WorkHoursRecord[],
   period: string,
   customStartDate?: Date,
@@ -61,13 +60,14 @@ export const calculatePreviousMetrics = (
 
   const saldo = receita - despesa;
   
-  // Calculate previous period KM
-  const filteredOdometer = odometerRecords.filter(o => {
-    const itemDate = new Date(o.date);
+  // Calculate previous period KM from lancamentos
+  const filteredLancamentos = lancamentos.filter(l => {
+    if (l.status !== 'completo' || !l.dataLancamento) return false;
+    const itemDate = new Date(l.dataLancamento);
     return itemDate >= previousStart && itemDate <= previousEnd;
   });
   
-  const kmRodado = calculateKmForAllRecords(filteredOdometer);
+  const kmRodado = filteredLancamentos.reduce((sum, l) => sum + (l.quilometragemPercorrida || 0), 0);
   
   // Calculate previous period work hours using the new logic
   const filteredWorkHours = workHours.filter(w => {
@@ -96,7 +96,7 @@ export const calculatePercentageChange = (current: number, previous: number): st
 // New function to calculate previous fuel expense
 export const calculatePreviousFuelExpense = (
   transactions: Transaction[],
-  odometerRecords: OdometerRecord[],
+  lancamentos: Lancamento[],
   user: any,
   period: string,
   customStartDate?: Date,
@@ -108,13 +108,14 @@ export const calculatePreviousFuelExpense = (
 
   const { previousStart, previousEnd } = getPreviousMonthDates(period, customStartDate, customEndDate);
   
-  // Get km driven in the previous period
-  const filteredOdometer = odometerRecords.filter(o => {
-    const itemDate = new Date(o.date);
+  // Get km driven in the previous period from lancamentos
+  const filteredLancamentos = lancamentos.filter(l => {
+    if (l.status !== 'completo' || !l.dataLancamento) return false;
+    const itemDate = new Date(l.dataLancamento);
     return itemDate >= previousStart && itemDate <= previousEnd;
   });
   
-  const kmDriven = calculateKmForAllRecords(filteredOdometer);
+  const kmDriven = filteredLancamentos.reduce((sum, l) => sum + (l.quilometragemPercorrida || 0), 0);
   
   if (kmDriven === 0) {
     return 0;
@@ -144,7 +145,7 @@ export const calculatePreviousFuelExpense = (
 // New function to calculate previous profit
 export const calculatePreviousProfit = (
   transactions: Transaction[],
-  odometerRecords: OdometerRecord[],
+  lancamentos: Lancamento[],
   user: any,
   period: string,
   customStartDate?: Date,
@@ -161,7 +162,7 @@ export const calculatePreviousProfit = (
     .filter(t => t.type === 'receita')
     .reduce((sum, t) => sum + t.value, 0);
 
-  const fuelExpense = calculatePreviousFuelExpense(transactions, odometerRecords, user, period, customStartDate, customEndDate);
+  const fuelExpense = calculatePreviousFuelExpense(transactions, lancamentos, user, period, customStartDate, customEndDate);
   
   return totalRevenue - fuelExpense;
 };

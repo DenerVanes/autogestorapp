@@ -1,16 +1,24 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RevenueHistoryTab from "./RevenueHistoryTab";
 import ExpenseHistoryTab from "./ExpenseHistoryTab";
 import OdometerHistoryTab from "./OdometerHistoryTab";
 import WorkHoursHistoryTab from "./WorkHoursHistoryTab";
-import type { Transaction, OdometerRecord, WorkHoursRecord } from "@/types";
+import type { Transaction, WorkHoursRecord } from "@/types";
+import { Lancamento } from "@/lib/types";
+
+interface Viagem {
+  day: string;
+  inicial?: any;
+  final?: any;
+  status: string;
+  distancia?: number;
+}
 
 interface HistoryTabsContentProps {
   onEditTransaction: (transaction: Transaction) => void;
   onDeleteTransaction: (id: string) => void;
-  onEditOdometerRecord: (record: OdometerRecord) => void;
-  onDeleteOdometerRecord: (id: string) => void;
+  onEditOdometer: (viagem: Viagem) => void;
+  onDeleteOdometer: (ids: string[]) => void;
   onEditWorkHours: (record: WorkHoursRecord) => void;
   onDeleteWorkHours: (id: string) => void;
 }
@@ -18,8 +26,8 @@ interface HistoryTabsContentProps {
 const HistoryTabsContent = ({
   onEditTransaction,
   onDeleteTransaction,
-  onEditOdometerRecord,
-  onDeleteOdometerRecord,
+  onEditOdometer,
+  onDeleteOdometer,
   onEditWorkHours,
   onDeleteWorkHours
 }: HistoryTabsContentProps) => {
@@ -48,8 +56,8 @@ const HistoryTabsContent = ({
 
       <TabsContent value="odometro">
         <OdometerHistoryTab 
-          onEditOdometerRecord={onEditOdometerRecord}
-          onDeleteOdometerRecord={onDeleteOdometerRecord}
+          onEdit={onEditOdometer}
+          onDelete={onDeleteOdometer}
         />
       </TabsContent>
 

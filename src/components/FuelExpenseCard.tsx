@@ -1,19 +1,19 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Fuel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
-import { calculateKmRodado } from "@/utils/kmCalculator";
 import { calculatePreviousFuelExpense, calculatePercentageChange } from "@/utils/comparisonCalculator";
 import { subDays } from "date-fns";
+import type { Metrics } from "@/types";
 
 interface FuelExpenseCardProps {
+  metrics: Metrics & { changes: Record<string, string> };
   period: string;
   customStartDate?: Date;
   customEndDate?: Date;
 }
 
-const FuelExpenseCard = ({ period, customStartDate, customEndDate }: FuelExpenseCardProps) => {
+const FuelExpenseCard = ({ metrics, period, customStartDate, customEndDate }: FuelExpenseCardProps) => {
   const { user, transactions, odometerRecords } = useUser();
 
   const formatCurrency = (value: number) => {
@@ -34,8 +34,8 @@ const FuelExpenseCard = ({ period, customStartDate, customEndDate }: FuelExpense
       };
     }
 
-    // Get km driven in the selected period
-    const kmDriven = calculateKmRodado(odometerRecords, period, customStartDate, customEndDate);
+    // Get km driven from the metrics object
+    const kmDriven = metrics.kmRodado;
     
     if (kmDriven === 0) {
       return {
