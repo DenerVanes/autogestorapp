@@ -70,12 +70,12 @@ const Dashboard = () => {
     const filteredTransactions = filterByPeriod(
       transactions,
       selectedPeriod,
-      dateRange?.from ?? undefined,
-      dateRange?.to ?? undefined
+      dateRange?.from,
+      dateRange?.to
     );
     const periodLabel = selectedPeriod;
-    const metrics = getMetrics(selectedPeriod, dateRange?.from ?? undefined, dateRange?.to ?? undefined);
-    const chartData = getChartData(selectedPeriod, dateRange?.from ?? undefined, dateRange?.to ?? undefined);
+    const metrics = getMetrics(selectedPeriod, dateRange?.from, dateRange?.to);
+    const chartData = getChartData(selectedPeriod, dateRange?.from, dateRange?.to);
 
     const handleFabAction = (type) => {
       if (!hasAccess) {
@@ -185,8 +185,7 @@ const Dashboard = () => {
           />
         )}
         {hasAccess && openAction === 'odometro' && (
-          <EditOdometerModal
-            lancamento={emptyLancamento}
+          <OdometerModal
             isOpen={true}
             onClose={() => setOpenAction(null)}
           />
