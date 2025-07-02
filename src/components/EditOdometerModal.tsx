@@ -136,12 +136,13 @@ const EditOdometerModal = ({ isOpen, onClose, cicloParaEditar }: EditOdometerMod
       return;
     }
     if (final - inicial > 500) {
-      if (!window.confirm("A diferença de km é muito alta. Tem certeza que deseja salvar?")) return;
+      if (!window.confirm("A diferência de km é muito alta. Tem certeza que deseja salvar?")) return;
     }
     await addOdometerRecord({
-      date: new Date(),
+      date: cicloAberto.inicial.date, // Usar a data do inicial
       type: 'final',
-      value: final
+      value: final,
+      pair_id: cicloAberto.inicial.pair_id // Usar o mesmo pair_id do inicial
     });
     setSuccessMsg("Final salvo! Distância registrada com sucesso.");
     setTimeout(() => {
