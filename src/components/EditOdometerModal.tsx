@@ -106,7 +106,7 @@ const EditOdometerModal = ({ isOpen, onClose, cicloParaEditar }: EditOdometerMod
       return;
     }
     await addOdometerRecord({
-      date: data.toISOString(),
+      date: new Date(data.toISOString()),
       type: 'inicial',
       value: parseInt(odometroInicial)
     });

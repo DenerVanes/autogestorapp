@@ -26,7 +26,7 @@ import { GoalsSummary } from "./GoalsSummary";
 const Dashboard = () => {
   const { user, transactions, getMetrics, getChartData, loading } = useUser();
   const [selectedPeriod, setSelectedPeriod] = useState("este-mes");
-  const [dateRange, setDateRange] = useState();
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [openAction, setOpenAction] = useState<null | 'receita' | 'despesa' | 'odometro' | 'horas'>(null);
   const [showProDialog, setShowProDialog] = useState(false);
@@ -70,12 +70,12 @@ const Dashboard = () => {
     const filteredTransactions = filterByPeriod(
       transactions,
       selectedPeriod,
-      dateRange?.from,
-      dateRange?.to
+      dateRange ? dateRange.from : undefined,
+      dateRange ? dateRange.to : undefined
     );
     const periodLabel = selectedPeriod;
-    const metrics = getMetrics(selectedPeriod, dateRange?.from, dateRange?.to);
-    const chartData = getChartData(selectedPeriod, dateRange?.from, dateRange?.to);
+    const metrics = getMetrics(selectedPeriod, dateRange ? dateRange.from : undefined, dateRange ? dateRange.to : undefined);
+    const chartData = getChartData(selectedPeriod, dateRange ? dateRange.from : undefined, dateRange ? dateRange.to : undefined);
 
     const handleFabAction = (type) => {
       if (!hasAccess) {
@@ -158,7 +158,7 @@ const Dashboard = () => {
               </Dialog>
             </Alert>
           )}
-          <DashboardMetricsSection metrics={metrics} period={selectedPeriod} customStartDate={dateRange?.from ?? undefined} customEndDate={dateRange?.to ?? undefined} />
+          <DashboardMetricsSection metrics={metrics} period={selectedPeriod} customStartDate={dateRange ? dateRange.from : undefined} customEndDate={dateRange ? dateRange.to : undefined} />
           <div className="flex w-full justify-start mt-0 mb-8">
             <GoalsSummary />
           </div>
@@ -185,7 +185,7 @@ const Dashboard = () => {
           />
         )}
         {hasAccess && openAction === 'odometro' && (
-          <OdometerModal
+          <EditOdometerModal
             isOpen={true}
             onClose={() => setOpenAction(null)}
           />
