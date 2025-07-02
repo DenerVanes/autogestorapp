@@ -1,4 +1,4 @@
-import type { Transaction, WorkHoursRecord, Metrics, OdometerCiclo } from "@/types";
+import type { Transaction, WorkHoursRecord, Metrics, OdometerRecord } from "@/types";
 import { Lancamento } from "@/lib/types";
 import { calculateKmRodado } from "@/utils/kmCalculator";
 
@@ -25,7 +25,7 @@ export function calculateWorkHours(workHours: WorkHoursRecord[]): number {
  */
 export function calculateMetrics(
   transactions: Transaction[],
-  odometerRecords: OdometerCiclo[],
+  odometerRecords: OdometerRecord[],
   workHours: WorkHoursRecord[],
   period?: string,
   customStartDate?: Date,
@@ -53,4 +53,4 @@ export function calculateMetrics(
   return { receita, despesa, saldo, kmRodado, valorPorKm, horasTrabalhadas, valorPorHora };
 }
 
-export const getMetrics = calculateMetrics; 
+export const getMetrics = calculateMetrics;

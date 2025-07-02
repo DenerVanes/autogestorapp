@@ -26,11 +26,18 @@ export const odometerService = {
       throw new Error('User not authenticated');
     }
 
+    // Se é um registro inicial, gera um novo pair_id
+    let pair_id = record.pair_id;
+    if (record.type === 'inicial' && !pair_id) {
+      pair_id = crypto.randomUUID();
+    }
+
     const { data, error } = await supabase
       .from('odometer_records')
       .insert([{
         user_id: user.id,
-        ...record
+        ...record,
+        pair_id
       }])
       .select()
       .single();

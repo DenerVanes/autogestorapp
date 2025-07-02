@@ -60,29 +60,108 @@ export type Database = {
         }
         Relationships: []
       }
+      lancamento: {
+        Row: {
+          created_at: string
+          dataLancamento: string | null
+          horaFinal: string | null
+          horaInicial: string | null
+          id: string
+          observacoes: number | null
+          odometroFinal: number | null
+          odometroInicial: number | null
+          quilometragemPercorrida: number | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dataLancamento?: string | null
+          horaFinal?: string | null
+          horaInicial?: string | null
+          id?: string
+          observacoes?: number | null
+          odometroFinal?: number | null
+          odometroInicial?: number | null
+          quilometragemPercorrida?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dataLancamento?: string | null
+          horaFinal?: string | null
+          horaInicial?: string | null
+          id?: string
+          observacoes?: number | null
+          odometroFinal?: number | null
+          odometroInicial?: number | null
+          quilometragemPercorrida?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lancamento_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_recent_pro_subscribers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamento_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_recent_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamento_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       odometer_records: {
         Row: {
+          ciclo: number | null
           created_at: string
           date: string
           id: string
+          odometro_final: number | null
+          odometro_inicial: number | null
+          pair_id: string | null
+          status: string | null
           type: string
           updated_at: string
           user_id: string
           value: number
         }
         Insert: {
+          ciclo?: number | null
           created_at?: string
           date: string
           id?: string
+          odometro_final?: number | null
+          odometro_inicial?: number | null
+          pair_id?: string | null
+          status?: string | null
           type: string
           updated_at?: string
           user_id: string
           value: number
         }
         Update: {
+          ciclo?: number | null
           created_at?: string
           date?: string
           id?: string
+          odometro_final?: number | null
+          odometro_inicial?: number | null
+          pair_id?: string | null
+          status?: string | null
           type?: string
           updated_at?: string
           user_id?: string
@@ -136,6 +215,7 @@ export type Database = {
           fuel_consumption: number | null
           id: string
           name: string | null
+          role: string | null
           updated_at: string
           vehicle_model: string | null
           vehicle_type: string | null
@@ -146,6 +226,7 @@ export type Database = {
           fuel_consumption?: number | null
           id: string
           name?: string | null
+          role?: string | null
           updated_at?: string
           vehicle_model?: string | null
           vehicle_type?: string | null
@@ -156,6 +237,7 @@ export type Database = {
           fuel_consumption?: number | null
           id?: string
           name?: string | null
+          role?: string | null
           updated_at?: string
           vehicle_model?: string | null
           vehicle_type?: string | null
@@ -296,9 +378,48 @@ export type Database = {
       }
     }
     Views: {
+      admin_conversion_funnel: {
+        Row: {
+          activated: number | null
+          active_users_7_days: number | null
+          pro_subscribers: number | null
+          registered: number | null
+          retained_pro: number | null
+        }
+        Relationships: []
+      }
+      admin_kpi_summary: {
+        Row: {
+          active_pro_users: number | null
+          active_users_7_days: number | null
+          canceled_this_month: number | null
+          current_monthly_revenue: number | null
+          next_month_revenue_forecast: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
+      admin_recent_pro_subscribers: {
+        Row: {
+          id: string | null
+          name: string | null
+          subscription_date: string | null
+        }
+        Relationships: []
+      }
+      admin_recent_users: {
+        Row: {
+          email: string | null
+          id: string | null
+          name: string | null
+          registration_date: string | null
+        }
+        Relationships: []
+      }
       admin_statistics: {
         Row: {
           active_subscribers: number | null
+          active_users_7_days: number | null
           daily_active_users: number | null
           monthly_active_users: number | null
           new_users_30_days: number | null
@@ -324,7 +445,40 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_user_subscription_info: {
+        Args: { user_id_param: string }
+        Returns: {
+          plan_type: string
+          status: string
+        }[]
+      }
+      grant_pro_access: {
+        Args: { user_id_param: string }
+        Returns: undefined
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      remove_pro_access: {
+        Args: { user_id_param: string }
+        Returns: undefined
+      }
+      search_users_with_subscription: {
+        Args: { search_term: string }
+        Returns: {
+          id: string
+          name: string
+          email: string
+          subscription_status: string
+          plan_type: string
+          expires_at: string
+        }[]
+      }
+      set_user_pro_status: {
+        Args: { target_user_id: string; grant_pro: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

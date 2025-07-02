@@ -67,16 +67,10 @@ export class UserDataService {
       })),
       odometerRecords: odometerData.map(o => ({
         id: o.id,
-        user_id: o.user_id,
         date: new Date(o.date),
         type: o.type as 'inicial' | 'final',
         value: o.value,
-        pair_id: o.pair_id,
-        odometro_inicial: o.odometro_inicial,
-        odometro_final: o.odometro_final,
-        ciclo: o.ciclo,
-        created_at: o.created_at ? new Date(o.created_at) : undefined,
-        updated_at: o.updated_at ? new Date(o.updated_at) : undefined,
+        pair_id: o.pair_id
       })),
       workHours: workHoursData.map(w => ({
         id: w.id,

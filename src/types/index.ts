@@ -24,6 +24,7 @@ export interface OdometerRecord {
   date: Date;
   type: 'inicial' | 'final';
   value: number;
+  pair_id?: string;
 }
 
 export interface WorkHoursRecord {
@@ -85,6 +86,14 @@ export interface DatabaseOdometerCiclo {
   updated_at: string;
   estado?: string;
   distancia?: number;
+}
+
+export interface OdometerCiclo {
+  id: string;
+  date: Date;
+  type: 'inicial' | 'final';
+  value: number;
+  pair_id?: string;
 }
 
 export interface DatabaseWorkHours {
