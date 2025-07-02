@@ -7,7 +7,7 @@ import { subDays } from "date-fns";
 import type { Metrics } from "@/types";
 
 interface FuelExpenseCardProps {
-  metrics: Metrics & { changes: Record<string, string> };
+  metrics: Metrics;
   period: string;
   customStartDate?: Date;
   customEndDate?: Date;
@@ -73,7 +73,7 @@ const FuelExpenseCard = ({ metrics, period, customStartDate, customEndDate }: Fu
     const totalExpense = litersConsumed * averagePricePerLiter;
 
     // Calculate previous period fuel expense for comparison
-    const previousFuelExpense = calculatePreviousFuelExpense(transactions, odometerRecords, user, period, customStartDate, customEndDate);
+    const previousFuelExpense = calculatePreviousFuelExpense(transactions, [] as any, user, period, customStartDate, customEndDate);
     const change = calculatePercentageChange(totalExpense, previousFuelExpense);
 
     return {

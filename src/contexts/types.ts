@@ -23,7 +23,7 @@ export interface UserContextType {
   deleteWorkHours: (id: string) => Promise<void>;
   
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
-  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics & { changes: Record<string, string> };
+  getMetrics: (period: string, customStartDate?: Date, customEndDate?: Date) => Metrics;
   getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
   refreshData: () => Promise<void>;
 

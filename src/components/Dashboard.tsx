@@ -91,7 +91,7 @@ const Dashboard = () => {
           userName={user?.name}
           selectedPeriod={selectedPeriod}
           onPeriodChange={handlePeriodChange}
-          dateRange={dateRange}
+          dateRange={dateRange as any}
           onDateRangeChange={handleDateRangeChange}
           onDateRangeApply={handleDateRangeApply}
           onShowProfileModal={handleShowProfileModal}

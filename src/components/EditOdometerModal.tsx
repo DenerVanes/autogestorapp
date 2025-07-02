@@ -139,7 +139,7 @@ const EditOdometerModal = ({ isOpen, onClose, cicloParaEditar }: EditOdometerMod
       if (!window.confirm("A diferença de km é muito alta. Tem certeza que deseja salvar?")) return;
     }
     await addOdometerRecord({
-      date: data.toISOString(),
+      date: new Date(),
       type: 'final',
       value: final
     });

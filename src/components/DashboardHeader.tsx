@@ -100,7 +100,7 @@ const DashboardHeader = ({
 
   useEffect(() => {
     if (session?.access_token) {
-      window._supabaseToken = session.access_token;
+      (window as any)._supabaseToken = session.access_token;
       console.log("Token de acesso disponível em window._supabaseToken");
     }
   }, [session]);

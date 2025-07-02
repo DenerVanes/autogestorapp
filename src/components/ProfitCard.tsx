@@ -8,7 +8,7 @@ import { subDays } from "date-fns";
 import type { Metrics } from "@/types";
 
 interface ProfitCardProps {
-  metrics: Metrics & { changes: Record<string, string> };
+  metrics: Metrics;
   period: string;
   customStartDate?: Date;
   customEndDate?: Date;
