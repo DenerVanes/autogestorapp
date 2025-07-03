@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const odometerService = {
@@ -30,15 +31,22 @@ export const odometerService = {
     let pair_id = record.pair_id;
     if (record.type === 'inicial' && !pair_id) {
       pair_id = crypto.randomUUID();
+      console.log('Gerando novo pair_id para registro inicial:', pair_id);
     }
+
+    const recordToInsert = {
+      user_id: user.id,
+      date: record.date,
+      type: record.type,
+      value: record.value,
+      pair_id: pair_id
+    };
+
+    console.log('Inserindo registro:', recordToInsert);
 
     const { data, error } = await supabase
       .from('odometer_records')
-      .insert([{
-        user_id: user.id,
-        ...record,
-        pair_id
-      }])
+      .insert([recordToInsert])
       .select()
       .single();
 
