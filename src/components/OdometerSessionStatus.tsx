@@ -10,7 +10,6 @@ interface OdometerSessionStatusProps {
     date: Date;
     value: number;
     id: string;
-    pair_id: string;
   } | null;
 }
 

@@ -14,7 +14,6 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
     date: Date;
     value: number;
     id: string;
-    pair_id: string;
   } | null>(null);
 
   // Função para converter data UTC para horário do Brasil
@@ -31,46 +30,44 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
     return format(brazilDate, 'yyyy-MM-dd');
   };
 
-  // Verifica se há algum ciclo aberto quando o modal abre
+  // Verifica se há algum registro inicial sem final para a data selecionada
   useEffect(() => {
     if (!isOpen) return;
 
-    console.log('=== VERIFICANDO CICLOS ABERTOS ===');
+    console.log('=== VERIFICANDO REGISTROS ABERTOS PARA A DATA ===');
+    console.log('Data selecionada:', date);
     console.log('Total de registros disponíveis:', odometerRecords.length);
 
-    // Procura por registros iniciais que não têm final correspondente
-    const openCycles = odometerRecords.filter(record => {
+    // Procura por registros iniciais na data selecionada que não têm final correspondente
+    const openRecordsForDate = odometerRecords.filter(record => {
       if (record.type !== 'inicial') return false;
       
-      // Só considera registros que têm pair_id válido
-      if (!record.pair_id) {
-        console.log(`Registro inicial ${record.id} ignorado - sem pair_id`);
-        return false;
-      }
+      const recordDate = getBrazilDateString(record.date);
+      console.log(`Registro inicial ${record.id} - Data: ${recordDate}, Valor: ${record.value}`);
       
-      // Verifica se tem final correspondente com o mesmo pair_id
+      if (recordDate !== date) return false;
+      
+      // Verifica se tem final correspondente na mesma data
       const hasFinal = odometerRecords.some(r => 
         r.type === 'final' && 
-        r.pair_id === record.pair_id &&
-        r.pair_id !== null // Garante que o pair_id não é null
+        getBrazilDateString(r.date) === date
       );
       
-      console.log(`Registro inicial ${record.id} (pair_id: ${record.pair_id}): tem final? ${hasFinal}`);
+      console.log(`Registro inicial ${record.id} tem final na data ${date}? ${hasFinal}`);
       return !hasFinal;
     });
 
-    console.log('Ciclos abertos encontrados:', openCycles.length);
+    console.log('Registros abertos encontrados para a data:', openRecordsForDate.length);
 
-    if (openCycles.length > 0) {
+    if (openRecordsForDate.length > 0) {
       // Pega o mais recente
-      const mostRecent = openCycles.sort((a, b) => 
+      const mostRecent = openRecordsForDate.sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       )[0];
       
-      console.log('Ciclo aberto mais recente:', {
+      console.log('Registro aberto mais recente:', {
         id: mostRecent.id,
         value: mostRecent.value,
-        pair_id: mostRecent.pair_id,
         date: mostRecent.date
       });
       
@@ -78,18 +75,16 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
       setSavedInitialReading({
         date: mostRecent.date instanceof Date ? mostRecent.date : new Date(mostRecent.date),
         value: mostRecent.value,
-        id: mostRecent.id,
-        pair_id: mostRecent.pair_id || mostRecent.id
+        id: mostRecent.id
       });
       setOdometerValue("");
     } else {
-      console.log('Nenhum ciclo aberto encontrado - limpando estado');
+      console.log('Nenhum registro aberto encontrado para a data - limpando estado');
       setIsOdometerInProgress(false);
       setSavedInitialReading(null);
       setOdometerValue("");
-      setDate(format(new Date(), "yyyy-MM-dd"));
     }
-  }, [isOpen, odometerRecords]);
+  }, [isOpen, odometerRecords, date]);
 
   // Limpa o estado quando o modal fecha
   useEffect(() => {
@@ -166,15 +161,13 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
       
       console.log('Registrando odômetro final:', {
         date: now,
-        value: finalValue,
-        pair_id: savedInitialReading.pair_id
+        value: finalValue
       });
 
       await addOdometerRecord({
         date: now, // Usa horário atual para o final
         type: 'final',
-        value: finalValue,
-        pair_id: savedInitialReading.pair_id
+        value: finalValue
       });
 
       const distance = finalValue - savedInitialReading.value;
@@ -196,7 +189,6 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
       setIsOdometerInProgress(false);
       setSavedInitialReading(null);
       setOdometerValue("");
-      setDate(format(new Date(), "yyyy-MM-dd"));
       toast.info("Registro cancelado");
     }
   };

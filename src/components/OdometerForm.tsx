@@ -10,7 +10,6 @@ interface OdometerFormProps {
     date: Date;
     value: number;
     id: string;
-    pair_id: string;
   } | null;
   onDateChange: (value: string) => void;
   onOdometerValueChange: (value: string) => void;
