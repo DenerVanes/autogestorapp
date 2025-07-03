@@ -22,9 +22,31 @@ interface OdometerHistoryTabProps {
   onDelete: (ids: string[]) => void;
 }
 
-// Função para agrupar por pair_id
+// Função para converter data UTC para horário do Brasil
+function convertToBrazilTime(date: Date | string): Date {
+  const utcDate = typeof date === 'string' ? new Date(date) : date;
+  // Subtrai 3 horas para converter de UTC para horário do Brasil
+  const brazilTime = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
+  return brazilTime;
+}
+
+// Função para agrupar por pair_id com tratamento de fuso horário
 function agruparPorPairId(records: OdometerRecordFull[]): Viagem[] {
-  console.log('Agrupando histórico por pair_id:', records.length, 'registros');
+  console.log('=== AGRUPANDO HISTÓRICO POR PAIR_ID ===');
+  console.log('Total de registros recebidos:', records.length);
+  
+  // Log detalhado dos registros
+  records.forEach((record, index) => {
+    const brazilDate = convertToBrazilTime(record.date);
+    console.log(`Registro histórico ${index + 1}:`, {
+      id: record.id,
+      type: record.type,
+      value: record.value,
+      pair_id: record.pair_id,
+      date_utc: record.date,
+      date_brazil: format(brazilDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })
+    });
+  });
   
   const pares: Record<string, { inicial?: OdometerRecordFull; final?: OdometerRecordFull }> = {};
   
@@ -37,22 +59,41 @@ function agruparPorPairId(records: OdometerRecordFull[]): Viagem[] {
     if (r.type === 'final') pares[pair].final = r;
   });
   
-  const viagens = Object.values(pares)
-    .map(par => {
+  const viagens = Object.entries(pares)
+    .map(([pairId, par]) => {
       const inicial = par.inicial;
       const final = par.final;
       const status = inicial && final ? 'fechado' : 'aberto';
       const distancia = inicial && final ? final.value - inicial.value : undefined;
-      const day = inicial ? inicial.date.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).slice(0, 10) : (final ? final.date.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).slice(0, 10) : '');
       
-      return { day, inicial, final, status, distancia };
+      // Usa a data do registro inicial convertida para horário do Brasil
+      let day = '';
+      if (inicial) {
+        const brazilDate = convertToBrazilTime(inicial.date);
+        day = format(brazilDate, 'yyyy-MM-dd');
+      } else if (final) {
+        const brazilDate = convertToBrazilTime(final.date);
+        day = format(brazilDate, 'yyyy-MM-dd');
+      }
+      
+      const viagem = { day, inicial, final, status, distancia };
+      
+      if (inicial && final) {
+        console.log(`Viagem completa criada - Pair ID: ${pairId}, Data: ${day}, Distância: ${distancia}km (${inicial.value} -> ${final.value})`);
+      } else {
+        console.log(`Viagem incompleta - Pair ID: ${pairId}, Status: ${status}`);
+      }
+      
+      return viagem;
     })
     .filter(v => v.inicial && v.final) // Só mostra ciclos completos no histórico
-    .sort((a, b) => b.day.localeCompare(a.day));
+    .sort((a, b) => b.day.localeCompare(a.day)); // Ordena por data mais recente primeiro
   
-  console.log('Viagens processadas para histórico:', viagens.length);
+  console.log('=== RESULTADO DO AGRUPAMENTO HISTÓRICO ===');
+  console.log(`Total de viagens completas: ${viagens.length}`);
+  
   viagens.forEach((v, index) => {
-    console.log(`Viagem ${index + 1}: ${v.inicial?.value} -> ${v.final?.value} = ${v.distancia}km (${v.day})`);
+    console.log(`Viagem ${index + 1}: ${v.day} - ${v.inicial?.value} -> ${v.final?.value} = ${v.distancia}km`);
   });
   
   return viagens;
@@ -61,7 +102,8 @@ function agruparPorPairId(records: OdometerRecordFull[]): Viagem[] {
 const OdometerHistoryTab = ({ onEdit, onDelete }: OdometerHistoryTabProps) => {
   const { odometerRecords } = useUser();
 
-  console.log('Renderizando histórico de odômetro com', odometerRecords.length, 'registros');
+  console.log('=== RENDERIZANDO HISTÓRICO DE ODÔMETRO ===');
+  console.log('Total de registros disponíveis:', odometerRecords.length);
 
   const viagens = agruparPorPairId(odometerRecords as OdometerRecordFull[]);
 
@@ -120,6 +162,10 @@ const OdometerHistoryTab = ({ onEdit, onDelete }: OdometerHistoryTabProps) => {
                   <br />
                   <span className="text-xs">
                     Total de registros: {odometerRecords.length}
+                  </span>
+                  <br />
+                  <span className="text-xs text-gray-500">
+                    Verifique se há registros iniciais e finais com o mesmo pair_id
                   </span>
                 </TableCell>
               </TableRow>
