@@ -7,8 +7,8 @@ import { useUser } from "@/contexts/UserContext";
 import { filterByPeriod } from "@/utils/dateFilters";
 import FloatingActionButton from "./FloatingActionButton";
 import EditTransactionModal from "./EditTransactionModal";
-import EditOdometerModal from "./EditOdometerModal";
 import WorkHoursModal from "./WorkHoursModal";
+import OdometerRegistrationModal from "./OdometerRegistrationModal";
 import { Transaction } from "@/types";
 import { Lancamento } from "@/lib/types";
 import { useNavigate } from "react-router-dom";
@@ -185,7 +185,7 @@ const Dashboard = () => {
           />
         )}
         {hasAccess && openAction === 'odometro' && (
-          <EditOdometerModal
+          <OdometerRegistrationModal
             isOpen={true}
             onClose={() => setOpenAction(null)}
           />
@@ -207,4 +207,4 @@ const Dashboard = () => {
   }
 };
 
-export default Dashboard; 
+export default Dashboard;
