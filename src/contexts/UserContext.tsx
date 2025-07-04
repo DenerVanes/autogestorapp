@@ -67,6 +67,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     deleteOdometerRecord: async (id: string): Promise<void> => {
       if (isExpired || !checkAccess('remover registros de hodômetro')) return;
       return odometerOps.deleteOdometerRecord(id);
+    },
+    deleteMultipleOdometerRecords: async (ids: string[]): Promise<void> => {
+      if (isExpired || !checkAccess('remover registros de hodômetro')) return;
+      return odometerOps.deleteMultipleOdometerRecords(ids);
     }
   };
 
@@ -351,4 +355,4 @@ export const useUser = () => {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
-}; 
+};

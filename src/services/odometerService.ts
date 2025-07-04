@@ -27,19 +27,11 @@ export const odometerService = {
       throw new Error('User not authenticated');
     }
 
-    // Se é um registro inicial, gera um novo pair_id
-    let pair_id = record.pair_id;
-    if (record.type === 'inicial' && !pair_id) {
-      pair_id = crypto.randomUUID();
-      console.log('Gerando novo pair_id para registro inicial:', pair_id);
-    }
-
     const recordToInsert = {
       user_id: user.id,
       date: record.date,
       type: record.type,
-      value: record.value,
-      pair_id: pair_id
+      value: record.value
     };
 
     console.log('Inserindo registro:', recordToInsert);
@@ -78,7 +70,7 @@ export const odometerService = {
   },
 
   async deleteOdometerRecord(id: string) {
-    console.log('Deleting odometer record:', id);
+    console.log('Deleting odometer record from database:', id);
     const { error } = await supabase
       .from('odometer_records')
       .delete()
@@ -89,6 +81,18 @@ export const odometerService = {
       throw error;
     }
 
-    console.log('Odometer record deleted:', id);
+    console.log('Odometer record deleted from database:', id);
+  },
+
+  async deleteMultipleOdometerRecords(ids: string[]) {
+    console.log('Deleting multiple odometer records from database:', ids);
+    
+    for (const id of ids) {
+      if (id) {
+        await this.deleteOdometerRecord(id);
+      }
+    }
+    
+    console.log('Multiple odometer records deleted from database');
   },
 };

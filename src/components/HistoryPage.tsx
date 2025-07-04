@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import EditTransactionModal from "./EditTransactionModal";
@@ -13,7 +14,7 @@ interface HistoryPageProps {
 }
 
 const HistoryPage = ({ onBack }: HistoryPageProps) => {
-  const { deleteTransaction, deleteOdometerRecord, deleteWorkHours } = useUser();
+  const { deleteTransaction, deleteMultipleOdometerRecords, deleteWorkHours } = useUser();
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [editingViagem, setEditingViagem] = useState<any | null>(null);
@@ -27,7 +28,8 @@ const HistoryPage = ({ onBack }: HistoryPageProps) => {
 
   const handleDeleteOdometer = (ids: string[]) => {
     if (confirm('Tem certeza que deseja excluir este registro de odômetro?')) {
-      ids.forEach(id => deleteOdometerRecord(id));
+      console.log('Deleting odometer records with IDs:', ids);
+      deleteMultipleOdometerRecords(ids);
     }
   };
 
