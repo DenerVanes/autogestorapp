@@ -6,7 +6,7 @@ import type { OdometerRecord } from "@/types";
 // Função para converter data UTC para horário do Brasil
 function convertToBrazilTime(date: Date | string): Date {
   const utcDate = typeof date === 'string' ? new Date(date) : date;
-  // Subtrai 3 horas para converter de UTC para horário do Brasil (BRT/BRST)
+  // Adiciona 3 horas para converter de UTC para horário do Brasil (BRT/BRST)
   const brazilTime = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
   return brazilTime;
 }
@@ -17,9 +17,9 @@ function getBrazilDateString(date: Date | string): string {
   return format(brazilDate, 'yyyy-MM-dd');
 }
 
-// Função para agrupar registros por data
-function agruparCiclosPorData(records: OdometerRecord[]) {
-  console.log('=== AGRUPANDO CICLOS POR DATA ===');
+// Função para agrupar registros por ciclos usando pair_id
+function agruparCiclosPorPairId(records: OdometerRecord[]) {
+  console.log('=== AGRUPANDO CICLOS POR PAIR_ID ===');
   console.log('Total de registros recebidos:', records.length);
   
   // Log detalhado dos registros
@@ -29,51 +29,53 @@ function agruparCiclosPorData(records: OdometerRecord[]) {
       id: record.id,
       type: record.type,
       value: record.value,
+      pair_id: record.pair_id,
       date_utc: record.date,
       date_brazil: format(brazilDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })
     });
   });
   
-  // Agrupa por data
-  const gruposPorData: Record<string, { inicial?: OdometerRecord, final?: OdometerRecord }> = {};
+  const pares: Record<string, { inicial?: OdometerRecord, final?: OdometerRecord }> = {};
   
   records.forEach(record => {
-    const dataRegistro = getBrazilDateString(record.date);
-    console.log(`Processando registro ${record.id}, type: ${record.type}, data: ${dataRegistro}, value: ${record.value}`);
+    // Usa pair_id se existir, senão usa o próprio id como fallback
+    const pairId = record.pair_id || record.id;
+    console.log(`Processando registro ${record.id}, type: ${record.type}, pair_id: ${pairId}, value: ${record.value}`);
     
-    if (!gruposPorData[dataRegistro]) {
-      gruposPorData[dataRegistro] = {};
+    if (!pares[pairId]) {
+      pares[pairId] = {};
     }
     
     if (record.type === 'inicial') {
-      gruposPorData[dataRegistro].inicial = record;
-      console.log(`Registro inicial adicionado para data ${dataRegistro}:`, record.value);
+      pares[pairId].inicial = record;
+      console.log(`Registro inicial adicionado para pair_id ${pairId}:`, record.value);
     } else if (record.type === 'final') {
-      gruposPorData[dataRegistro].final = record;
-      console.log(`Registro final adicionado para data ${dataRegistro}:`, record.value);
+      pares[pairId].final = record;
+      console.log(`Registro final adicionado para pair_id ${pairId}:`, record.value);
     }
   });
   
-  // Filtra apenas os grupos que têm tanto inicial quanto final
-  const ciclosCompletos = Object.entries(gruposPorData)
-    .filter(([data, grupo]) => {
-      const hasInitial = !!grupo.inicial;
-      const hasFinal = !!grupo.final;
+  // Filtra apenas os pares que têm tanto inicial quanto final
+  const ciclosCompletos = Object.entries(pares)
+    .filter(([pairId, par]) => {
+      const hasInitial = !!par.inicial;
+      const hasFinal = !!par.final;
       const isComplete = hasInitial && hasFinal;
       
-      console.log(`Data ${data}: inicial=${hasInitial}, final=${hasFinal}, completo=${isComplete}`);
+      console.log(`Pair ID ${pairId}: inicial=${hasInitial}, final=${hasFinal}, completo=${isComplete}`);
       
-      if (isComplete && grupo.inicial && grupo.final) {
-        const distancia = grupo.final.value - grupo.inicial.value;
-        console.log(`Ciclo completo - Data: ${data}, Distância: ${distancia}km (${grupo.inicial.value} -> ${grupo.final.value})`);
+      if (isComplete && par.inicial && par.final) {
+        const distancia = par.final.value - par.inicial.value;
+        const dataInicial = getBrazilDateString(par.inicial.date);
+        console.log(`Ciclo completo - Data: ${dataInicial}, Distância: ${distancia}km (${par.inicial.value} -> ${par.final.value})`);
       }
       
       return isComplete;
     })
-    .map(([data, grupo]) => grupo);
+    .map(([pairId, par]) => par);
   
   console.log(`=== RESULTADO DO AGRUPAMENTO ===`);
-  console.log(`Total de grupos criados: ${Object.keys(gruposPorData).length}`);
+  console.log(`Total de pares criados: ${Object.keys(pares).length}`);
   console.log(`Ciclos completos encontrados: ${ciclosCompletos.length}`);
   
   return ciclosCompletos;
@@ -165,8 +167,8 @@ export const calculateKmRodado = (odometerRecords: OdometerRecord[], period: str
     return 0;
   }
   
-  // Primeiro agrupa todos os ciclos por data
-  const ciclosCompletos = agruparCiclosPorData(odometerRecords);
+  // Primeiro agrupa todos os ciclos por pair_id
+  const ciclosCompletos = agruparCiclosPorPairId(odometerRecords);
   console.log('Ciclos completos encontrados:', ciclosCompletos.length);
   
   if (ciclosCompletos.length === 0) {
@@ -214,7 +216,7 @@ export const calculateKmForAllRecords = (odometerRecords: OdometerRecord[]): num
   console.log('=== CALCULANDO KM PARA TODOS OS REGISTROS ===');
   console.log('Total de registros:', odometerRecords.length);
   
-  const ciclosCompletos = agruparCiclosPorData(odometerRecords);
+  const ciclosCompletos = agruparCiclosPorPairId(odometerRecords);
   
   let totalKm = 0;
   ciclosCompletos.forEach((ciclo, index) => {

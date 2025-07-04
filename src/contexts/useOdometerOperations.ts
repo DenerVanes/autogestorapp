@@ -1,4 +1,3 @@
-
 import { odometerService } from '@/services/odometerService';
 import { OdometerRecord } from '@/types';
 
@@ -12,14 +11,16 @@ export const useOdometerOperations = (
     const newRecord = await odometerService.createOdometerRecord({
       date: typeof record.date === 'string' ? record.date : record.date.toISOString(),
       type: record.type,
-      value: record.value
+      value: record.value,
+      pair_id: record.pair_id
     });
 
     const transformedRecord = {
       id: newRecord.id,
       date: new Date(newRecord.date),
       type: newRecord.type as 'inicial' | 'final',
-      value: newRecord.value
+      value: newRecord.value,
+      pair_id: newRecord.pair_id
     };
 
     setOdometerRecords(prev => [transformedRecord, ...prev]);

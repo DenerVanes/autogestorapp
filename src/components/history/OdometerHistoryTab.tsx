@@ -30,9 +30,9 @@ function convertToBrazilTime(date: Date | string): Date {
   return brazilTime;
 }
 
-// Função para agrupar por data com tratamento de fuso horário
-function agruparPorData(records: OdometerRecordFull[]): Viagem[] {
-  console.log('=== AGRUPANDO HISTÓRICO POR DATA ===');
+// Função para agrupar por pair_id com tratamento de fuso horário
+function agruparPorPairId(records: OdometerRecordFull[]): Viagem[] {
+  console.log('=== AGRUPANDO HISTÓRICO POR PAIR_ID ===');
   console.log('Total de registros recebidos:', records.length);
   
   // Log detalhado dos registros
@@ -42,36 +42,46 @@ function agruparPorData(records: OdometerRecordFull[]): Viagem[] {
       id: record.id,
       type: record.type,
       value: record.value,
+      pair_id: record.pair_id,
       date_utc: record.date,
       date_brazil: format(brazilDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })
     });
   });
   
-  const gruposPorData: Record<string, { inicial?: OdometerRecordFull; final?: OdometerRecordFull }> = {};
+  const pares: Record<string, { inicial?: OdometerRecordFull; final?: OdometerRecordFull }> = {};
   
   records.forEach(r => {
-    const brazilDate = convertToBrazilTime(r.date);
-    const dataKey = format(brazilDate, 'yyyy-MM-dd');
-    console.log(`Processando registro histórico ${r.id}, type: ${r.type}, data: ${dataKey}`);
+    const pair = r.pair_id || r.id; // fallback para id se não houver pair_id
+    console.log(`Processando registro histórico ${r.id}, type: ${r.type}, pair_id: ${pair}`);
     
-    if (!gruposPorData[dataKey]) gruposPorData[dataKey] = {};
-    if (r.type === 'inicial') gruposPorData[dataKey].inicial = r;
-    if (r.type === 'final') gruposPorData[dataKey].final = r;
+    if (!pares[pair]) pares[pair] = {};
+    if (r.type === 'inicial') pares[pair].inicial = r;
+    if (r.type === 'final') pares[pair].final = r;
   });
   
-  const viagens = Object.entries(gruposPorData)
-    .map(([dataKey, grupo]) => {
-      const inicial = grupo.inicial;
-      const final = grupo.final;
+  const viagens = Object.entries(pares)
+    .map(([pairId, par]) => {
+      const inicial = par.inicial;
+      const final = par.final;
       const status = inicial && final ? 'fechado' : 'aberto';
       const distancia = inicial && final ? final.value - inicial.value : undefined;
       
-      const viagem = { day: dataKey, inicial, final, status, distancia };
+      // Usa a data do registro inicial convertida para horário do Brasil
+      let day = '';
+      if (inicial) {
+        const brazilDate = convertToBrazilTime(inicial.date);
+        day = format(brazilDate, 'yyyy-MM-dd');
+      } else if (final) {
+        const brazilDate = convertToBrazilTime(final.date);
+        day = format(brazilDate, 'yyyy-MM-dd');
+      }
+      
+      const viagem = { day, inicial, final, status, distancia };
       
       if (inicial && final) {
-        console.log(`Viagem completa criada - Data: ${dataKey}, Distância: ${distancia}km (${inicial.value} -> ${final.value})`);
+        console.log(`Viagem completa criada - Pair ID: ${pairId}, Data: ${day}, Distância: ${distancia}km (${inicial.value} -> ${final.value})`);
       } else {
-        console.log(`Viagem incompleta - Data: ${dataKey}, Status: ${status}`);
+        console.log(`Viagem incompleta - Pair ID: ${pairId}, Status: ${status}`);
       }
       
       return viagem;
@@ -95,7 +105,7 @@ const OdometerHistoryTab = ({ onEdit, onDelete }: OdometerHistoryTabProps) => {
   console.log('=== RENDERIZANDO HISTÓRICO DE ODÔMETRO ===');
   console.log('Total de registros disponíveis:', odometerRecords.length);
 
-  const viagens = agruparPorData(odometerRecords as OdometerRecordFull[]);
+  const viagens = agruparPorPairId(odometerRecords as OdometerRecordFull[]);
 
   return (
     <Card>
@@ -155,7 +165,7 @@ const OdometerHistoryTab = ({ onEdit, onDelete }: OdometerHistoryTabProps) => {
                   </span>
                   <br />
                   <span className="text-xs text-gray-500">
-                    Verifique se há registros iniciais e finais na mesma data
+                    Verifique se há registros iniciais e finais com o mesmo pair_id
                   </span>
                 </TableCell>
               </TableRow>
