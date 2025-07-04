@@ -27,11 +27,18 @@ export const odometerService = {
       throw new Error('User not authenticated');
     }
 
+    // Gera um pair_id único se for inicial e não tiver um
+    let pairId = record.pair_id;
+    if (record.type === 'inicial' && !pairId) {
+      pairId = crypto.randomUUID();
+    }
+
     const recordToInsert = {
       user_id: user.id,
       date: record.date,
       type: record.type,
-      value: record.value
+      value: record.value,
+      pair_id: pairId
     };
 
     console.log('Inserindo registro:', recordToInsert);

@@ -12,17 +12,24 @@ export const useOdometerOperations = (
     const newRecord = await odometerService.createOdometerRecord({
       date: typeof record.date === 'string' ? record.date : record.date.toISOString(),
       type: record.type,
-      value: record.value
+      value: record.value,
+      pair_id: record.pair_id || undefined
     });
 
     const transformedRecord = {
       id: newRecord.id,
       date: new Date(newRecord.date),
       type: newRecord.type as 'inicial' | 'final',
-      value: newRecord.value
+      value: newRecord.value,
+      pair_id: newRecord.pair_id
     };
 
     setOdometerRecords(prev => [transformedRecord, ...prev]);
+    
+    // Força recarregamento dos dados após adicionar
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   const updateOdometerRecord = async (id: string, updates: Partial<OdometerRecord>) => {
@@ -31,7 +38,8 @@ export const useOdometerOperations = (
     const updatedRecord = await odometerService.updateOdometerRecord(id, {
       date: updates.date?.toISOString(),
       type: updates.type,
-      value: updates.value
+      value: updates.value,
+      pair_id: updates.pair_id
     });
 
     setOdometerRecords(prev => prev.map(o => 
@@ -40,7 +48,8 @@ export const useOdometerOperations = (
             id: updatedRecord.id,
             date: new Date(updatedRecord.date),
             type: updatedRecord.type as 'inicial' | 'final',
-            value: updatedRecord.value
+            value: updatedRecord.value,
+            pair_id: updatedRecord.pair_id
           }
         : o
     ));

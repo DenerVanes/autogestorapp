@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const useOdometerRegistrationModal = (isOpen: boolean) => {
-  const { odometerRecords, addOdometerRecord } = useUser();
+  const { odometerRecords, addOdometerRecord, deleteOdometerRecord } = useUser();
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [odometerValue, setOdometerValue] = useState("");
   const [isOdometerInProgress, setIsOdometerInProgress] = useState(false);
@@ -184,20 +184,38 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
       setOdometerValue("");
       setIsOdometerInProgress(false);
       setSavedInitialReading(null);
+      
+      // Força refresh dos dados para atualizar cards e histórico
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Erro ao salvar odômetro final:', error);
       toast.error("Erro ao salvar registro final");
     }
   };
 
-  const handleCancelOdometer = () => {
-    if (window.confirm("Tem certeza que deseja cancelar o registro em andamento?")) {
-      console.log('Cancelando registro em andamento');
-      setIsOdometerInProgress(false);
-      setSavedInitialReading(null);
-      setOdometerValue("");
-      setDate(format(new Date(), "yyyy-MM-dd"));
-      toast.info("Registro cancelado");
+  const handleCancelOdometer = async () => {
+    if (!savedInitialReading) return;
+    
+    if (window.confirm("Tem certeza que deseja cancelar o registro em andamento? Este registro inicial será excluído permanentemente.")) {
+      try {
+        console.log('Cancelando e deletando registro inicial:', savedInitialReading.id);
+        
+        // Deleta o registro inicial do Supabase
+        await deleteOdometerRecord(savedInitialReading.id);
+        
+        // Limpa o estado local
+        setIsOdometerInProgress(false);
+        setSavedInitialReading(null);
+        setOdometerValue("");
+        setDate(format(new Date(), "yyyy-MM-dd"));
+        
+        toast.success("Registro cancelado e excluído com sucesso");
+      } catch (error) {
+        console.error('Erro ao cancelar registro:', error);
+        toast.error("Erro ao cancelar registro");
+      }
     }
   };
 
