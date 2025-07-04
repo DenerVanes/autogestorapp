@@ -13,7 +13,6 @@ interface OdometerRegistrationModalContentProps {
     date: Date;
     value: number;
     id: string;
-    pair_id: string;
   } | null;
   date: string;
   odometerValue: string;
