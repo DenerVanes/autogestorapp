@@ -1,3 +1,4 @@
+
 import { User, Transaction, WorkHoursRecord, Metrics, ChartData } from '@/types';
 import { OdometerRecord } from '@/types';
 import { Lancamento } from '@/lib/types';
@@ -30,4 +31,5 @@ export interface UserContextType {
   addOdometerRecord: (record: Omit<OdometerRecord, 'id'>) => Promise<void>;
   updateOdometerRecord: (id: string, updates: Partial<OdometerRecord>) => Promise<void>;
   deleteOdometerRecord: (id: string) => Promise<void>;
+  deleteMultipleOdometerRecords: (ids: string[]) => Promise<void>;
 }
