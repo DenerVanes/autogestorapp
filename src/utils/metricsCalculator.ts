@@ -1,4 +1,5 @@
-import type { Transaction, WorkHoursRecord, Metrics, OdometerRecord } from "@/types";
+
+import type { Transaction, WorkHoursRecord, Metrics, OdometerRecordFull } from "@/types";
 import { Lancamento } from "@/lib/types";
 import { calculateKmRodado } from "@/utils/kmCalculator";
 
@@ -25,7 +26,7 @@ export function calculateWorkHours(workHours: WorkHoursRecord[]): number {
  */
 export function calculateMetrics(
   transactions: Transaction[],
-  odometerRecords: OdometerRecord[],
+  odometerRecords: OdometerRecordFull[],
   workHours: WorkHoursRecord[],
   period?: string,
   customStartDate?: Date,
