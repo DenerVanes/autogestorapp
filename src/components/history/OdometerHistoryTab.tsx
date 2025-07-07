@@ -25,8 +25,8 @@ interface OdometerHistoryTabProps {
 // Função para converter data UTC para horário do Brasil
 function convertToBrazilTime(date: Date | string): Date {
   const utcDate = typeof date === 'string' ? new Date(date) : date;
-  // Subtrai 3 horas para converter de UTC para horário do Brasil
-  const brazilTime = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
+  // Adiciona 3 horas para converter de UTC para horário do Brasil
+  const brazilTime = new Date(utcDate.getTime() + (3 * 60 * 60 * 1000));
   return brazilTime;
 }
 
