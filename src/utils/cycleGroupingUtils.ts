@@ -1,12 +1,12 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { OdometerRecord } from "@/types";
+import type { OdometerRecord, OdometerRecordFull } from "@/types";
 import { convertToBrazilTime, getBrazilDateString } from "./timezoneUtils";
 
 export interface CompleteCycle {
-  inicial?: OdometerRecord;
-  final?: OdometerRecord;
+  inicial?: OdometerRecordFull;
+  final?: OdometerRecordFull;
 }
 
 /**
@@ -14,7 +14,7 @@ export interface CompleteCycle {
  * @param records - Array of odometer records
  * @returns Array of complete cycles (with both inicial and final records)
  */
-export function agruparCiclosPorPairId(records: OdometerRecord[]): CompleteCycle[] {
+export function agruparCiclosPorPairId(records: OdometerRecordFull[]): CompleteCycle[] {
   console.log('=== AGRUPANDO CICLOS POR PAIR_ID ===');
   console.log('Total de registros recebidos:', records.length);
   

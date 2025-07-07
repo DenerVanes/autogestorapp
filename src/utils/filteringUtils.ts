@@ -1,7 +1,7 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { OdometerRecord } from "@/types";
+import type { OdometerRecord, OdometerRecordFull } from "@/types";
 import { convertToBrazilTime } from "./timezoneUtils";
 
 /**
@@ -13,11 +13,11 @@ import { convertToBrazilTime } from "./timezoneUtils";
  * @returns Filtered array of odometer records
  */
 export function filterOdometerByPeriod(
-  records: OdometerRecord[], 
+  records: OdometerRecordFull[], 
   period: string, 
   customStartDate?: Date, 
   customEndDate?: Date
-): OdometerRecord[] {
+): OdometerRecordFull[] {
   const now = new Date();
   const brazilNow = convertToBrazilTime(now);
   let startDate: Date;

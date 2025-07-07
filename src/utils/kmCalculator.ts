@@ -1,5 +1,5 @@
 
-import type { OdometerRecord } from "@/types";
+import type { OdometerRecord, OdometerRecordFull } from "@/types";
 import { agruparCiclosPorPairId } from "./cycleGroupingUtils";
 import { filterOdometerByPeriod } from "./filteringUtils";
 import { getBrazilDateString } from "./timezoneUtils";
@@ -13,7 +13,7 @@ import { getBrazilDateString } from "./timezoneUtils";
  * @returns Total kilometers driven
  */
 export const calculateKmRodado = (
-  odometerRecords: OdometerRecord[], 
+  odometerRecords: OdometerRecordFull[], 
   period: string, 
   customStartDate?: Date, 
   customEndDate?: Date
@@ -39,7 +39,7 @@ export const calculateKmRodado = (
   // Para isso, vamos criar um array com apenas os registros iniciais dos ciclos completos
   const registrosIniciais = ciclosCompletos
     .map(ciclo => ciclo.inicial)
-    .filter(inicial => inicial !== undefined) as OdometerRecord[];
+    .filter(inicial => inicial !== undefined) as OdometerRecordFull[];
   
   const registrosIniciaisNoPeriodo = filterOdometerByPeriod(registrosIniciais, period, customStartDate, customEndDate);
   
@@ -76,7 +76,7 @@ export const calculateKmRodado = (
  * @param odometerRecords - Array of odometer records
  * @returns Total kilometers driven across all cycles
  */
-export const calculateKmForAllRecords = (odometerRecords: OdometerRecord[]): number => {
+export const calculateKmForAllRecords = (odometerRecords: OdometerRecordFull[]): number => {
   console.log('=== CALCULANDO KM PARA TODOS OS REGISTROS ===');
   console.log('Total de registros:', odometerRecords.length);
   
