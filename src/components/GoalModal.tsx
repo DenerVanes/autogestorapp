@@ -24,8 +24,9 @@ export const GoalModal: React.FC<GoalModalProps> = ({ open, onClose, transaction
 
   useEffect(() => {
     const loadData = async () => {
-      if (open) {
+      if (open && userId) {
         try {
+          setError("");
           // Carregar metas atuais do banco
           const goals = await goalService.getGoals(userId);
           setWeeklyGoal(goals.weeklyGoal > 0 ? String(goals.weeklyGoal) : "");
@@ -36,6 +37,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({ open, onClose, transaction
           setSuggested(suggestedGoals);
         } catch (error) {
           console.error('Error loading modal data:', error);
+          setError("Erro ao carregar dados das metas.");
         }
       }
     };
@@ -44,11 +46,22 @@ export const GoalModal: React.FC<GoalModalProps> = ({ open, onClose, transaction
   }, [open, userId, transactions]);
 
   const handleSave = async () => {
-    const weekly = Number(weeklyGoal);
-    const monthly = Number(monthlyGoal);
+    const weekly = parseFloat(weeklyGoal);
+    const monthly = parseFloat(monthlyGoal);
     
-    if (weekly <= 0 || monthly <= 0 || isNaN(weekly) || isNaN(monthly)) {
-      setError("As metas devem ser valores positivos.");
+    // Validações melhoradas
+    if (!weeklyGoal || !monthlyGoal) {
+      setError("Por favor, preencha ambas as metas.");
+      return;
+    }
+    
+    if (isNaN(weekly) || isNaN(monthly) || weekly <= 0 || monthly <= 0) {
+      setError("As metas devem ser valores numéricos positivos.");
+      return;
+    }
+
+    if (!userId) {
+      setError("Usuário não autenticado.");
       return;
     }
 
@@ -56,24 +69,32 @@ export const GoalModal: React.FC<GoalModalProps> = ({ open, onClose, transaction
       setLoading(true);
       setError("");
       
-      await onSave({ weeklyGoal: weekly, monthlyGoal: monthly });
+      const goals = { weeklyGoal: weekly, monthlyGoal: monthly };
+      
+      // Salvar no banco de dados primeiro
+      await goalService.setGoals(userId, goals);
+      
+      // Depois chamar o callback do componente pai
+      await onSave(goals);
       
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         onClose();
-      }, 800);
+      }, 1000);
     } catch (error) {
       console.error('Error saving goals:', error);
-      setError("Erro ao salvar metas. Tente novamente.");
+      setError("Erro ao salvar metas. Verifique sua conexão e tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSuggest = () => {
-    setWeeklyGoal(suggested.weeklyGoal > 0 ? String(suggested.weeklyGoal) : "");
-    setMonthlyGoal(suggested.monthlyGoal > 0 ? String(suggested.monthlyGoal) : "");
+    if (suggested.weeklyGoal > 0 && suggested.monthlyGoal > 0) {
+      setWeeklyGoal(String(suggested.weeklyGoal));
+      setMonthlyGoal(String(suggested.monthlyGoal));
+    }
   };
 
   return (
@@ -87,7 +108,8 @@ export const GoalModal: React.FC<GoalModalProps> = ({ open, onClose, transaction
             <label className="block text-sm font-medium mb-1">Meta Semanal (R$)</label>
             <Input
               type="number"
-              min={1}
+              min="1"
+              step="0.01"
               value={weeklyGoal}
               onChange={e => setWeeklyGoal(e.target.value)}
               className="w-full"
@@ -99,7 +121,8 @@ export const GoalModal: React.FC<GoalModalProps> = ({ open, onClose, transaction
             <label className="block text-sm font-medium mb-1">Meta Mensal (R$)</label>
             <Input
               type="number"
-              min={1}
+              min="1"
+              step="0.01"
               value={monthlyGoal}
               onChange={e => setMonthlyGoal(e.target.value)}
               className="w-full"
