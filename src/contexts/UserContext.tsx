@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { profileService } from '@/services/profileService';
-import { User, Transaction, OdometerRecord, WorkHoursRecord, Metrics, ChartData } from '@/types';
+import { User, Transaction, OdometerRecordFull, WorkHoursRecord, Metrics, ChartData } from '@/types';
 import { getMetrics, getChartData } from '@/utils/calculations';
 import { UserContextType } from './types';
 import { UserDataService } from './userDataService';
@@ -20,7 +21,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [odometerRecords, setOdometerRecords] = useState<OdometerRecord[]>([]);
+  const [odometerRecords, setOdometerRecords] = useState<OdometerRecordFull[]>([]);
   const [workHours, setWorkHours] = useState<WorkHoursRecord[]>([]);
   const [lancamentos, setLancamentos] = useState([]);
 

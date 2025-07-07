@@ -1,6 +1,6 @@
 
 import { User, Transaction, WorkHoursRecord, Metrics, ChartData } from '@/types';
-import { OdometerRecord } from '@/types';
+import { OdometerRecordFull } from '@/types';
 import { Lancamento } from '@/lib/types';
 
 export interface UserContextType {
@@ -9,7 +9,7 @@ export interface UserContextType {
   transactions: Transaction[];
   lancamentos: Lancamento[];
   workHours: WorkHoursRecord[];
-  odometerRecords: OdometerRecord[];
+  odometerRecords: OdometerRecordFull[];
   
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>;
@@ -28,8 +28,8 @@ export interface UserContextType {
   getChartData: (period: string, customStartDate?: Date, customEndDate?: Date) => ChartData[];
   refreshData: () => Promise<void>;
 
-  addOdometerRecord: (record: Omit<OdometerRecord, 'id'>) => Promise<void>;
-  updateOdometerRecord: (id: string, updates: Partial<OdometerRecord>) => Promise<void>;
+  addOdometerRecord: (record: Omit<OdometerRecordFull, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateOdometerRecord: (id: string, updates: Partial<OdometerRecordFull>) => Promise<void>;
   deleteOdometerRecord: (id: string) => Promise<void>;
   deleteMultipleOdometerRecords: (ids: string[]) => Promise<void>;
 }
