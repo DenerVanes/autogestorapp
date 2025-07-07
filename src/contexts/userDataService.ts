@@ -3,7 +3,7 @@ import { transactionService } from '@/services/transactionService';
 import { odometerService } from '@/services/odometerService';
 import { workHoursService } from '@/services/workHoursService';
 import { lancamentoService } from '@/services/lancamentoService';
-import { User, Transaction, OdometerRecord, WorkHoursRecord } from '@/types';
+import { User, Transaction, OdometerRecordFull, WorkHoursRecord } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
 export class UserDataService {
@@ -42,7 +42,7 @@ export class UserDataService {
 
   static async loadAllUserData(): Promise<{
     transactions: Transaction[];
-    odometerRecords: OdometerRecord[];
+    odometerRecords: OdometerRecordFull[];
     workHours: WorkHoursRecord[];
     lancamentos: any[];
   }> {
@@ -67,10 +67,16 @@ export class UserDataService {
       })),
       odometerRecords: odometerData.map(o => ({
         id: o.id,
+        user_id: o.user_id,
         date: new Date(o.date),
         type: o.type as 'inicial' | 'final',
         value: o.value,
-        pair_id: o.pair_id
+        pair_id: o.pair_id,
+        odometro_inicial: o.odometro_inicial,
+        odometro_final: o.odometro_final,
+        ciclo: o.ciclo,
+        created_at: new Date(o.created_at),
+        updated_at: new Date(o.updated_at)
       })),
       workHours: workHoursData.map(w => ({
         id: w.id,
