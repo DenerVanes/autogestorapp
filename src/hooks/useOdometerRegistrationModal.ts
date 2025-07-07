@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { convertToBrazilTime, getBrazilDateString } from "@/utils/timezoneUtils";
 
 export const useOdometerRegistrationModal = (isOpen: boolean) => {
   const { odometerRecords, addOdometerRecord, deleteOdometerRecord } = useUser();
@@ -16,20 +16,6 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
     id: string;
     pair_id: string;
   } | null>(null);
-
-  // Função para converter data UTC para horário do Brasil
-  const convertToBrazilTime = (date: Date | string): Date => {
-    const utcDate = typeof date === 'string' ? new Date(date) : date;
-    // Adiciona 3 horas para converter de UTC para horário do Brasil
-    const brazilTime = new Date(utcDate.getTime() + (3 * 60 * 60 * 1000));
-    return brazilTime;
-  };
-
-  // Função para obter a data no formato brasileiro (DD/MM/YYYY)
-  const getBrazilDateString = (date: Date | string): string => {
-    const brazilDate = convertToBrazilTime(date);
-    return format(brazilDate, 'yyyy-MM-dd');
-  };
 
   // Verifica se há algum ciclo aberto quando o modal abre
   useEffect(() => {
