@@ -111,6 +111,16 @@ const WorkHoursModal = ({ isOpen, onClose }: WorkHoursModalProps) => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // O modal de trabalho não precisa de persistência pois é um estado em tempo real
+  const handleClose = () => {
+    if (isWorking) {
+      // Se está trabalhando, apenas fechar sem alterar o estado
+      onClose();
+    } else {
+      onClose();
+    }
+  };
+
   // Atualizar o cronômetro a cada segundo
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -127,7 +137,7 @@ const WorkHoursModal = ({ isOpen, onClose }: WorkHoursModalProps) => {
   }, [isWorking, startTime]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/contexts/UserContext";
 import { Transaction } from "@/types";
 import { toast } from "sonner";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 interface EditTransactionModalProps {
   transaction: Transaction;
@@ -22,7 +23,10 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   onClose
 }) => {
   const { addTransaction, updateTransaction } = useUser();
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(false);
+
+  // Dados iniciais do formulário
+  const initialFormData = {
     type: transaction.type,
     value: transaction.value.toString(),
     date: transaction.date.toISOString().slice(0, 16),
@@ -31,23 +35,18 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     fuelType: transaction.fuelType || '',
     pricePerLiter: transaction.pricePerLiter?.toString() || '',
     observation: transaction.observation || ''
-  });
-  const [loading, setLoading] = useState(false);
+  };
 
+  // Usar persistência de formulário apenas para transações novas
+  const formId = transaction.id ? `edit_transaction_${transaction.id}` : 'new_transaction';
+  const { formData, updateFormData, clearSavedData } = useFormPersistence(formId, initialFormData);
+
+  // Resetar dados quando a transação muda (para edição)
   useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        type: transaction.type,
-        value: transaction.value.toString(),
-        date: transaction.date.toISOString().slice(0, 16),
-        category: transaction.category,
-        subcategory: transaction.subcategory || '',
-        fuelType: transaction.fuelType || '',
-        pricePerLiter: transaction.pricePerLiter?.toString() || '',
-        observation: transaction.observation || ''
-      });
+    if (isOpen && transaction.id) {
+      updateFormData(initialFormData);
     }
-  }, [transaction, isOpen]);
+  }, [transaction.id, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +78,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
         toast.success("Transação criada com sucesso!");
       }
       
-      // Fechar modal apenas após salvar com sucesso
+      // Limpar dados salvos e fechar modal após salvar com sucesso
+      clearSavedData();
       onClose();
     } catch (error) {
       console.error('Error saving transaction:', error);
@@ -89,13 +89,23 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    // Para transações em edição, não precisamos salvar estado
+    if (transaction.id) {
+      onClose();
+    } else {
+      // Para novas transações, manter os dados salvos
+      onClose();
+    }
+  };
+
   const categoryOptions = {
     receita: ['Corrida', 'Gorjeta', 'Bônus', 'Outros'],
     despesa: ['Combustível', 'Manutenção', 'Multa', 'Estacionamento', 'Outros']
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
@@ -110,7 +120,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
               type="number"
               step="0.01"
               value={formData.value}
-              onChange={(e) => setFormData({...formData, value: e.target.value})}
+              onChange={(e) => updateFormData({ value: e.target.value })}
               required
               disabled={loading}
             />
@@ -121,7 +131,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             <Input
               type="datetime-local"
               value={formData.date}
-              onChange={(e) => setFormData({...formData, date: e.target.value})}
+              onChange={(e) => updateFormData({ date: e.target.value })}
               required
               disabled={loading}
             />
@@ -131,7 +141,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             <Label>Categoria</Label>
             <Select 
               value={formData.category} 
-              onValueChange={(value) => setFormData({...formData, category: value})}
+              onValueChange={(value) => updateFormData({ category: value })}
               disabled={loading}
             >
               <SelectTrigger>
@@ -151,7 +161,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                 <Label>Tipo de Combustível</Label>
                 <Select 
                   value={formData.fuelType} 
-                  onValueChange={(value) => setFormData({...formData, fuelType: value})}
+                  onValueChange={(value) => updateFormData({ fuelType: value })}
                   disabled={loading}
                 >
                   <SelectTrigger>
@@ -172,7 +182,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                   type="number"
                   step="0.001"
                   value={formData.pricePerLiter}
-                  onChange={(e) => setFormData({...formData, pricePerLiter: e.target.value})}
+                  onChange={(e) => updateFormData({ pricePerLiter: e.target.value })}
                   disabled={loading}
                 />
               </div>
@@ -183,7 +193,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             <Label>Observação</Label>
             <Textarea
               value={formData.observation}
-              onChange={(e) => setFormData({...formData, observation: e.target.value})}
+              onChange={(e) => updateFormData({ observation: e.target.value })}
               placeholder="Observações adicionais..."
               disabled={loading}
             />
@@ -193,7 +203,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             <Button 
               type="button" 
               variant="outline" 
-              onClick={onClose}
+              onClick={handleClose}
               disabled={loading}
             >
               Cancelar
