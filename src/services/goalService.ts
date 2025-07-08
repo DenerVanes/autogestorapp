@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Goals {
@@ -13,16 +12,14 @@ export const goalService = {
         .from('user_goals')
         .select('weekly_goal, monthly_goal')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching goals:', error);
-        // Fallback para valores padrão
         return { weeklyGoal: 1000, monthlyGoal: 4000 };
       }
 
       if (!data) {
-        // Se não existir registro, retorna valores padrão
         return { weeklyGoal: 1000, monthlyGoal: 4000 };
       }
 

@@ -294,6 +294,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_goals: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_goal: number
+          updated_at: string
+          user_id: string
+          weekly_goal: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_goal?: number
+          updated_at?: string
+          user_id: string
+          weekly_goal?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_goal?: number
+          updated_at?: string
+          user_id?: string
+          weekly_goal?: number
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           amount: number | null
