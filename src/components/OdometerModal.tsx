@@ -32,8 +32,10 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
     tipo: 'inicial' as 'inicial' | 'final'
   });
 
-  // Verifica se há algum ciclo aberto (inicial sem final)
+  // Verifica se há algum ciclo aberto (inicial sem final) - SEM CAUSAR REFRESH
   useEffect(() => {
+    if (!isOpen) return; // Só executa quando modal está aberto
+    
     const ciclosAbertos = odometerRecords.filter(record => {
       if (record.type !== 'inicial') return false;
       
@@ -58,7 +60,7 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
       setCicloAbertoId(null);
       updateFormData({ tipo: 'inicial' });
     }
-  }, [odometerRecords, updateFormData]);
+  }, [isOpen, odometerRecords.length]); // Dependências específicas
 
   const cicloAberto = cicloAbertoId ? odometerRecords.find(r => r.id === cicloAbertoId) : null;
 
@@ -83,7 +85,7 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
         
         toast.success("Odômetro inicial registrado! Agora registre o final quando terminar.");
         
-        // Limpar apenas o valor, não fechar o modal
+        // Limpar apenas o valor, NÃO fechar o modal
         updateFormData({ valor: "" });
       } else if (formData.tipo === 'final' && cicloAberto) {
         // Valida se o final é maior que o inicial
@@ -110,7 +112,7 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
 
         toast.success(`Ciclo finalizado! Distância: ${distancia}km`);
         
-        // Limpar dados salvos e fechar modal após finalizar o ciclo
+        // Limpar dados salvos e fechar modal APENAS após finalizar o ciclo
         clearSavedData();
         onClose();
       }
@@ -125,7 +127,7 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
   // Limpar dados salvos quando modal é fechado pelo usuário
   const handleClose = () => {
     if (formData.tipo === 'final' && cicloAberto) {
-      // Se tem ciclo aberto, não limpar os dados
+      // Se tem ciclo aberto, NÃO limpar os dados (manter persistência)
       onClose();
     } else {
       // Se não tem ciclo aberto, pode limpar

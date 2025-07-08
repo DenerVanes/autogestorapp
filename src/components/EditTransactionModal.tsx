@@ -41,12 +41,13 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const formId = transaction.id ? `edit_transaction_${transaction.id}` : 'new_transaction';
   const { formData, updateFormData, clearSavedData } = useFormPersistence(formId, initialFormData);
 
-  // Resetar dados quando a transação muda (para edição)
+  // Resetar dados quando a transação muda (para edição) - SEM CAUSAR REFRESH
   useEffect(() => {
     if (isOpen && transaction.id) {
+      // Para transações existentes, sempre usar os dados atuais (não persistir)
       updateFormData(initialFormData);
     }
-  }, [transaction.id, isOpen]);
+  }, [transaction.id, isOpen]); // Dependências específicas
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +79,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
         toast.success("Transação criada com sucesso!");
       }
       
-      // Limpar dados salvos e fechar modal após salvar com sucesso
+      // Limpar dados salvos e fechar modal SEMPRE após salvar com sucesso
       clearSavedData();
       onClose();
     } catch (error) {
@@ -90,11 +91,11 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   };
 
   const handleClose = () => {
-    // Para transações em edição, não precisamos salvar estado
+    // Para transações em edição, não manter persistência
     if (transaction.id) {
       onClose();
     } else {
-      // Para novas transações, manter os dados salvos
+      // Para novas transações, manter os dados salvos (não limpar)
       onClose();
     }
   };

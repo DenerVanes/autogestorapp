@@ -17,6 +17,7 @@ export const useFormPersistence = <T extends FormData>(
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
+        // Mescla dados salvos com dados iniciais, priorizando dados salvos
         setFormData(prev => ({ ...prev, ...parsed }));
       } catch (error) {
         console.error('Erro ao carregar dados do formulário:', error);
@@ -24,12 +25,18 @@ export const useFormPersistence = <T extends FormData>(
     }
   }, [formId]);
 
-  // Salva dados no localStorage sempre que formData muda
+  // Salva dados no localStorage sempre que formData muda (mas não na inicialização)
   useEffect(() => {
-    if (formData !== initialData) {
-      localStorage.setItem(`form_${formId}`, JSON.stringify(formData));
-    }
-  }, [formData, formId, initialData]);
+    // Evita salvar na primeira renderização
+    const timer = setTimeout(() => {
+      // Só salva se há dados diferentes do inicial
+      if (JSON.stringify(formData) !== JSON.stringify(initialData)) {
+        localStorage.setItem(`form_${formId}`, JSON.stringify(formData));
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [formData, formId]);
 
   // Função para atualizar dados do formulário
   const updateFormData = useCallback((updates: Partial<T>) => {

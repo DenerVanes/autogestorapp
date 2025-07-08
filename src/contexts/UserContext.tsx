@@ -60,49 +60,48 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [authUser]);
 
-  // Função geral para casos onde é necessário recarregar tudo
+  // Função geral para casos onde é necessário recarregar tudo (apenas na inicialização)
   const refreshData = useCallback(async () => {
     if (!authUser) return;
 
     try {
-      console.log('Full data refresh...');
+      console.log('Initial data load...');
       const data = await UserDataService.loadAllUserData();
       setTransactions(data.transactions);
       setOdometerRecords(data.odometerRecords);
       setWorkHours(data.workHours);
       setLancamentos(data.lancamentos || []);
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      console.error('Error loading initial data:', error);
     }
   }, [authUser]);
 
-  // Wrap operations with access control that return promises
+  // Wrap operations with access control that return promises - SEM REFRESH AUTOMÁTICO
   const protectedTransactionOps = {
     addTransaction: async (transaction: any): Promise<void> => {
       console.log('UserContext - addTransaction chamada');
-      console.log('Transaction data:', transaction);
-      console.log('isExpired:', isExpired);
-      console.log('checkAccess result:', checkAccess('adicionar transações'));
       
       if (isExpired || !checkAccess('adicionar transações')) {
         console.log('Acesso negado para adicionar transação');
         return;
       }
       
-      console.log('Chamando transactionOps.addTransaction...');
       await transactionOps.addTransaction(transaction);
-      // Atualizar apenas transações
-      await refreshSpecificData('transactions');
+      // APENAS atualizar localmente os dados, sem refresh completo
+      const newTransaction = { ...transaction, id: crypto.randomUUID(), userId: authUser?.id };
+      setTransactions(prev => [newTransaction, ...prev]);
     },
     updateTransaction: async (id: string, updates: any): Promise<void> => {
       if (isExpired || !checkAccess('editar transações')) return;
       await transactionOps.updateTransaction(id, updates);
-      await refreshSpecificData('transactions');
+      // Atualizar localmente
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     },
     deleteTransaction: async (id: string): Promise<void> => {
       if (isExpired || !checkAccess('remover transações')) return;
       await transactionOps.deleteTransaction(id);
-      await refreshSpecificData('transactions');
+      // Remover localmente
+      setTransactions(prev => prev.filter(t => t.id !== id));
     }
   };
 
@@ -110,23 +109,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     addOdometerRecord: async (record: any): Promise<void> => {
       if (isExpired || !checkAccess('adicionar registros de hodômetro')) return;
       await odometerOps.addOdometerRecord(record);
-      // Atualizar apenas registros de odômetro
-      await refreshSpecificData('odometer');
+      // APENAS atualizar localmente os dados, sem refresh completo
+      const newRecord = { ...record, id: crypto.randomUUID(), userId: authUser?.id };
+      setOdometerRecords(prev => [newRecord, ...prev]);
     },
     updateOdometerRecord: async (id: string, updates: any): Promise<void> => {
       if (isExpired || !checkAccess('editar registros de hodômetro')) return;
       await odometerOps.updateOdometerRecord(id, updates);
-      await refreshSpecificData('odometer');
+      setOdometerRecords(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
     },
     deleteOdometerRecord: async (id: string): Promise<void> => {
       if (isExpired || !checkAccess('remover registros de hodômetro')) return;
       await odometerOps.deleteOdometerRecord(id);
-      await refreshSpecificData('odometer');
+      setOdometerRecords(prev => prev.filter(r => r.id !== id));
     },
     deleteMultipleOdometerRecords: async (ids: string[]): Promise<void> => {
       if (isExpired || !checkAccess('remover registros de hodômetro')) return;
       await odometerOps.deleteMultipleOdometerRecords(ids);
-      await refreshSpecificData('odometer');
+      setOdometerRecords(prev => prev.filter(r => !ids.includes(r.id)));
     }
   };
 
@@ -134,21 +134,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     addWorkHours: async (record: any): Promise<void> => {
       if (isExpired || !checkAccess('adicionar horas trabalhadas')) return;
       await workHoursOps.addWorkHours(record);
-      await refreshSpecificData('workHours');
+      const newRecord = { ...record, id: crypto.randomUUID(), userId: authUser?.id };
+      setWorkHours(prev => [newRecord, ...prev]);
     },
     updateWorkHours: async (id: string, updates: any): Promise<void> => {
       if (isExpired || !checkAccess('editar horas trabalhadas')) return;
       await workHoursOps.updateWorkHours(id, updates);
-      await refreshSpecificData('workHours');
+      setWorkHours(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w));
     },
     deleteWorkHours: async (id: string): Promise<void> => {
       if (isExpired || !checkAccess('remover horas trabalhadas')) return;
       await workHoursOps.deleteWorkHours(id);
-      await refreshSpecificData('workHours');
+      setWorkHours(prev => prev.filter(w => w.id !== id));
     }
   };
 
-  // Operações de Lançamento
+  // Operações de Lançamento - SEM REFRESH AUTOMÁTICO
   const addLancamento = async (lancamento) => {
     if (isExpired || !checkAccess('adicionar lançamentos')) {
       throw new Error('Acesso bloqueado: Assine o PRO para continuar.');
@@ -174,7 +175,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setLancamentos((prev) => prev.filter(l => l.id !== id));
   };
 
-  // Load user data when auth user changes
+  // Load user data APENAS quando auth user muda (inicialização)
   useEffect(() => {
     const loadUserData = async () => {
       if (!authUser) {
@@ -205,7 +206,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadUserData();
-  }, [authUser, refreshData]);
+  }, [authUser?.id]); // Dependência específica para evitar loops
 
   const updateUserProfile = async (updates: Partial<User>) => {
     if (!authUser || !user) throw new Error('User not authenticated');
@@ -367,6 +368,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return getChartData(transactions, period, customStartDate, customEndDate);
   };
 
+  // Função manual para refresh completo (se necessário)
+  const manualRefreshData = useCallback(async () => {
+    if (!authUser) return;
+    await refreshData();
+  }, [authUser, refreshData]);
+
   return (
     <UserContext.Provider
       value={{
@@ -385,7 +392,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         updateUserProfile,
         getMetrics: getMetricsWithChanges,
         getChartData: getChartDataFiltered,
-        refreshData: () => refreshData()
+        refreshData: manualRefreshData // Só para casos muito específicos
       }}
     >
       {children}
