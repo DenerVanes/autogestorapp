@@ -1,17 +1,14 @@
-import { useState, useEffect } from "react";
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, DollarSign, TrendingDown } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/contexts/UserContext";
-import type { Transaction } from "@/types";
+import { Transaction } from "@/types";
+import { toast } from "sonner";
 
 interface EditTransactionModalProps {
   transaction: Transaction;
@@ -19,237 +16,193 @@ interface EditTransactionModalProps {
   onClose: () => void;
 }
 
-const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionModalProps) => {
-  const [date, setDate] = useState<Date>(transaction.date);
-  const [value, setValue] = useState(transaction.id ? transaction.value.toString() : "");
-  const [category, setCategory] = useState(transaction.category);
-  const [fuelType, setFuelType] = useState(transaction.fuelType || "");
-  const [pricePerLiter, setPricePerLiter] = useState(transaction.pricePerLiter?.toString() || "");
-  const [subcategory, setSubcategory] = useState(transaction.subcategory || "");
-  const [observation, setObservation] = useState(transaction.observation || "");
+const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
+  transaction,
+  isOpen,
+  onClose
+}) => {
+  const { addTransaction, updateTransaction } = useUser();
+  const [formData, setFormData] = useState({
+    type: transaction.type,
+    value: transaction.value.toString(),
+    date: transaction.date.toISOString().slice(0, 16),
+    category: transaction.category,
+    subcategory: transaction.subcategory || '',
+    fuelType: transaction.fuelType || '',
+    pricePerLiter: transaction.pricePerLiter?.toString() || '',
+    observation: transaction.observation || ''
+  });
+  const [loading, setLoading] = useState(false);
 
-  const { updateTransaction, addTransaction } = useUser();
-
-  const getModalConfig = () => {
-    const isNewTransaction = !transaction.id;
-    const action = isNewTransaction ? 'Nova' : 'Editar';
-    
-    switch (transaction.type) {
-      case 'receita':
-        return {
-          title: `${action} Receita`,
-          icon: DollarSign,
-          color: 'text-green-600',
-          categories: ['Uber', '99', 'InDrive', 'iFood', 'Gorjetas', 'Corridas Particulares']
-        };
-      case 'despesa':
-        return {
-          title: `${action} Despesa`,
-          icon: TrendingDown,
-          color: 'text-red-600',
-          categories: [
-            'Combustível',
-            'Alimentação',
-            'Manutenção',
-            'IPVA',
-            'Financiamento',
-            'Aluguel Veículo',
-            'Lava Rápido',
-            'Seguro'
-          ]
-        };
-      default:
-        return { title: '', icon: DollarSign, color: '', categories: [] };
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        type: transaction.type,
+        value: transaction.value.toString(),
+        date: transaction.date.toISOString().slice(0, 16),
+        category: transaction.category,
+        subcategory: transaction.subcategory || '',
+        fuelType: transaction.fuelType || '',
+        pricePerLiter: transaction.pricePerLiter?.toString() || '',
+        observation: transaction.observation || ''
+      });
     }
-  };
-
-  const config = getModalConfig();
-  const IconComponent = config.icon;
+  }, [transaction, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('EditTransactionModal - handleSubmit chamado');
-    console.log('Transaction ID:', transaction.id);
-    console.log('Transaction type:', transaction.type);
-    
-    const transactionData = {
-      type: transaction.type,
-      date,
-      value: parseFloat(value),
-      category,
-      ...(transaction.type === 'despesa' && category === 'Combustível' && {
-        fuelType,
-        pricePerLiter: parseFloat(pricePerLiter)
-      }),
-      ...(transaction.type === 'despesa' && category === 'Manutenção' && {
-        subcategory,
-        observation
-      })
-    };
-
-    console.log('Transaction data to save:', transactionData);
+    if (!formData.value || !formData.category) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
 
     try {
-      if (!transaction.id) {
-        // Nova transação
-        console.log('Criando nova transação...');
-        await addTransaction(transactionData);
-        console.log('Transação criada com sucesso!');
-      } else {
-        // Editar transação existente
-        console.log('Editando transação existente...');
+      setLoading(true);
+      
+      const transactionData = {
+        type: formData.type as 'receita' | 'despesa',
+        value: parseFloat(formData.value),
+        date: new Date(formData.date),
+        category: formData.category,
+        subcategory: formData.subcategory || undefined,
+        fuelType: formData.fuelType || undefined,
+        pricePerLiter: formData.pricePerLiter ? parseFloat(formData.pricePerLiter) : undefined,
+        observation: formData.observation || undefined
+      };
+
+      if (transaction.id) {
         await updateTransaction(transaction.id, transactionData);
-        console.log('Transação editada com sucesso!');
+        toast.success("Transação atualizada com sucesso!");
+      } else {
+        await addTransaction(transactionData);
+        toast.success("Transação criada com sucesso!");
       }
+      
+      // Fechar modal apenas após salvar com sucesso
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar transação:', error);
-      alert('Erro ao salvar transação. Tente novamente.');
+      console.error('Error saving transaction:', error);
+      toast.error("Erro ao salvar transação");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const categoryOptions = {
+    receita: ['Corrida', 'Gorjeta', 'Bônus', 'Outros'],
+    despesa: ['Combustível', 'Manutenção', 'Multa', 'Estacionamento', 'Outros']
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <IconComponent className={cn("w-5 h-5", config.color)} />
-            <span>{config.title}</span>
+          <DialogTitle>
+            {transaction.id ? 'Editar' : 'Nova'} {formData.type === 'receita' ? 'Receita' : 'Despesa'}
           </DialogTitle>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Data */}
-          <div className="space-y-2">
-            <Label>Data</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => newDate && setDate(newDate)}
-                  initialFocus
-                  locale={ptBR}
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Valor */}
-          <div className="space-y-2">
+          <div>
             <Label>Valor (R$)</Label>
             <Input
               type="number"
               step="0.01"
-              placeholder="Digite o valor"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
+              value={formData.value}
+              onChange={(e) => setFormData({...formData, value: e.target.value})}
               required
+              disabled={loading}
             />
           </div>
 
-          {/* Categoria */}
-          <div className="space-y-2">
+          <div>
+            <Label>Data e Hora</Label>
+            <Input
+              type="datetime-local"
+              value={formData.date}
+              onChange={(e) => setFormData({...formData, date: e.target.value})}
+              required
+              disabled={loading}
+            />
+          </div>
+
+          <div>
             <Label>Categoria</Label>
-            <Select value={category} onValueChange={setCategory} required>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => setFormData({...formData, category: value})}
+              disabled={loading}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
+                <SelectValue placeholder="Selecione a categoria" />
               </SelectTrigger>
               <SelectContent>
-                {config.categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
+                {categoryOptions[formData.type].map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Campos específicos para combustível */}
-          {transaction.type === 'despesa' && category === 'Combustível' && (
+          {formData.category === 'Combustível' && (
             <>
-              <div className="space-y-2">
+              <div>
                 <Label>Tipo de Combustível</Label>
-                <Select value={fuelType} onValueChange={setFuelType} required>
+                <Select 
+                  value={formData.fuelType} 
+                  onValueChange={(value) => setFormData({...formData, fuelType: value})}
+                  disabled={loading}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
+                    <SelectValue placeholder="Selecione o combustível" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gasolina">Gasolina</SelectItem>
-                    <SelectItem value="alcool">Álcool</SelectItem>
+                    <SelectItem value="Gasolina">Gasolina</SelectItem>
+                    <SelectItem value="Etanol">Etanol</SelectItem>
+                    <SelectItem value="Diesel">Diesel</SelectItem>
+                    <SelectItem value="GNV">GNV</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Valor por Litro (R$)</Label>
+              
+              <div>
+                <Label>Preço por Litro (R$)</Label>
                 <Input
                   type="number"
-                  step="0.01"
-                  placeholder="0,00"
-                  value={pricePerLiter}
-                  onChange={(e) => setPricePerLiter(e.target.value)}
-                  required
+                  step="0.001"
+                  value={formData.pricePerLiter}
+                  onChange={(e) => setFormData({...formData, pricePerLiter: e.target.value})}
+                  disabled={loading}
                 />
               </div>
             </>
           )}
 
-          {/* Campos específicos para manutenção */}
-          {transaction.type === 'despesa' && category === 'Manutenção' && (
-            <>
-              <div className="space-y-2">
-                <Label>Subcategoria</Label>
-                <Select value={subcategory} onValueChange={setSubcategory} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a subcategoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="troca-oleo">Troca de Óleo</SelectItem>
-                    <SelectItem value="pneu">Pneu</SelectItem>
-                    <SelectItem value="pastilha">Pastilha</SelectItem>
-                    <SelectItem value="geral">Geral</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Observação</Label>
-                <Input
-                  placeholder="Descrição da manutenção..."
-                  value={observation}
-                  onChange={(e) => setObservation(e.target.value)}
-                />
-              </div>
-            </>
-          )}
+          <div>
+            <Label>Observação</Label>
+            <Textarea
+              value={formData.observation}
+              onChange={(e) => setFormData({...formData, observation: e.target.value})}
+              placeholder="Observações adicionais..."
+              disabled={loading}
+            />
+          </div>
 
-          {/* Botões */}
-          <div className="flex space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+          <div className="flex justify-end space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={loading}
+            >
               Cancelar
             </Button>
             <Button 
               type="submit" 
-              className={cn(
-                "flex-1",
-                transaction.type === 'receita' && "bg-green-600 hover:bg-green-700",
-                transaction.type === 'despesa' && "bg-red-600 hover:bg-red-700"
-              )}
+              disabled={loading}
             >
-              Salvar
+              {loading ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </form>

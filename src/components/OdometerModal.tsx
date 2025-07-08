@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
   const [valor, setValor] = useState("");
   const [tipo, setTipo] = useState<'inicial' | 'final'>('inicial');
   const [cicloAbertoId, setCicloAbertoId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Verifica se há algum ciclo aberto (inicial sem final)
   useEffect(() => {
@@ -64,6 +66,8 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
     const valorNum = parseInt(valor);
     
     try {
+      setLoading(true);
+      
       if (tipo === 'inicial') {
         // Cria novo ciclo inicial
         await addOdometerRecord({
@@ -73,6 +77,9 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
         });
         
         toast.success("Odômetro inicial registrado! Agora registre o final quando terminar.");
+        
+        // Limpar apenas o valor, não fechar o modal
+        setValor("");
       } else if (tipo === 'final' && cicloAberto) {
         // Valida se o final é maior que o inicial
         if (valorNum <= cicloAberto.value) {
@@ -97,13 +104,16 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
         });
 
         toast.success(`Ciclo finalizado! Distância: ${distancia}km`);
+        
+        // Fechar modal apenas ao finalizar um ciclo
+        setValor("");
+        onClose();
       }
-
-      setValor("");
-      onClose();
     } catch (error) {
       console.error('Erro ao salvar odômetro:', error);
       toast.error("Erro ao salvar registro");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -179,6 +189,7 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
               value={valor}
               placeholder={`Digite km ${tipo === 'inicial' ? 'inicial' : 'final'}`}
               onChange={e => setValor(e.target.value)}
+              disabled={loading}
             />
             {cicloAberto && valor && (
               <p className="text-sm text-blue-600">
@@ -187,8 +198,12 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
             )}
           </div>
 
-          <Button onClick={handleSubmit} className="w-full">
-            Salvar {tipo === 'inicial' ? 'Inicial' : 'Final'}
+          <Button 
+            onClick={handleSubmit} 
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? 'Salvando...' : `Salvar ${tipo === 'inicial' ? 'Inicial' : 'Final'}`}
           </Button>
 
           {/* Histórico do dia atual */}
