@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
 import { OdometerRecord } from "@/types";
 import { toast } from "sonner";
-import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 interface OdometerModalProps {
   isOpen: boolean;
@@ -22,20 +20,13 @@ interface OdometerModalProps {
 
 const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
   const { odometerRecords, addOdometerRecord } = useUser();
+  const [data, setData] = useState<Date>(new Date());
+  const [valor, setValor] = useState("");
+  const [tipo, setTipo] = useState<'inicial' | 'final'>('inicial');
   const [cicloAbertoId, setCicloAbertoId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Usar persistência de formulário
-  const { formData, updateFormData, clearSavedData } = useFormPersistence('odometer_modal', {
-    data: new Date(),
-    valor: "",
-    tipo: 'inicial' as 'inicial' | 'final'
-  });
-
-  // Verifica se há algum ciclo aberto (inicial sem final) - SEM CAUSAR REFRESH
+  // Verifica se há algum ciclo aberto (inicial sem final)
   useEffect(() => {
-    if (!isOpen) return; // Só executa quando modal está aberto
-    
     const ciclosAbertos = odometerRecords.filter(record => {
       if (record.type !== 'inicial') return false;
       
@@ -55,39 +46,34 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
       )[0];
       
       setCicloAbertoId(maisRecente.id);
-      updateFormData({ tipo: 'final' });
+      setTipo('final');
     } else {
       setCicloAbertoId(null);
-      updateFormData({ tipo: 'inicial' });
+      setTipo('inicial');
     }
-  }, [isOpen, odometerRecords.length]); // Dependências específicas
+  }, [odometerRecords]);
 
   const cicloAberto = cicloAbertoId ? odometerRecords.find(r => r.id === cicloAbertoId) : null;
 
   const handleSubmit = async () => {
-    if (!formData.valor) {
+    if (!valor) {
       toast.error("Digite o valor do odômetro");
       return;
     }
 
-    const valorNum = parseInt(formData.valor);
+    const valorNum = parseInt(valor);
     
     try {
-      setLoading(true);
-      
-      if (formData.tipo === 'inicial') {
+      if (tipo === 'inicial') {
         // Cria novo ciclo inicial
         await addOdometerRecord({
-          date: formData.data,
+          date: data,
           type: 'inicial',
           value: valorNum
         });
         
         toast.success("Odômetro inicial registrado! Agora registre o final quando terminar.");
-        
-        // Limpar apenas o valor, NÃO fechar o modal
-        updateFormData({ valor: "" });
-      } else if (formData.tipo === 'final' && cicloAberto) {
+      } else if (tipo === 'final' && cicloAberto) {
         // Valida se o final é maior que o inicial
         if (valorNum <= cicloAberto.value) {
           toast.error("O odômetro final deve ser maior que o inicial");
@@ -111,33 +97,29 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
         });
 
         toast.success(`Ciclo finalizado! Distância: ${distancia}km`);
-        
-        // Limpar dados salvos e fechar modal APENAS após finalizar o ciclo
-        clearSavedData();
-        onClose();
       }
+
+      setValor("");
+      onClose();
     } catch (error) {
       console.error('Erro ao salvar odômetro:', error);
       toast.error("Erro ao salvar registro");
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Limpar dados salvos quando modal é fechado pelo usuário
-  const handleClose = () => {
-    if (formData.tipo === 'final' && cicloAberto) {
-      // Se tem ciclo aberto, NÃO limpar os dados (manter persistência)
-      onClose();
-    } else {
-      // Se não tem ciclo aberto, pode limpar
-      clearSavedData();
-      onClose();
-    }
+  const resetForm = () => {
+    setValor("");
+    setData(new Date());
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -168,18 +150,18 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !formData.data && "text-muted-foreground"
+                      !data && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(formData.data, "dd/MM/yyyy", { locale: ptBR })}
+                    {format(data, "dd/MM/yyyy", { locale: ptBR })}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={formData.data}
-                    onSelect={d => d && updateFormData({ data: d })}
+                    selected={data}
+                    onSelect={d => d && setData(d)}
                     initialFocus
                     locale={ptBR}
                   />
@@ -190,28 +172,23 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
 
           <div className="space-y-2">
             <Label>
-              Odômetro {formData.tipo === 'inicial' ? 'Inicial' : 'Final'} (km)
+              Odômetro {tipo === 'inicial' ? 'Inicial' : 'Final'} (km)
             </Label>
             <Input
               type="number"
-              value={formData.valor}
-              placeholder={`Digite km ${formData.tipo === 'inicial' ? 'inicial' : 'final'}`}
-              onChange={e => updateFormData({ valor: e.target.value })}
-              disabled={loading}
+              value={valor}
+              placeholder={`Digite km ${tipo === 'inicial' ? 'inicial' : 'final'}`}
+              onChange={e => setValor(e.target.value)}
             />
-            {cicloAberto && formData.valor && (
+            {cicloAberto && valor && (
               <p className="text-sm text-blue-600">
-                Distância: {parseInt(formData.valor) - cicloAberto.value} km
+                Distância: {parseInt(valor) - cicloAberto.value} km
               </p>
             )}
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? 'Salvando...' : `Salvar ${formData.tipo === 'inicial' ? 'Inicial' : 'Final'}`}
+          <Button onClick={handleSubmit} className="w-full">
+            Salvar {tipo === 'inicial' ? 'Inicial' : 'Final'}
           </Button>
 
           {/* Histórico do dia atual */}
