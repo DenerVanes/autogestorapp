@@ -1,4 +1,3 @@
-
 import { format, subMonths, startOfDay, endOfDay, subDays } from "date-fns";
 import type { Transaction, WorkHoursRecord, Metrics } from "@/types";
 import { Lancamento } from "@/lib/types";
@@ -92,45 +91,6 @@ export const calculatePercentageChange = (current: number, previous: number): st
   const change = ((current - previous) / previous) * 100;
   const sign = change >= 0 ? '+' : '';
   return `${sign}${change.toFixed(1)}%`;
-};
-
-export const calculatePreviousPeriodComparison = (
-  metrics: Metrics,
-  period: string,
-  customStartDate?: Date,
-  customEndDate?: Date
-) => {
-  // This function would need access to the full context data
-  // For now, returning a structure that matches what's expected
-  // This should be called from a context that has access to transactions, lancamentos, and workHours
-  
-  return {
-    receita: {
-      change: 'Sem dados anteriores para comparar',
-      breakdown: []
-    },
-    despesa: {
-      change: 'Sem dados anteriores para comparar',
-      breakdown: []
-    },
-    saldo: {
-      change: 'Sem dados anteriores para comparar'
-    },
-    kmRodado: {
-      change: 'Sem dados anteriores para comparar'
-    },
-    horasTrabalhadas: {
-      change: 'Sem dados anteriores para comparar'
-    },
-    valorPorKm: {
-      change: 'Sem dados anteriores para comparar',
-      comparison: ''
-    },
-    valorPorHora: {
-      change: 'Sem dados anteriores para comparar',
-      comparison: ''
-    }
-  };
 };
 
 // New function to calculate previous fuel expense
