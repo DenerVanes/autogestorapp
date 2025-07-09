@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,23 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
   const [pricePerLiter, setPricePerLiter] = useState(transaction.pricePerLiter?.toString() || "");
   const [subcategory, setSubcategory] = useState(transaction.subcategory || "");
   const [observation, setObservation] = useState(transaction.observation || "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { updateTransaction, addTransaction } = useUser();
+
+  // Reset form when transaction changes
+  useEffect(() => {
+    if (isOpen) {
+      setDate(transaction.date);
+      setValue(transaction.id ? transaction.value.toString() : "");
+      setCategory(transaction.category);
+      setFuelType(transaction.fuelType || "");
+      setPricePerLiter(transaction.pricePerLiter?.toString() || "");
+      setSubcategory(transaction.subcategory || "");
+      setObservation(transaction.observation || "");
+      setIsSubmitting(false);
+    }
+  }, [transaction, isOpen]);
 
   const getModalConfig = () => {
     const isNewTransaction = !transaction.id;
@@ -69,9 +85,10 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isSubmitting) return;
+    
     console.log('EditTransactionModal - handleSubmit chamado');
-    console.log('Transaction ID:', transaction.id);
-    console.log('Transaction type:', transaction.type);
+    setIsSubmitting(true);
     
     const transactionData = {
       type: transaction.type,
@@ -92,12 +109,10 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
 
     try {
       if (!transaction.id) {
-        // Nova transação
         console.log('Criando nova transação...');
         await addTransaction(transactionData);
         console.log('Transação criada com sucesso!');
       } else {
-        // Editar transação existente
         console.log('Editando transação existente...');
         await updateTransaction(transaction.id, transactionData);
         console.log('Transação editada com sucesso!');
@@ -106,11 +121,19 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
     } catch (error) {
       console.error('Erro ao salvar transação:', error);
       alert('Erro ao salvar transação. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!isSubmitting) {
+      onClose();
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -131,6 +154,7 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
                     "w-full justify-start text-left font-normal",
                     !date && "text-muted-foreground"
                   )}
+                  disabled={isSubmitting}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
@@ -159,13 +183,14 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
               value={value}
               onChange={(e) => setValue(e.target.value)}
               required
+              disabled={isSubmitting}
             />
           </div>
 
           {/* Categoria */}
           <div className="space-y-2">
             <Label>Categoria</Label>
-            <Select value={category} onValueChange={setCategory} required>
+            <Select value={category} onValueChange={setCategory} required disabled={isSubmitting}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
@@ -184,7 +209,7 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
             <>
               <div className="space-y-2">
                 <Label>Tipo de Combustível</Label>
-                <Select value={fuelType} onValueChange={setFuelType} required>
+                <Select value={fuelType} onValueChange={setFuelType} required disabled={isSubmitting}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
@@ -203,6 +228,7 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
                   value={pricePerLiter}
                   onChange={(e) => setPricePerLiter(e.target.value)}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </>
@@ -213,7 +239,7 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
             <>
               <div className="space-y-2">
                 <Label>Subcategoria</Label>
-                <Select value={subcategory} onValueChange={setSubcategory} required>
+                <Select value={subcategory} onValueChange={setSubcategory} required disabled={isSubmitting}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a subcategoria" />
                   </SelectTrigger>
@@ -231,6 +257,7 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
                   placeholder="Descrição da manutenção..."
                   value={observation}
                   onChange={(e) => setObservation(e.target.value)}
+                  disabled={isSubmitting}
                 />
               </div>
             </>
@@ -238,7 +265,13 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
 
           {/* Botões */}
           <div className="flex space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose} 
+              className="flex-1"
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
             <Button 
@@ -248,8 +281,9 @@ const EditTransactionModal = ({ transaction, isOpen, onClose }: EditTransactionM
                 transaction.type === 'receita' && "bg-green-600 hover:bg-green-700",
                 transaction.type === 'despesa' && "bg-red-600 hover:bg-red-700"
               )}
+              disabled={isSubmitting}
             >
-              Salvar
+              {isSubmitting ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </form>
