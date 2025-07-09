@@ -20,7 +20,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2 text-base font-medium">
           {icon && <span className="text-lg">{icon}</span>}
-          <span className="mx-0">{label}</span>
+          <span className="mx-[7px]">{label}</span>
         </div>
         <span className="text-gray-600 text-sm font-semibold text-left mx-[7px] my-0 px-0">
           R$ {current.toLocaleString("pt-BR", {
