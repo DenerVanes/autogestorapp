@@ -2,6 +2,7 @@ import { DollarSign, TrendingDown, Car, Clock } from "lucide-react";
 import MetricCard from "./MetricCard";
 import FuelExpenseCard from "./FuelExpenseCard";
 import ProfitCard from "./ProfitCard";
+import BestDayCard from "./BestDayCard";
 import type { Metrics } from "@/types";
 import { useUser } from "@/contexts/UserContext";
 import { filterByPeriod } from "@/utils/dateFilters";
@@ -183,11 +184,12 @@ const DashboardMetricsSection = ({
           customEndDate={customEndDate}
         />
       </div>
-      {/* Terceira fileira - Card de Metas */}
+      {/* Terceira fileira - Card de Metas e Melhor Dia */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div>
           {children}
         </div>
+        <BestDayCard />
       </div>
     </div>
   );
