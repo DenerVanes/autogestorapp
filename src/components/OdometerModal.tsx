@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -88,9 +89,9 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
           }
         }
 
-        // Cria registro final usando o mesmo pair_id
+        // Cria registro final usando a MESMA DATA do inicial (não a data atual)
         await addOdometerRecord({
-          date: new Date(), // data atual para o final
+          date: cicloAberto.date, // USA A DATA DO INICIAL, não new Date()
           type: 'final',
           value: valorNum,
           pair_id: cicloAberto.pair_id
@@ -138,6 +139,9 @@ const OdometerModal = ({ isOpen, onClose }: OdometerModalProps) => {
               </p>
               <p className="text-sm text-yellow-700">
                 Agora registre o odômetro final para fechar este ciclo.
+              </p>
+              <p className="text-xs text-yellow-600 mt-2">
+                O registro final será salvo na mesma data do inicial ({format(new Date(cicloAberto.date), "dd/MM/yyyy", { locale: ptBR })})
               </p>
             </div>
           ) : (

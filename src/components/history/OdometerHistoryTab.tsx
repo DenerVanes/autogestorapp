@@ -7,7 +7,6 @@ import { ptBR } from "date-fns/locale";
 import { OdometerRecord, OdometerRecordFull } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { convertToBrazilTime } from "@/utils/timezoneUtils";
 import { agruparCiclosPorPairId } from "@/utils/cycleGroupingUtils";
 
 // Tipo para viagem agrupada
@@ -24,7 +23,17 @@ interface OdometerHistoryTabProps {
   onDelete: (ids: string[]) => void;
 }
 
-// Função para agrupar por pair_id com tratamento de fuso horário
+/**
+ * Converts UTC date to Brazil timezone (UTC-3)
+ */
+function convertToBrazilTime(date: Date | string): Date {
+  const utcDate = typeof date === 'string' ? new Date(date) : date;
+  // Subtrai 3 horas para converter de UTC para horário do Brasil
+  const brazilTime = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
+  return brazilTime;
+}
+
+// Função para agrupar por pair_id com tratamento correto de fuso horário
 function agruparPorPairId(records: OdometerRecordFull[]): Viagem[] {
   console.log('=== AGRUPANDO HISTÓRICO POR PAIR_ID ===');
   console.log('Total de registros recebidos:', records.length);

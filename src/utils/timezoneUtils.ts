@@ -9,8 +9,8 @@ import { ptBR } from "date-fns/locale";
  */
 export function convertToBrazilTime(date: Date | string): Date {
   const utcDate = typeof date === 'string' ? new Date(date) : date;
-  // Adiciona 3 horas para converter de UTC para horário do Brasil (BRT/BRST)
-  const brazilTime = new Date(utcDate.getTime() + (3 * 60 * 60 * 1000));
+  // Subtrai 3 horas para converter de UTC para horário do Brasil (BRT/BRST)
+  const brazilTime = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
   return brazilTime;
 }
 

@@ -2,7 +2,16 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { OdometerRecord, OdometerRecordFull } from "@/types";
-import { convertToBrazilTime } from "./timezoneUtils";
+
+/**
+ * Converts UTC date to Brazil timezone (UTC-3)
+ */
+function convertToBrazilTime(date: Date | string): Date {
+  const utcDate = typeof date === 'string' ? new Date(date) : date;
+  // Subtrai 3 horas para converter de UTC para horário do Brasil
+  const brazilTime = new Date(utcDate.getTime() - (3 * 60 * 60 * 1000));
+  return brazilTime;
+}
 
 /**
  * Filters odometer records by period using Brazil timezone
@@ -74,17 +83,15 @@ export function filterOdometerByPeriod(
 
   console.log(`=== FILTRO POR PERÍODO ===`);
   console.log(`Período: ${period}`);
-  console.log(`Data início: ${format(startDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}`);
-  console.log(`Data fim: ${format(endDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}`);
+  console.log(`Data início (Brasil): ${format(startDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}`);
+  console.log(`Data fim (Brasil): ${format(endDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}`);
   
-  // Filtra registros pelo período - considera a data do registro inicial convertida para horário do Brasil
+  // Filtra registros pelo período - converte a data UTC do registro para horário do Brasil
   const filteredRecords = records.filter(record => {
     const brazilDate = convertToBrazilTime(record.date);
     const isInPeriod = brazilDate >= startDate && brazilDate <= endDate;
     
-    if (record.type === 'inicial') {
-      console.log(`Registro inicial ${record.id} em ${format(brazilDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })} está no período? ${isInPeriod}`);
-    }
+    console.log(`Registro ${record.id} (${record.type}) - UTC: ${record.date.toISOString()}, Brasil: ${format(brazilDate, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}, no período? ${isInPeriod}`);
     
     return isInPeriod;
   });
