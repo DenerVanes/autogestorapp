@@ -22,93 +22,77 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Zap, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GoalsSummary } from "./GoalsSummary";
-
 const Dashboard = () => {
-  const { user, transactions, getMetrics, getChartData, loading } = useUser();
+  const {
+    user,
+    transactions,
+    getMetrics,
+    getChartData,
+    loading
+  } = useUser();
   const [selectedPeriod, setSelectedPeriod] = useState("este-mes");
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dateRange, setDateRange] = useState<{
+    from?: Date;
+    to?: Date;
+  }>({});
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [openAction, setOpenAction] = useState<null | 'receita' | 'despesa' | 'odometro' | 'horas'>(null);
   const [showProDialog, setShowProDialog] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
-
   const navigate = useNavigate();
-  const { hasAccess, createCheckout } = useSubscription();
-
+  const {
+    hasAccess,
+    createCheckout
+  } = useSubscription();
   const emptyTransaction: Transaction = {
     id: '',
     type: 'receita',
     value: 0,
     date: new Date(),
-    category: '',
+    category: ''
   };
   const emptyLancamento: Lancamento = {
     id: '',
     dataLancamento: new Date().toISOString(),
     horaInicial: new Date().toISOString().slice(11, 19),
     odometroInicial: 0,
-    status: 'pendente',
+    status: 'pendente'
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando dashboard...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   try {
-    const handlePeriodChange = (value) => setSelectedPeriod(value);
-    const handleDateRangeChange = (range) => setDateRange(range);
+    const handlePeriodChange = value => setSelectedPeriod(value);
+    const handleDateRangeChange = range => setDateRange(range);
     const handleDateRangeApply = () => setSelectedPeriod('personalizado');
     const handleShowProfileModal = () => setShowProfileModal(true);
-
-    const filteredTransactions = filterByPeriod(
-      transactions,
-      selectedPeriod,
-      dateRange ? dateRange.from : undefined,
-      dateRange ? dateRange.to : undefined
-    );
+    const filteredTransactions = filterByPeriod(transactions, selectedPeriod, dateRange ? dateRange.from : undefined, dateRange ? dateRange.to : undefined);
     const periodLabel = selectedPeriod;
     const metrics = getMetrics(selectedPeriod, dateRange ? dateRange.from : undefined, dateRange ? dateRange.to : undefined);
     const chartData = getChartData(selectedPeriod, dateRange ? dateRange.from : undefined, dateRange ? dateRange.to : undefined);
-
-    const handleFabAction = (type) => {
+    const handleFabAction = type => {
       if (!hasAccess) {
         toast.error("Sua assinatura PRO expirou. Para continuar usando os lançamentos, assine o PRO novamente.");
         return;
       }
       setOpenAction(type);
     };
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-        <DashboardHeader
-          userName={user?.name}
-          selectedPeriod={selectedPeriod}
-          onPeriodChange={handlePeriodChange}
-          dateRange={dateRange as any}
-          onDateRangeChange={handleDateRangeChange}
-          onDateRangeApply={handleDateRangeApply}
-          onShowProfileModal={handleShowProfileModal}
-        />
+    return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <DashboardHeader userName={user?.name} selectedPeriod={selectedPeriod} onPeriodChange={handlePeriodChange} dateRange={dateRange as any} onDateRangeChange={handleDateRangeChange} onDateRangeApply={handleDateRangeApply} onShowProfileModal={handleShowProfileModal} />
         <div className="max-w-7xl mx-auto px-4 py-6">
-          {!hasAccess && (
-            <Alert className="mb-8 border-red-200 bg-red-50 w-full flex items-center justify-between px-8 py-4">
+          {!hasAccess && <Alert className="mb-8 border-red-200 bg-red-50 w-full flex items-center justify-between px-8 py-4">
               <div className="flex items-center gap-3">
                 <Crown className="h-6 w-6 text-black" />
                 <AlertDescription className="text-red-800 text-base font-medium">
                   Assinatura expirou. Renove o PRO para continuar.
                 </AlertDescription>
               </div>
-              <Button
-                className="flex items-center px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded transition-colors text-base"
-                onClick={() => setShowProDialog(true)}
-              >
+              <Button className="flex items-center px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded transition-colors text-base" onClick={() => setShowProDialog(true)}>
                 <Crown className="h-5 w-5 mr-2" />
                 Assine PRO
               </Button>
@@ -139,15 +123,11 @@ const Dashboard = () => {
                           <li>✅ Sem preocupação com vencimento</li>
                           <li>✅ Pode cancelar a qualquer momento</li>
                         </ul>
-                        <Button
-                          onClick={async () => {
-                            setLoadingCheckout(true);
-                            await createCheckout('recurring');
-                            setLoadingCheckout(false);
-                          }}
-                          disabled={loadingCheckout}
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                        >
+                        <Button onClick={async () => {
+                      setLoadingCheckout(true);
+                      await createCheckout('recurring');
+                      setLoadingCheckout(false);
+                    }} disabled={loadingCheckout} className="w-full bg-blue-600 hover:bg-blue-700">
                           <Zap className="mr-2 h-4 w-4" />
                           {loadingCheckout ? 'Processando...' : 'Assinar Agora'}
                         </Button>
@@ -156,55 +136,38 @@ const Dashboard = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-            </Alert>
-          )}
+            </Alert>}
           <DashboardMetricsSection metrics={metrics} period={selectedPeriod} customStartDate={dateRange ? dateRange.from : undefined} customEndDate={dateRange ? dateRange.to : undefined} />
-          <div className="flex w-full justify-start mt-0 mb-8">
+          <div className="flex w-full justify-start mt-0 mb-8 mx-0 my-px px-0 py-0 rounded-full">
             <GoalsSummary />
           </div>
           <DashboardChartSection chartData={chartData} />
-          <DashboardRecentTransactions 
-            filteredTransactions={filteredTransactions} 
-            periodLabel={periodLabel} 
-            onShowHistory={() => navigate('/historico')} 
-          />
+          <DashboardRecentTransactions filteredTransactions={filteredTransactions} periodLabel={periodLabel} onShowHistory={() => navigate('/historico')} />
         </div>
         <FloatingActionButton onAction={handleFabAction} />
-        {hasAccess && openAction === 'receita' && (
-          <EditTransactionModal
-            transaction={{ ...emptyTransaction, type: 'receita' }}
-            isOpen={true}
-            onClose={() => setOpenAction(null)}
-          />
-        )}
-        {hasAccess && openAction === 'despesa' && (
-          <EditTransactionModal
-            transaction={{ ...emptyTransaction, type: 'despesa' }}
-            isOpen={true}
-            onClose={() => setOpenAction(null)}
-          />
-        )}
-        {hasAccess && openAction === 'odometro' && (
-          <OdometerRegistrationModal
-            isOpen={true}
-            onClose={() => setOpenAction(null)}
-          />
-        )}
-        {hasAccess && openAction === 'horas' && (
-          <WorkHoursModal
-            isOpen={true}
-            onClose={() => setOpenAction(null)}
-          />
-        )}
+        {hasAccess && openAction === 'receita' && <EditTransactionModal transaction={{
+        ...emptyTransaction,
+        type: 'receita'
+      }} isOpen={true} onClose={() => setOpenAction(null)} />}
+        {hasAccess && openAction === 'despesa' && <EditTransactionModal transaction={{
+        ...emptyTransaction,
+        type: 'despesa'
+      }} isOpen={true} onClose={() => setOpenAction(null)} />}
+        {hasAccess && openAction === 'odometro' && <OdometerRegistrationModal isOpen={true} onClose={() => setOpenAction(null)} />}
+        {hasAccess && openAction === 'horas' && <WorkHoursModal isOpen={true} onClose={() => setOpenAction(null)} />}
         <UserProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-      </div>
-    );
+      </div>;
   } catch (err) {
     if (err instanceof Error) {
-      return <div style={{ color: 'red', padding: 32 }}>Erro no Dashboard: {err.message}<br/>{err.stack}</div>;
+      return <div style={{
+        color: 'red',
+        padding: 32
+      }}>Erro no Dashboard: {err.message}<br />{err.stack}</div>;
     }
-    return <div style={{ color: 'red', padding: 32 }}>Erro desconhecido no Dashboard.</div>;
+    return <div style={{
+      color: 'red',
+      padding: 32
+    }}>Erro desconhecido no Dashboard.</div>;
   }
 };
-
 export default Dashboard;
