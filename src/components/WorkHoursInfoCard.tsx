@@ -1,14 +1,10 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Info, Clock, Calendar } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-
 const WorkHoursInfoCard = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <Card className="mb-6 border-blue-200 bg-blue-50/50">
+  return <Card className="mb-6 border-blue-200 bg-blue-50/50">
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -17,12 +13,7 @@ const WorkHoursInfoCard = () => {
               <h3 className="font-semibold text-blue-900 text-sm">
                 Como Funciona o Registro de Horas
               </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-blue-600 hover:text-blue-700 p-1 h-auto"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="text-blue-600 hover:text-blue-700 p-1 h-auto">
                 {isExpanded ? 'Minimizar' : 'Ver detalhes'}
               </Button>
             </div>
@@ -31,8 +22,7 @@ const WorkHoursInfoCard = () => {
               Múltiplos registros no mesmo dia são somados automaticamente
             </p>
 
-            {isExpanded && (
-              <div className="mt-3 space-y-3 text-sm text-blue-800">
+            {isExpanded && <div className="mt-3 space-y-3 text-sm text-blue-800">
                 <div className="flex items-start space-x-2">
                   <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
@@ -53,17 +43,11 @@ const WorkHoursInfoCard = () => {
                   </div>
                 </div>
 
-                <div className="bg-blue-100 p-3 rounded-lg">
-                  <p className="font-medium text-blue-900">Lembrete:</p>
-                  <p>Registros que atravessam 04:00 são divididos automaticamente seguindo o padrão Uber para cálculo correto do "R$ por hora".</p>
-                </div>
-              </div>
-            )}
+                
+              </div>}
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default WorkHoursInfoCard;
