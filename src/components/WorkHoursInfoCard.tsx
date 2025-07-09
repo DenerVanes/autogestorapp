@@ -28,7 +28,7 @@ const WorkHoursInfoCard = () => {
             </div>
             
             <p className="text-blue-800 text-sm mt-1">
-              Jornadas são agrupadas seguindo o padrão Uber com corte às 04:00
+              Múltiplos registros no mesmo dia são somados automaticamente
             </p>
 
             {isExpanded && (
@@ -36,31 +36,26 @@ const WorkHoursInfoCard = () => {
                 <div className="flex items-start space-x-2">
                   <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium">Regra do Corte às 04:00:</p>
-                    <p>• Horários até 04:00 da manhã são contabilizados no dia anterior</p>
-                    <p>• Horários após 04:01 são contabilizados no dia atual</p>
+                    <p className="font-medium">Múltiplos Registros por Dia:</p>
+                    <p>• Pode-se registrar mais de 1 vez no dia</p>
+                    <p>• Exemplo: Manhã 06:00-10:00, Tarde 12:00-16:00, Noite 20:00-23:00</p>
+                    <p>• Todos os registros serão somados entre início e fim</p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-2">
                   <Calendar className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium">Divisão Automática:</p>
-                    <p>Registros que atravessam 04:00 são divididos automaticamente:</p>
-                    <p>→ Até 04:00: contabilizado no dia anterior</p>
-                    <p>→ Após 04:01: contabilizado no dia atual</p>
+                    <p className="font-medium">Registro Atravessando Dias:</p>
+                    <p>• Pode-se registrar início em um dia e fim no outro dia</p>
+                    <p>• As horas serão calculadas no dia do registro inicial</p>
+                    <p>• Exemplo: Início 23:00 (dia 8), Fim 03:00 (dia 9) = contabilizado no dia 8</p>
                   </div>
                 </div>
 
                 <div className="bg-blue-100 p-3 rounded-lg">
-                  <p className="font-medium text-blue-900">Exemplo:</p>
-                  <p>Trabalhou das 23:00 às 06:00</p>
-                  <p>→ 23:00-04:00 = dia anterior</p>
-                  <p>→ 04:01-06:00 = dia atual</p>
-                </div>
-
-                <div className="text-xs text-blue-700 bg-blue-100 p-2 rounded">
-                  Esta lógica garante o cálculo correto do "R$ por hora" e alinhamento com o padrão da indústria.
+                  <p className="font-medium text-blue-900">Lembrete:</p>
+                  <p>Registros que atravessam 04:00 são divididos automaticamente seguindo o padrão Uber para cálculo correto do "R$ por hora".</p>
                 </div>
               </div>
             )}
