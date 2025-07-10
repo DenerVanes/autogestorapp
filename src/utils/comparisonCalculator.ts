@@ -1,4 +1,3 @@
-
 import { format, subMonths, startOfDay, endOfDay, subDays } from "date-fns";
 import type { Transaction, WorkHoursRecord, Metrics } from "@/types";
 import { Lancamento } from "@/lib/types";
@@ -29,12 +28,11 @@ const getPreviousMonthDates = (period: string, customStartDate?: Date, customEnd
     }
   }
   
-  // Calcular o período exato correspondente no mês anterior
-  // Para cada data do período atual, subtrair exatamente 1 mês
+  // Calculate the same period in the previous month
   const previousStart = startOfDay(subMonths(currentStart, 1));
   const previousEnd = endOfDay(subMonths(currentEnd, 1));
   
-  return { previousStart, previousEnd, currentStart, currentEnd };
+  return { previousStart, previousEnd };
 };
 
 export const calculatePreviousMetrics = (
@@ -86,56 +84,13 @@ export const calculatePreviousMetrics = (
 };
 
 export const calculatePercentageChange = (current: number, previous: number): string => {
-  console.log("calculatePercentageChange inputs:", { current, previous });
-  
-  // Se o valor anterior é zero ou muito próximo de zero
-  if (Math.abs(previous) < 0.01) {
-    if (Math.abs(current) < 0.01) {
-      return '0% vs mês anterior';
-    }
-    return current > 0 ? '+100% vs mês anterior' : 'Sem dados anteriores para comparar';
+  if (previous === 0) {
+    return current > 0 ? '+100%' : 'Sem dados anteriores para comparar';
   }
   
-  // Fórmula correta: (valor_atual - valor_anterior) / valor_anterior * 100
   const change = ((current - previous) / previous) * 100;
   const sign = change >= 0 ? '+' : '';
-  
-  console.log("Percentage change calculation:", { current, previous, change, result: `${sign}${change.toFixed(1)}%` });
-  
-  return `${sign}${change.toFixed(1)}% vs mês anterior`;
-};
-
-// Função para verificar se há dados no período anterior
-export const hasPreviousPeriodData = (
-  transactions: Transaction[],
-  lancamentos: Lancamento[],
-  workHours: WorkHoursRecord[],
-  period: string,
-  customStartDate?: Date,
-  customEndDate?: Date
-): boolean => {
-  const { previousStart, previousEnd } = getPreviousMonthDates(period, customStartDate, customEndDate);
-  
-  // Verificar se existe pelo menos uma transação no período anterior
-  const hasTransactions = transactions.some(t => {
-    const itemDate = new Date(t.date);
-    return itemDate >= previousStart && itemDate <= previousEnd;
-  });
-  
-  // Verificar se existe pelo menos um lançamento no período anterior
-  const hasLancamentos = lancamentos.some(l => {
-    if (!l.dataLancamento) return false;
-    const itemDate = new Date(l.dataLancamento);
-    return itemDate >= previousStart && itemDate <= previousEnd;
-  });
-  
-  // Verificar se existe pelo menos um registro de horas no período anterior
-  const hasWorkHours = workHours.some(w => {
-    const itemStartDate = new Date(w.startDateTime);
-    return itemStartDate >= previousStart && itemStartDate <= previousEnd;
-  });
-  
-  return hasTransactions || hasLancamentos || hasWorkHours;
+  return `${sign}${change.toFixed(1)}%`;
 };
 
 // New function to calculate previous fuel expense
