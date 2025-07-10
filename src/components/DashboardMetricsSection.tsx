@@ -28,17 +28,27 @@ function getPreviousPeriod(period: string) {
 
 function getSimpleChange(current: number, previous: number) {
   console.log("getSimpleChange", { current, previous }); // log para depuração
+  
+  // Normalizar valores muito pequenos para zero
   if (Math.abs(previous) < 0.01) previous = 0;
   if (Math.abs(current) < 0.01) current = 0;
 
+  // Se ambos são zero
   if (current === 0 && previous === 0) {
     return "0% vs mês anterior";
   }
+  
+  // Se o valor anterior é zero mas o atual não
   if (previous === 0) {
     return current > 0 ? "+100% vs mês anterior" : "0% vs mês anterior";
   }
+  
+  // Fórmula correta: (valor_atual - valor_anterior) / valor_anterior * 100
   const percent = ((current - previous) / previous) * 100;
   const sign = percent > 0 ? "+" : "";
+  
+  console.log("Change calculation:", { current, previous, percent, result: `${sign}${percent.toFixed(1)}%` });
+  
   return `${sign}${percent.toFixed(1)}% vs mês anterior`;
 }
 
