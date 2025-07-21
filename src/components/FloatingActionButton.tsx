@@ -90,7 +90,7 @@ const FloatingActionButton = ({ onAction }: FloatingActionButtonProps) => {
           "w-14 h-14 rounded-full shadow-lg transition-all duration-300",
           isOpen 
             ? "bg-gray-500 hover:bg-gray-600 rotate-45" 
-            : "bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+            : "bg-orange-500 hover:bg-orange-600"
         )}
         onClick={() => setIsOpen(!isOpen)}
       >

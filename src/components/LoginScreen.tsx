@@ -48,17 +48,19 @@ const LoginScreen = () => {
             Voltar
           </Button>
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-              <Car className="w-4 h-4 text-white" />
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            <img
+              src="/nova-logo.png"
+              alt="Logo Auto Gestor"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
               Auto Gestor APP
             </h1>
           </div>
           <Button 
             variant="outline" 
             onClick={() => navigate('/signup')}
-            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600"
           >
             Criar Conta
           </Button>
@@ -70,10 +72,12 @@ const LoginScreen = () => {
         <div className="w-full max-w-md">
           {/* Logo e nome da ferramenta */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full mb-4">
-              <Car className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            <img
+              src="/nova-logo.png"
+              alt="Logo Auto Gestor"
+              className="inline-block w-16 h-16 rounded-full object-cover mb-4"
+            />
+            <h1 className="text-3xl font-bold text-orange-600">
               Auto Gestor APP
             </h1>
             <p className="text-muted-foreground mt-2">
@@ -125,15 +129,15 @@ const LoginScreen = () => {
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 transition-all duration-300"
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white transition-all duration-300 py-6 text-lg rounded-2xl font-semibold"
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
 
-                <div className="text-center">
+                <div className="flex justify-between items-center mt-2">
                   <button
                     type="button"
-                    className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                    className="text-sm text-orange-600 hover:text-orange-700 transition-colors"
                   >
                     Recuperar senha
                   </button>

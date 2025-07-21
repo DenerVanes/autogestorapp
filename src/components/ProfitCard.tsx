@@ -12,12 +12,17 @@ interface ProfitCardProps {
   period: string;
   customStartDate?: Date;
   customEndDate?: Date;
+  change?: string;
+  lucroMensal?: number;
 }
 
-const ProfitCard = ({ metrics, period, customStartDate, customEndDate }: ProfitCardProps) => {
+const ProfitCard = ({ metrics, period, customStartDate, customEndDate, change, lucroMensal }: ProfitCardProps) => {
   const { user, transactions, lancamentos } = useUser();
   const safeTransactions = transactions ?? [];
   const safeLancamentos = lancamentos ?? [];
+
+  // Log para depuração
+  console.log('[PROFIT CARD DEBUG] lucroMensal prop:', lucroMensal, '| valor exibido:', typeof lucroMensal === 'number' ? lucroMensal : undefined);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -68,14 +73,14 @@ const ProfitCard = ({ metrics, period, customStartDate, customEndDate }: ProfitC
 
     // Calculate previous period profit for comparison
     const previousProfit = calculatePreviousProfit(safeTransactions, safeLancamentos, user, period, customStartDate, customEndDate);
-    const change = calculatePercentageChange(profit, previousProfit);
+    const changeValue = calculatePercentageChange(profit, previousProfit);
 
     return {
       value: profit,
       revenue: totalRevenue,
       fuelExpense: fuelExpense,
       hasData: totalRevenue > 0 || fuelExpense > 0,
-      change
+      change: changeValue
     };
   };
 
@@ -117,6 +122,8 @@ const ProfitCard = ({ metrics, period, customStartDate, customEndDate }: ProfitC
   const getChangeText = (changeValue?: string) => {
     if (!changeValue) return "";
     if (changeValue === "Sem dados anteriores para comparar") return changeValue;
+    // Não duplicar 'vs mês anterior'
+    if (changeValue.includes('vs mês anterior')) return changeValue;
     return `${changeValue} vs mês anterior`;
   };
 
@@ -129,14 +136,14 @@ const ProfitCard = ({ metrics, period, customStartDate, customEndDate }: ProfitC
           <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground mb-1">Lucro</p>
             <p className={cn("text-2xl font-bold", textColor)}>
-              {formatCurrency(profitData.value)}
+              {formatCurrency(typeof lucroMensal === 'number' ? lucroMensal : profitData.value)}
             </p>
             <p className="text-xs mt-1 font-medium text-gray-600">
               Receita - Combustível
             </p>
-            {profitData.change && (
-              <p className={cn("text-xs mt-1 font-medium", getChangeColor(profitData.change))}>
-                {getChangeText(profitData.change)}
+            {(change) && (
+              <p className={cn("text-xs mt-1 font-medium", getChangeColor(change))}>
+                {getChangeText(change)}
               </p>
             )}
           </div>

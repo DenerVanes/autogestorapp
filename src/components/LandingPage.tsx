@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Car, BarChart3, Fuel, Target, CheckCircle, ArrowRight, Star, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+// Tente importar usando o alias @ para src
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -16,70 +17,100 @@ const LandingPage = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            <img
+              src="/nova-logo.png"
+              alt="Logo Auto Gestor"
+              className="w-14 h-14 rounded-full object-cover"
+            />
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
               Auto Gestor APP
             </h1>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/login')}
-            className="border-blue-600 text-blue-600 hover:bg-blue-50"
-          >
-            Já tenho conta - ENTRAR
-          </Button>
+          {/* Menu centralizado */}
+          <nav className="hidden md:flex flex-1 justify-center items-center space-x-6">
+            <a href="#" className="text-black font-semibold hover:underline" onClick={() => scrollToSection('demo')}>Demonstração</a>
+            <a href="#" className="text-black font-semibold hover:underline" onClick={() => scrollToSection('solucoes')}>Solução</a>
+            <a href="#" className="text-black font-semibold hover:underline" onClick={() => scrollToSection('preco')}>Preço</a>
+          </nav>
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/login')}
+              className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+            >
+              Entrar
+            </Button>
+            <Button
+              onClick={() => navigate('/signup')}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Crie uma conta grátis
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 via-white to-green-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Gerencie suas Finanças como
-            <span className="bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent"> Motorista de App </span>
-            de Forma Inteligente
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Com o Auto Gestor APP, você controla receitas, despesas e lucro real. 
-            Tome decisões baseadas em dados e maximize seus ganhos.
-          </p>
-          
-          <div className="bg-white p-6 rounded-2xl shadow-lg inline-block mb-8">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              Por apenas R$ 0,66 por dia
-            </div>
-            <div className="text-sm text-gray-500">
-              Equivalente a R$ 19,90/mês
-            </div>
-          </div>
+      <section className="bg-gradient-to-br from-blue-50 via-white to-green-50 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-start gap-16">
+            {/* Coluna da esquerda - Textos e botões */}
+            <div className="flex-1 text-left">
+              <h1 className="text-4xl md:text-5xl mb-4 leading-tight text-orange-600 font-bold" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+                Dirija como um profissional<br />
+                Gerencie como um <span className="text-black">empreendedor</span>
+              </h1>
+              <p className="text-base md:text-lg text-neutral-700 mb-10 max-w-2xl leading-relaxed font-normal" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+                Com o Auto Gestor APP, você controla receitas, despesas e lucro real. Tome decisões baseadas em dados e maximize seus ganhos.
+              </p>
+              
+              <div className="flex justify-center w-full mb-12">
+                <div className="bg-white px-6 py-4 rounded-2xl shadow-lg text-center w-auto">
+                  <div className="text-2xl font-bold text-blue-500">
+                    Por apenas R$ 0,66 por dia
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Equivalente a R$ 19,90/mês
+                  </div>
+                </div>
+              </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              size="lg"
-              onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              TESTE GRÁTIS POR 7 DIAS
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => scrollToSection('demo')}
-              className="px-8 py-6 text-lg rounded-xl"
-            >
-              Ver Demonstração
-            </Button>
+              <div className="flex flex-col sm:flex-row gap-6">
+                <Button
+                  size="lg"
+                  onClick={() => scrollToSection('demo')}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-7 text-lg rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                >
+                  Ver demonstração
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate('/signup')}
+                  className="border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 px-10 py-7 text-lg rounded-2xl font-semibold"
+                >
+                  Crie uma conta grátis
+                </Button>
+              </div>
+            </div>
+
+            {/* Coluna da direita - Imagem */}
+            <div className="flex-1 flex justify-center md:justify-end">
+              <img
+                src="/funcionalidades-hero.png"
+                alt="Funcionalidades do Auto Gestor APP"
+                className="max-w-full md:max-w-xl rounded-3xl shadow-xl"
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-white">
+      <section id="solucoes" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -141,7 +172,7 @@ const LandingPage = () => {
             <Button 
               size="lg"
               onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-6 text-lg rounded-xl"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg rounded-xl font-bold"
             >
               TESTE GRÁTIS POR 7 DIAS
             </Button>
@@ -194,7 +225,7 @@ const LandingPage = () => {
             <Button 
               size="lg"
               onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-6 text-lg rounded-xl"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg rounded-xl"
             >
               COMEÇAR AGORA - TESTE GRÁTIS
             </Button>
@@ -237,13 +268,19 @@ const LandingPage = () => {
                   </li>
                 </ul>
               </div>
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Car className="w-10 h-10 text-white" />
-                  </div>
-                  <p className="text-gray-600">Preview do Dashboard</p>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center justify-center w-full">
+                <img
+                  src="/dashboard-mockup-pronto.png"
+                  alt="Preview do Dashboard no celular"
+                  style={{ maxWidth: '340px', width: '100%', height: 'auto', borderRadius: '32px', boxShadow: '0 0 16px rgba(0,0,0,0.10)' }}
+                  onLoad={() => console.log('Imagem carregada com sucesso!')}
+                  onError={(e) => { console.log('Erro ao carregar a imagem!', e); }}
+                />
+                <img
+                  src="/dashboard-mockup-escuro.png"
+                  alt="Preview do Dashboard no celular (tema escuro)"
+                  style={{ maxWidth: '340px', width: '100%', height: 'auto', borderRadius: '32px', boxShadow: '0 0 16px rgba(0,0,0,0.10)' }}
+                />
               </div>
             </div>
           </div>
@@ -252,7 +289,7 @@ const LandingPage = () => {
             <Button 
               size="lg"
               onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-6 text-lg rounded-xl"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg rounded-xl"
             >
               TESTE GRÁTIS POR 7 DIAS
             </Button>
@@ -277,6 +314,13 @@ const LandingPage = () => {
                     <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
+                <div className="flex justify-center mb-4">
+                  <img
+                    src="https://randomuser.me/api/portraits/men/32.jpg"
+                    alt="Carlos Silva"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 shadow"
+                  />
+                </div>
                 <p className="text-gray-600 mb-4">
                   "Com o Auto Gestor APP consegui aumentar meu lucro em 25%. Agora sei exatamente onde estou gastando e quanto realmente ganho."
                 </p>
@@ -291,6 +335,13 @@ const LandingPage = () => {
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                   ))}
+                </div>
+                <div className="flex justify-center mb-4">
+                  <img
+                    src="https://randomuser.me/api/portraits/women/44.jpg"
+                    alt="Ana Paula"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 shadow"
+                  />
                 </div>
                 <p className="text-gray-600 mb-4">
                   "Finalmente encontrei uma ferramenta que entende as necessidades de quem trabalha com app. Simples e muito eficiente!"
@@ -307,6 +358,13 @@ const LandingPage = () => {
                     <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
+                <div className="flex justify-center mb-4">
+                  <img
+                    src="https://randomuser.me/api/portraits/men/65.jpg"
+                    alt="Roberto Santos"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 shadow"
+                  />
+                </div>
                 <p className="text-gray-600 mb-4">
                   "Os relatórios me ajudaram a identificar os melhores horários e rotas. Minha renda aumentou significativamente."
                 </p>
@@ -320,7 +378,7 @@ const LandingPage = () => {
             <Button 
               size="lg"
               onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-6 text-lg rounded-xl"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg rounded-xl"
             >
               JUNTE-SE A ELES - TESTE GRÁTIS
             </Button>
@@ -329,56 +387,46 @@ const LandingPage = () => {
       </section>
 
       {/* Pricing CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-600 to-green-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Comece Hoje Mesmo
+      <section id="preco" className="py-20 bg-gradient-to-br from-blue-600 to-green-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            R$ 0,66 por dia
           </h2>
+          <p className="text-xl mb-10">
+            Menos que um café por dia para controlar suas finanças
+          </p>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mb-8">
-            <div className="text-4xl md:text-5xl font-bold mb-4">
-              R$ 0,66 por dia
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-x-12 gap-y-6 text-left mb-12">
+            <div className="flex items-center">
+              <CheckCircle className="w-6 h-6 mr-3 flex-shrink-0" />
+              <span>Controle completo de receitas e despesas</span>
             </div>
-            <div className="text-xl mb-6">
-              Menos que um café por dia para controlar suas finanças
+            <div className="flex items-center">
+              <CheckCircle className="w-6 h-6 mr-3 flex-shrink-0" />
+              <span>Suporte via email</span>
             </div>
-            
-            <div className="grid md:grid-cols-2 gap-4 text-left">
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-3" />
-                  <span>Controle completo de receitas e despesas</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-3" />
-                  <span>Relatórios e gráficos detalhados</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-3" />
-                  <span>Gestão de combustível e quilometragem</span>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-3" />
-                  <span>Suporte via email</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-3" />
-                  <span>Atualizações gratuitas</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-3" />
-                  <span>Acesso completo a todas as funcionalidades</span>
-                </div>
-              </div>
+            <div className="flex items-center">
+              <CheckCircle className="w-6 h-6 mr-3 flex-shrink-0" />
+              <span>Relatórios e gráficos detalhados</span>
+            </div>
+            <div className="flex items-center">
+              <CheckCircle className="w-6 h-6 mr-3 flex-shrink-0" />
+              <span>Atualizações gratuitas</span>
+            </div>
+            <div className="flex items-center">
+              <CheckCircle className="w-6 h-6 mr-3 flex-shrink-0" />
+              <span>Gestão de combustível e quilometragem</span>
+            </div>
+            <div className="flex items-center">
+              <CheckCircle className="w-6 h-6 mr-3 flex-shrink-0" />
+              <span>Acesso completo a todas as funcionalidades</span>
             </div>
           </div>
 
           <Button 
             size="lg"
             onClick={() => navigate('/signup')}
-            className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl font-bold"
+            className="bg-white text-blue-600 hover:bg-gray-100 px-10 py-7 text-lg rounded-2xl font-bold"
           >
             TESTE GRÁTIS POR 7 DIAS
           </Button>

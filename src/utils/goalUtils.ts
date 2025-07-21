@@ -14,7 +14,7 @@ export function getCurrentMonthEarnings(transactions: Transaction[]): number {
 }
 
 export function getGoalColor(percent: number): string {
-  if (percent >= 100) return "bg-green-500";
-  if (percent >= 50) return "bg-yellow-400";
+  if (percent > 80) return "bg-green-500";
+  if (percent > 40) return "bg-yellow-400";
   return "bg-red-400";
 } 

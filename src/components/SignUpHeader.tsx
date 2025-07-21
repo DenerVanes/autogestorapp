@@ -18,10 +18,12 @@ export default function SignUpHeader() {
           Voltar
         </Button>
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-            <Car className="w-4 h-4 text-white" />
-          </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+          <img
+            src="/nova-logo.png"
+            alt="Logo Auto Gestor"
+            className="w-8 h-8 rounded-full object-cover"
+          />
+          <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
             Auto Gestor APP
           </h1>
         </div>

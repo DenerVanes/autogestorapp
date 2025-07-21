@@ -162,7 +162,7 @@ export default function SignUpForm() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 transition-all duration-300 py-6 text-lg"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white transition-all duration-300 py-6 text-lg rounded-2xl font-semibold"
           >
             {isLoading ? "Criando conta..." : "COMEÇAR TESTE GRÁTIS"}
           </Button>
