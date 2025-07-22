@@ -17,36 +17,32 @@ const LandingPage = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex flex-row items-center justify-between gap-3">
+          {/* Lado esquerdo: logo + nome */}
+          <div className="flex flex-row items-center space-x-3 min-w-0">
             <img
               src="/nova-logo.png"
               alt="Logo Auto Gestor"
-              className="w-14 h-14 rounded-full object-cover"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover flex-shrink-0"
             />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+            <span className="hidden md:inline text-lg md:text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent truncate">
               Auto Gestor APP
-            </h1>
+            </span>
           </div>
-          {/* Menu centralizado */}
-          <nav className="hidden md:flex flex-1 justify-center items-center space-x-6">
-            <a href="#" className="text-black font-semibold hover:underline" onClick={() => scrollToSection('demo')}>Demonstração</a>
-            <a href="#" className="text-black font-semibold hover:underline" onClick={() => scrollToSection('solucoes')}>Solução</a>
-            <a href="#" className="text-black font-semibold hover:underline" onClick={() => scrollToSection('preco')}>Preço</a>
-          </nav>
-          <div className="flex items-center space-x-4">
+          {/* Lado direito: botões */}
+          <div className="flex flex-row items-center gap-2 sm:gap-4">
             <Button
               variant="outline"
               onClick={() => navigate('/login')}
-              className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+              className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 px-4 py-2 text-sm md:text-base"
             >
               Entrar
             </Button>
             <Button
               onClick={() => navigate('/signup')}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-sm md:text-base"
             >
-              Crie uma conta grátis
+              Criar Conta
             </Button>
           </div>
         </div>

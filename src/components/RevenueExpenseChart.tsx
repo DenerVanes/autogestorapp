@@ -21,9 +21,8 @@ const RevenueExpenseChart = ({ data }: RevenueExpenseChartProps) => {
   const formatXAxisLabel = (tickItem: string) => {
     try {
       const date = parseISO(tickItem);
-      const dayName = format(date, 'EEE', { locale: ptBR });
-      const dayNumber = format(date, 'dd/MM', { locale: ptBR });
-      return `${dayName}\n${dayNumber}`;
+      // Apenas o dia e mês, ex: 22/07
+      return format(date, 'dd/MM', { locale: ptBR });
     } catch {
       return tickItem;
     }

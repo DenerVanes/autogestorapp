@@ -38,29 +38,21 @@ const LoginScreen = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex flex-col">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-white/20 p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <Button 
             variant="ghost" 
             onClick={() => navigate('/landing')}
-            className="flex items-center"
+            className="flex items-center min-w-fit"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
-          <div className="flex items-center space-x-3">
-            <img
-              src="/nova-logo.png"
-              alt="Logo Auto Gestor"
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-              Auto Gestor APP
-            </h1>
-          </div>
+          {/* Logo removido do header */}
+          <div className="flex-1" />
           <Button 
             variant="outline" 
             onClick={() => navigate('/signup')}
-            className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+            className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 min-w-fit"
           >
             Criar Conta
           </Button>
