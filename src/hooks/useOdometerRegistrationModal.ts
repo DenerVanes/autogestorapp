@@ -171,10 +171,8 @@ export const useOdometerRegistrationModal = (isOpen: boolean) => {
       setIsOdometerInProgress(false);
       setSavedInitialReading(null);
       
-      // Força refresh dos dados para atualizar cards e histórico
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Os dados serão atualizados automaticamente pelo contexto
+      // Não é necessário recarregar a página
     } catch (error) {
       console.error('Erro ao salvar odômetro final:', error);
       toast.error("Erro ao salvar registro final");

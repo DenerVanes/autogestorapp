@@ -26,10 +26,8 @@ export const useOdometerOperations = (
 
     setOdometerRecords(prev => [transformedRecord, ...prev]);
     
-    // Força recarregamento dos dados após adicionar
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
+    // Os dados já foram atualizados no estado local
+    // Não é necessário recarregar a página
   };
 
   const updateOdometerRecord = async (id: string, updates: Partial<OdometerRecord>) => {
