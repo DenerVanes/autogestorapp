@@ -86,8 +86,34 @@
   }
 }
 
+/* Ajustes para cards menores e mais enxutos no mobile */
 .card {
   padding: 2em;
+  margin-bottom: 1.5em;
+  border-radius: 1.2em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 0.75em 0.7em;
+    margin-bottom: 0.7em;
+    border-radius: 0.8em;
+  }
+  .card h2, .card .card-title, .card .text-xl, .card .text-lg {
+    font-size: 1.1em !important;
+    margin-bottom: 0.2em;
+  }
+  .card .text-3xl, .card .text-4xl, .card .text-2xl {
+    font-size: 1.3em !important;
+  }
+  .card .text-sm, .card .text-xs {
+    font-size: 0.95em !important;
+  }
+  .card .card-value, .card .font-bold {
+    font-size: 1.2em !important;
+  }
 }
 
 .read-the-docs {
