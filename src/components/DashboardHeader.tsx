@@ -212,7 +212,7 @@ const DashboardHeader = ({
             </div>
             
             {/* Second line - Action buttons */}
-            <div className="flex items-center justify-between space-x-2">
+            <div className="dashboard-header__actions flex items-center justify-between space-x-2 flex-wrap w-full">
               <div className="flex items-center space-x-2">
                 {user?.email === 'dennervanes@hotmail.com' && (
                   <>
