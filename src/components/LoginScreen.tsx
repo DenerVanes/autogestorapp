@@ -7,6 +7,7 @@ import { Car, Mail, Lock, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 const LoginScreen = () => {
   const { signIn } = useAuth();
@@ -14,6 +15,9 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +35,28 @@ const LoginScreen = () => {
       toast.error("Ocorreu um erro inesperado");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: window.location.origin + '/reset-password'
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+        setShowResetModal(false);
+        setResetEmail("");
+      }
+    } catch (err) {
+      toast.error("Erro ao solicitar recuperação de senha.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -127,12 +153,14 @@ const LoginScreen = () => {
                 </Button>
 
                 <div className="flex justify-between items-center mt-2">
-                  <button
-                    type="button"
-                    className="text-sm text-orange-600 hover:text-orange-700 transition-colors"
+                  <span
+                    className="text-sm text-orange-600 hover:text-orange-700 transition-colors cursor-pointer underline"
+                    onClick={() => { console.log('Clicou em Recuperar senha'); setShowResetModal(true); }}
+                    role="button"
+                    tabIndex={0}
                   >
                     Recuperar senha
-                  </button>
+                  </span>
                 </div>
               </form>
 
@@ -158,6 +186,33 @@ const LoginScreen = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de recuperação de senha - fora do Card para garantir renderização correta */}
+      <Dialog open={showResetModal} onOpenChange={(open) => { console.log('Modal aberto?', open); setShowResetModal(open); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recuperar senha</DialogTitle>
+            <DialogDescription>
+              Informe seu e-mail cadastrado. Você receberá um link para redefinir sua senha.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <Input
+              type="email"
+              placeholder="seu@email.com"
+              value={resetEmail}
+              onChange={e => setResetEmail(e.target.value)}
+              required
+              autoFocus
+            />
+            <DialogFooter>
+              <Button type="submit" disabled={resetLoading} className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                {resetLoading ? "Enviando..." : "Enviar link de recuperação"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
